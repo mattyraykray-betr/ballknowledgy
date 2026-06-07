@@ -295,7 +295,7 @@ export default function HomePage() {
                 </section>
 
                 <section style={styles.card}>
-                  <div style={styles.label}>Debug answer for now</div>
+                  <div style={styles.label}>/div>
                   <div style={{ ...styles.big, ...styles.orange }}>
                     {activeChallenge.player?.full_name}
                   </div>

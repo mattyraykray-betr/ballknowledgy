@@ -23,8 +23,26 @@ function calculateScore({ secondsElapsed, wrongGuessCount, hintsUsed }) {
   const base = 1000;
   const timePenalty = Math.floor(secondsElapsed * 4);
   const wrongPenalty = wrongGuessCount * 100;
-  const hintPenalty = hintsUsed === 0 ? 0 : hintsUsed === 1 ? 75 : hintsUsed === 2 ? 175 : 350;
+  const hintPenalty =
+    hintsUsed === 0 ? 0 : hintsUsed === 1 ? 75 : hintsUsed === 2 ? 175 : 350;
+
   return Math.max(0, base - timePenalty - wrongPenalty - hintPenalty);
+}
+
+function renderHint(hint) {
+  if (!hint || Object.keys(hint).length === 0) return null;
+
+  if (hint.label && hint.value) return `${hint.label}: ${hint.value}`;
+  if (hint.type && hint.value) return `${hint.type}: ${hint.value}`;
+  if (hint.text) return hint.text;
+
+  if (hint.teammates && Array.isArray(hint.teammates)) {
+    return `Season: ${hint.season_label || hint.season_year}. Teammates: ${hint.teammates.join(", ")}`;
+  }
+
+  return Object.entries(hint)
+    .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") : value}`)
+    .join(" · ");
 }
 
 export default function HomePage() {
@@ -58,7 +76,7 @@ export default function HomePage() {
         }
       : {
           bg: "#ffffff",
-          card: "#f4f4f4",
+          card: "#f6f6f6",
           pane: "#eeeeee",
           text: "#111111",
           muted: "#555555",
@@ -94,7 +112,6 @@ export default function HomePage() {
         player_id,
         season_year,
         season_label,
-        decade,
         season_range,
         starting_clue_json,
         hint_1_json,
@@ -160,7 +177,8 @@ export default function HomePage() {
       setMessage("Correct.");
     } else {
       setWrongGuesses((prev) => [...prev, selectedPlayer]);
-      setMessage("Incorrect. Try again.");
+      setHintsShown((prev) => Math.min(3, prev + 1));
+      setMessage("Incorrect. Hint revealed.");
       setQuery("");
       setSelectedPlayer(null);
       setPlayerResults([]);
@@ -194,24 +212,23 @@ export default function HomePage() {
       color: theme.text,
       fontFamily:
         'Arial, Helvetica, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      padding: 0,
       margin: 0,
     },
     wrap: {
       maxWidth: 520,
       margin: "0 auto",
-      padding: "16px",
+      padding: "12px",
     },
     topbar: {
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
       borderBottom: `2px solid ${theme.border}`,
-      paddingBottom: 12,
-      marginBottom: 16,
+      paddingBottom: 10,
+      marginBottom: 10,
     },
     title: {
-      fontSize: 26,
+      fontSize: 24,
       fontWeight: 900,
       margin: 0,
       letterSpacing: "-0.04em",
@@ -219,55 +236,39 @@ export default function HomePage() {
     },
     sub: {
       color: theme.muted,
-      fontSize: 13,
+      fontSize: 12,
       marginTop: 2,
     },
-    button: {
+    iconButton: {
+      width: 36,
+      height: 36,
       border: `1px solid ${theme.border}`,
       background: theme.card,
       color: theme.text,
-      padding: "10px 12px",
-      fontWeight: 900,
       borderRadius: 0,
       cursor: "pointer",
-      textTransform: "uppercase",
-      fontSize: 12,
-    },
-    primaryButton: {
-      border: "1px solid #003594",
-      background: "#003594",
-      color: "#ffffff",
-      padding: "12px",
-      fontWeight: 900,
-      borderRadius: 0,
-      cursor: "pointer",
-      textTransform: "uppercase",
-      width: "100%",
-      fontSize: 14,
-    },
-    disabledButton: {
-      opacity: 0.45,
-      cursor: "not-allowed",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
     },
     dateInput: {
-      width: "100%",
-      boxSizing: "border-box",
-      padding: "12px",
+      width: 142,
+      padding: "7px 8px",
       border: `1px solid ${theme.border}`,
       background: theme.input,
       color: theme.text,
       borderRadius: 0,
-      fontSize: 16,
-      marginBottom: 14,
+      fontSize: 12,
+      marginBottom: 10,
     },
     tabs: {
       display: "grid",
       gridTemplateColumns: "repeat(3, 1fr)",
-      gap: 8,
-      marginBottom: 16,
+      gap: 6,
+      marginBottom: 10,
     },
     tab: {
-      padding: "12px 8px",
+      padding: "7px 5px",
       border: `1px solid ${theme.border}`,
       background: theme.card,
       color: theme.text,
@@ -276,7 +277,8 @@ export default function HomePage() {
       cursor: "pointer",
       textAlign: "center",
       textTransform: "uppercase",
-      fontSize: 13,
+      fontSize: 10,
+      lineHeight: 1.15,
     },
     activeTab: {
       background: "#003594",
@@ -287,80 +289,124 @@ export default function HomePage() {
       background: theme.card,
       border: `1px solid ${theme.border}`,
       borderRadius: 0,
-      padding: 16,
-      marginBottom: 14,
+      padding: 12,
+      marginBottom: 10,
     },
     label: {
       color: theme.muted,
-      fontSize: 12,
+      fontSize: 10,
       fontWeight: 900,
       textTransform: "uppercase",
       letterSpacing: "0.04em",
-      marginBottom: 5,
+      marginBottom: 4,
     },
     big: {
-      fontSize: 23,
+      fontSize: 21,
       fontWeight: 900,
       marginBottom: 2,
     },
+    metaRow: {
+      display: "flex",
+      justifyContent: "space-between",
+      gap: 8,
+      alignItems: "center",
+    },
     statGrid: {
       display: "grid",
-      gridTemplateColumns: "repeat(3, 1fr)",
-      gap: 8,
-      marginTop: 12,
+      gridTemplateColumns: "repeat(6, 1fr)",
+      gap: 4,
+      marginTop: 10,
     },
     statBox: {
-      background: theme.pane,
-      border: `1px solid ${theme.border}`,
-      padding: 10,
+      background: theme.input,
+      borderTop: `2px solid ${theme.border}`,
+      padding: "6px 3px",
       textAlign: "center",
     },
     statLabel: {
-      fontSize: 11,
+      fontSize: 9,
       color: theme.muted,
       fontWeight: 900,
     },
     statValue: {
-      fontSize: 20,
+      fontSize: 14,
       fontWeight: 900,
-      marginTop: 3,
+      marginTop: 2,
     },
     input: {
       width: "100%",
       boxSizing: "border-box",
-      padding: "13px",
+      padding: "11px",
       border: `1px solid ${theme.border}`,
       background: theme.input,
       color: theme.text,
       borderRadius: 0,
-      fontSize: 16,
-      marginBottom: 8,
+      fontSize: 15,
+      marginBottom: 7,
     },
     resultList: {
       border: `1px solid ${theme.border}`,
       background: theme.input,
-      marginBottom: 10,
+      marginBottom: 8,
     },
     resultItem: {
-      padding: "12px",
+      padding: "10px",
       borderBottom: `1px solid ${theme.border}`,
       cursor: "pointer",
       fontWeight: 800,
+      fontSize: 14,
+    },
+    primaryButton: {
+      border: "1px solid #003594",
+      background: "#003594",
+      color: "#ffffff",
+      padding: "11px",
+      fontWeight: 900,
+      borderRadius: 0,
+      cursor: "pointer",
+      textTransform: "uppercase",
+      width: "100%",
+      fontSize: 13,
+    },
+    disabledButton: {
+      opacity: 0.45,
+      cursor: "not-allowed",
+    },
+    hintButton: {
+      border: "1px solid #EF3B24",
+      background: "#EF3B24",
+      color: "#ffffff",
+      padding: "10px",
+      fontWeight: 900,
+      borderRadius: 0,
+      cursor: "pointer",
+      textTransform: "uppercase",
+      width: "100%",
+      fontSize: 13,
+      marginTop: 8,
     },
     pillRow: {
       display: "flex",
-      gap: 8,
+      gap: 6,
       flexWrap: "wrap",
-      marginTop: 10,
+      marginTop: 8,
     },
     pill: {
       border: `1px solid ${theme.border}`,
       background: theme.pane,
       color: theme.text,
-      padding: "7px 9px",
-      fontSize: 12,
+      padding: "5px 7px",
+      fontSize: 10,
       fontWeight: 900,
       textTransform: "uppercase",
+    },
+    hintText: {
+      borderLeft: "3px solid #EF3B24",
+      paddingLeft: 9,
+      marginTop: 8,
+      fontSize: 13,
+      fontWeight: 800,
+      lineHeight: 1.35,
     },
     orange: {
       color: "#EF3B24",
@@ -368,7 +414,8 @@ export default function HomePage() {
     message: {
       fontWeight: 900,
       color: "#EF3B24",
-      marginTop: 10,
+      marginTop: 8,
+      fontSize: 13,
     },
   };
 
@@ -386,8 +433,10 @@ export default function HomePage() {
             <div style={styles.sub}>Daily player challenge</div>
           </div>
 
-          <button style={styles.button} onClick={() => setDarkMode(!darkMode)}>
-            {darkMode ? "Light" : "Dark"}
+          <button style={styles.iconButton} onClick={() => setDarkMode(!darkMode)}>
+            <span className="material-symbols-outlined">
+              {darkMode ? "light_mode" : "dark_mode"}
+            </span>
           </button>
         </div>
 
@@ -414,9 +463,7 @@ export default function HomePage() {
                   }}
                   onClick={() => resetGameState(c)}
                 >
-                  #{c.daily_slot}
-                  <br />
-                  {c.difficulty}
+                  #{c.daily_slot} · {c.difficulty}
                 </button>
               ))}
             </div>
@@ -424,62 +471,78 @@ export default function HomePage() {
             {activeChallenge && (
               <>
                 <section style={styles.card}>
-                  <div style={styles.label}>Challenge</div>
-                  <div style={styles.big}>
-                    {activeChallenge.team?.display_name || "Unknown Team"}
-                  </div>
-                  <div style={styles.sub}>
-                    {activeChallenge.decade} · {activeChallenge.season_range}
+                  <div style={styles.metaRow}>
+                    <div>
+                      <div style={styles.label}>Team</div>
+                      <div style={styles.big}>
+                        {activeChallenge.team?.display_name || "Unknown Team"}
+                      </div>
+                      <div style={styles.sub}>{activeChallenge.season_range}</div>
+                    </div>
+
+                    <div style={{ textAlign: "right" }}>
+                      <div style={styles.label}>Timer</div>
+                      <div style={{ ...styles.big, ...styles.orange }}>
+                        {secondsElapsed}s
+                      </div>
+                    </div>
                   </div>
 
-                  <div style={styles.pillRow}>
-                    <div style={styles.pill}>Time {secondsElapsed}s</div>
-                    <div style={styles.pill}>Misses {wrongGuesses.length}</div>
-                    <div style={styles.pill}>Hints {hintsShown}</div>
-                  </div>
+                  <button
+                    style={{
+                      ...styles.hintButton,
+                      ...(isSolved || hintsShown >= 3 ? styles.disabledButton : {}),
+                    }}
+                    onClick={revealHint}
+                    disabled={isSolved || hintsShown >= 3}
+                  >
+                    {hintsShown >= 3 ? "All Hints Revealed" : `Reveal Hint #${hintsShown + 1}`}
+                  </button>
+
+                  {hintsShown >= 1 && (
+                    <div style={styles.hintText}>Hint 1: {renderHint(hint1)}</div>
+                  )}
+                  {hintsShown >= 2 && (
+                    <div style={styles.hintText}>Hint 2: {renderHint(hint2)}</div>
+                  )}
+                  {hintsShown >= 3 && (
+                    <div style={styles.hintText}>Hint 3: {renderHint(hint3)}</div>
+                  )}
+                </section>
+
+                <section style={styles.card}>
+                  <div style={styles.label}>Stat line</div>
 
                   <div style={styles.statGrid}>
                     <div style={styles.statBox}>
                       <div style={styles.statLabel}>PTS</div>
-                      <div style={styles.statValue}>
-                        {formatStat(clue.points_per_game)}
-                      </div>
+                      <div style={styles.statValue}>{formatStat(clue.points_per_game)}</div>
                     </div>
-
                     <div style={styles.statBox}>
                       <div style={styles.statLabel}>REB</div>
-                      <div style={styles.statValue}>
-                        {formatStat(clue.rebounds_per_game)}
-                      </div>
+                      <div style={styles.statValue}>{formatStat(clue.rebounds_per_game)}</div>
                     </div>
-
                     <div style={styles.statBox}>
                       <div style={styles.statLabel}>AST</div>
-                      <div style={styles.statValue}>
-                        {formatStat(clue.assists_per_game)}
-                      </div>
+                      <div style={styles.statValue}>{formatStat(clue.assists_per_game)}</div>
                     </div>
-
                     <div style={styles.statBox}>
                       <div style={styles.statLabel}>STL</div>
-                      <div style={styles.statValue}>
-                        {formatStat(clue.steals_per_game)}
-                      </div>
+                      <div style={styles.statValue}>{formatStat(clue.steals_per_game)}</div>
                     </div>
-
                     <div style={styles.statBox}>
                       <div style={styles.statLabel}>BLK</div>
-                      <div style={styles.statValue}>
-                        {formatStat(clue.blocks_per_game)}
-                      </div>
+                      <div style={styles.statValue}>{formatStat(clue.blocks_per_game)}</div>
                     </div>
-
                     <div style={styles.statBox}>
                       <div style={styles.statLabel}>GS</div>
-                      <div style={styles.statValue}>
-                        {formatStat(clue.game_score)}
-                      </div>
+                      <div style={styles.statValue}>{formatStat(clue.game_score)}</div>
                     </div>
+                  </div>
+
+                  <div style={styles.pillRow}>
+                    <div style={styles.pill}>Misses {wrongGuesses.length}</div>
+                    <div style={styles.pill}>Hints {hintsShown}</div>
                   </div>
                 </section>
 
@@ -526,7 +589,7 @@ export default function HomePage() {
                     {message && <div style={styles.message}>{message}</div>}
 
                     {wrongGuesses.length > 0 && (
-                      <div style={{ marginTop: 12 }}>
+                      <div style={{ marginTop: 10 }}>
                         <div style={styles.label}>Wrong guesses</div>
                         <div style={styles.pillRow}>
                           {wrongGuesses.map((g, idx) => (
@@ -539,43 +602,6 @@ export default function HomePage() {
                     )}
                   </section>
                 )}
-
-                <section style={styles.card}>
-                  <div style={styles.label}>Hints</div>
-
-                  {hintsShown >= 1 && (
-                    <div style={{ marginBottom: 10 }}>
-                      <strong>Hint 1:</strong>{" "}
-                      {hint1.label || hint1.type || "Bio clue"}:{" "}
-                      {hint1.value || hint1.text || JSON.stringify(hint1)}
-                    </div>
-                  )}
-
-                  {hintsShown >= 2 && (
-                    <div style={{ marginBottom: 10 }}>
-                      <strong>Hint 2:</strong>{" "}
-                      {hint2.label || hint2.type || "Bio clue"}:{" "}
-                      {hint2.value || hint2.text || JSON.stringify(hint2)}
-                    </div>
-                  )}
-
-                  {hintsShown >= 3 && (
-                    <div style={{ marginBottom: 10 }}>
-                      <strong>Hint 3:</strong>{" "}
-                      {hint3.text || JSON.stringify(hint3)}
-                    </div>
-                  )}
-
-                  {!isSolved && hintsShown < 3 && (
-                    <button style={styles.button} onClick={revealHint}>
-                      Reveal Hint #{hintsShown + 1}
-                    </button>
-                  )}
-
-                  {!isSolved && hintsShown === 3 && (
-                    <div style={styles.sub}>All hints revealed.</div>
-                  )}
-                </section>
 
                 {isSolved && (
                   <section style={styles.card}>
@@ -590,18 +616,14 @@ export default function HomePage() {
                     <div style={styles.statGrid}>
                       <div style={styles.statBox}>
                         <div style={styles.statLabel}>Score</div>
-                        <div style={{ ...styles.statValue, ...styles.orange }}>
-                          {score}
-                        </div>
+                        <div style={{ ...styles.statValue, ...styles.orange }}>{score}</div>
                       </div>
-
                       <div style={styles.statBox}>
                         <div style={styles.statLabel}>Time</div>
                         <div style={styles.statValue}>{secondsElapsed}s</div>
                       </div>
-
                       <div style={styles.statBox}>
-                        <div style={styles.statLabel}>Misses</div>
+                        <div style={styles.statLabel}>Miss</div>
                         <div style={styles.statValue}>{wrongGuesses.length}</div>
                       </div>
                     </div>

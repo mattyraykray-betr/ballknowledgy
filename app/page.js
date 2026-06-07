@@ -19,29 +19,90 @@ function formatStat(value) {
   return num.toFixed(1);
 }
 
-function calculateScore({ secondsElapsed, wrongGuessCount, hintsUsed }) {
-  const base = 1000;
-  const timePenalty = Math.floor(secondsElapsed * 4);
-  const wrongPenalty = wrongGuessCount * 100;
-  const hintPenalty =
-    hintsUsed === 0 ? 0 : hintsUsed === 1 ? 75 : hintsUsed === 2 ? 175 : 350;
+function calculateScore({ secondsElapsed, wrongGuessCount, hintsUsed, gaveUp }) {
+  if (gaveUp) return 0;
+  return Math.max(
+    0,
+    1000 -
+      Math.floor(secondsElapsed * 4) -
+      wrongGuessCount * 100 -
+      (hintsUsed === 0 ? 0 : hintsUsed === 1 ? 75 : hintsUsed === 2 ? 175 : 350)
+  );
+}
 
-  return Math.max(0, base - timePenalty - wrongPenalty - hintPenalty);
+function cleanLabel(value) {
+  if (!value) return "";
+  return String(value)
+    .replaceAll("_", " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function renderHint(hint) {
   if (!hint || Object.keys(hint).length === 0) return null;
 
-  if (hint.label && hint.value) return `${hint.label}: ${hint.value}`;
-  if (hint.type && hint.value) return `${hint.type}: ${hint.value}`;
+  if (hint.college_name) return `College: ${hint.college_name}`;
+  if (hint.college && typeof hint.college === "string" && !/^\d+$/.test(hint.college)) {
+    return `College: ${hint.college}`;
+  }
+
+  if (hint.label && hint.value) {
+    const label = cleanLabel(hint.label);
+    if (label.toLowerCase().includes("college") && /^\d+$/.test(String(hint.value))) {
+      return "College: available after college-name lookup";
+    }
+    return `${label}: ${hint.value}`;
+  }
+
+  if (hint.type && hint.value) {
+    const label = cleanLabel(hint.type);
+    if (label.toLowerCase().includes("college") && /^\d+$/.test(String(hint.value))) {
+      return "College: available after college-name lookup";
+    }
+    return `${label}: ${hint.value}`;
+  }
+
   if (hint.text) return hint.text;
 
-  if (hint.teammates && Array.isArray(hint.teammates)) {
-    return `Season: ${hint.season_label || hint.season_year}. Teammates: ${hint.teammates.join(", ")}`;
+  const teammates =
+    hint.teammates || hint.top_teammates || hint.players || hint.names || hint.value;
+
+  if (Array.isArray(teammates)) {
+    const cleaned = teammates
+      .map((t) => {
+        if (typeof t === "string") return t;
+        if (t?.full_name) return t.full_name;
+        if (t?.name) return t.name;
+        if (t?.player_name) return t.player_name;
+        return null;
+      })
+      .filter(Boolean);
+
+    if (cleaned.length > 0) {
+      return `Exact year: ${hint.season_label || hint.season_year || ""}. Teammates: ${cleaned.join(", ")}`;
+    }
   }
 
   return Object.entries(hint)
-    .map(([key, value]) => `${key}: ${Array.isArray(value) ? value.join(", ") : value}`)
+    .filter(([key]) => !["player_id", "college_id", "team_id"].includes(key))
+    .map(([key, value]) => {
+      if (Array.isArray(value)) {
+        const arr = value
+          .map((v) => {
+            if (typeof v === "string") return v;
+            if (v?.full_name) return v.full_name;
+            if (v?.name) return v.name;
+            if (v?.player_name) return v.player_name;
+            return null;
+          })
+          .filter(Boolean);
+
+        return `${cleanLabel(key)}: ${arr.join(", ")}`;
+      }
+
+      if (typeof value === "object") return null;
+      return `${cleanLabel(key)}: ${value}`;
+    })
+    .filter(Boolean)
     .join(" · ");
 }
 
@@ -49,6 +110,8 @@ export default function HomePage() {
   const [selectedDate, setSelectedDate] = useState(todayLocal());
   const [challenges, setChallenges] = useState([]);
   const [activeChallenge, setActiveChallenge] = useState(null);
+  const [selectedDifficulty, setSelectedDifficulty] = useState("easy");
+  const [hasStarted, setHasStarted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
 
@@ -58,8 +121,9 @@ export default function HomePage() {
   const [wrongGuesses, setWrongGuesses] = useState([]);
   const [hintsShown, setHintsShown] = useState(0);
   const [isSolved, setIsSolved] = useState(false);
+  const [gaveUp, setGaveUp] = useState(false);
   const [score, setScore] = useState(null);
-  const [startedAt, setStartedAt] = useState(Date.now());
+  const [startedAt, setStartedAt] = useState(null);
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [message, setMessage] = useState("");
 
@@ -85,7 +149,7 @@ export default function HomePage() {
         };
   }, [darkMode]);
 
-  function resetGameState(challenge) {
+  function resetGameState(challenge, keepStarted = false) {
     setActiveChallenge(challenge);
     setQuery("");
     setPlayerResults([]);
@@ -93,10 +157,18 @@ export default function HomePage() {
     setWrongGuesses([]);
     setHintsShown(0);
     setIsSolved(false);
+    setGaveUp(false);
     setScore(null);
-    setStartedAt(Date.now());
     setSecondsElapsed(0);
     setMessage("");
+
+    if (keepStarted && challenge) {
+      setStartedAt(Date.now());
+      setHasStarted(true);
+    } else {
+      setStartedAt(null);
+      setHasStarted(false);
+    }
   }
 
   async function loadChallenges(dateValue) {
@@ -117,8 +189,20 @@ export default function HomePage() {
         hint_1_json,
         hint_2_json,
         hint_3_json,
-        team:nba_teams(display_name, abbreviation),
-        player:nba_players(full_name)
+        team:nba_teams(display_name, abbreviation, logo_url),
+        player:nba_players(full_name),
+        season:nba_player_seasons(
+          games_played,
+          games_started,
+          minutes_per_game,
+          points_per_game,
+          rebounds_per_game,
+          assists_per_game,
+          steals_per_game,
+          blocks_per_game,
+          game_score,
+          eff
+        )
       `)
       .eq("challenge_date", dateValue)
       .eq("is_active", true)
@@ -127,10 +211,16 @@ export default function HomePage() {
     if (error) {
       console.error(error);
       setChallenges([]);
-      setActiveChallenge(null);
+      resetGameState(null);
     } else {
-      setChallenges(data || []);
-      resetGameState(data?.[0] || null);
+      const rows = data || [];
+      setChallenges(rows);
+
+      const preferred =
+        rows.find((c) => c.difficulty === selectedDifficulty) || rows[0] || null;
+
+      resetGameState(preferred);
+      if (preferred?.difficulty) setSelectedDifficulty(preferred.difficulty);
     }
 
     setLoading(false);
@@ -160,50 +250,88 @@ export default function HomePage() {
     }
   }
 
+  function chooseDifficulty(difficulty) {
+    setSelectedDifficulty(difficulty);
+    const challenge = challenges.find((c) => c.difficulty === difficulty);
+    resetGameState(challenge || null);
+  }
+
+  function startGame() {
+    const challenge =
+      challenges.find((c) => c.difficulty === selectedDifficulty) || challenges[0];
+
+    if (!challenge) return;
+
+    resetGameState(challenge, true);
+  }
+
+  function finishChallenge({ correct, gaveUpNow, outOfGuesses }) {
+    const finalSeconds = startedAt ? Math.floor((Date.now() - startedAt) / 1000) : 0;
+    const finalScore = calculateScore({
+      secondsElapsed: finalSeconds,
+      wrongGuessCount: wrongGuesses.length,
+      hintsUsed: hintsShown,
+      gaveUp: gaveUpNow || outOfGuesses,
+    });
+
+    setIsSolved(correct);
+    setGaveUp(gaveUpNow || outOfGuesses);
+    setSecondsElapsed(finalSeconds);
+    setScore(finalScore);
+
+    if (correct) setMessage("Correct.");
+    else if (gaveUpNow) setMessage("Answer revealed.");
+    else setMessage("Out of guesses. Answer revealed.");
+  }
+
   function submitGuess() {
-    if (!activeChallenge || !selectedPlayer || isSolved) return;
+    if (!activeChallenge || !selectedPlayer || isSolved || gaveUp) return;
 
     if (selectedPlayer.id === activeChallenge.player_id) {
-      const finalSeconds = Math.floor((Date.now() - startedAt) / 1000);
-      const finalScore = calculateScore({
-        secondsElapsed: finalSeconds,
-        wrongGuessCount: wrongGuesses.length,
-        hintsUsed: hintsShown,
-      });
+      finishChallenge({ correct: true, gaveUpNow: false, outOfGuesses: false });
+      return;
+    }
 
-      setIsSolved(true);
-      setSecondsElapsed(finalSeconds);
-      setScore(finalScore);
-      setMessage("Correct.");
+    const nextWrongGuesses = [...wrongGuesses, selectedPlayer];
+    setWrongGuesses(nextWrongGuesses);
+    setHintsShown((prev) => Math.min(3, prev + 1));
+    setQuery("");
+    setSelectedPlayer(null);
+    setPlayerResults([]);
+
+    if (nextWrongGuesses.length >= 10) {
+      finishChallenge({ correct: false, gaveUpNow: false, outOfGuesses: true });
     } else {
-      setWrongGuesses((prev) => [...prev, selectedPlayer]);
-      setHintsShown((prev) => Math.min(3, prev + 1));
       setMessage("Incorrect. Hint revealed.");
-      setQuery("");
-      setSelectedPlayer(null);
-      setPlayerResults([]);
     }
   }
 
   function revealHint() {
-    if (hintsShown < 3 && !isSolved) {
+    if (hintsShown < 3 && !isSolved && !gaveUp) {
       setHintsShown((prev) => prev + 1);
     }
   }
 
+  function giveUp() {
+    if (!activeChallenge || isSolved || gaveUp) return;
+    setHintsShown(3);
+    finishChallenge({ correct: false, gaveUpNow: true, outOfGuesses: false });
+  }
+
   useEffect(() => {
     loadChallenges(selectedDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
   useEffect(() => {
-    if (!activeChallenge || isSolved) return;
+    if (!activeChallenge || !hasStarted || isSolved || gaveUp || !startedAt) return;
 
     const timer = setInterval(() => {
       setSecondsElapsed(Math.floor((Date.now() - startedAt) / 1000));
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [activeChallenge, startedAt, isSolved]);
+  }, [activeChallenge, startedAt, isSolved, gaveUp, hasStarted]);
 
   const styles = {
     page: {
@@ -261,6 +389,21 @@ export default function HomePage() {
       fontSize: 12,
       marginBottom: 10,
     },
+    setupHero: {
+      background: theme.card,
+      border: `1px solid ${theme.border}`,
+      borderRadius: 0,
+      padding: 14,
+      marginBottom: 10,
+    },
+    setupTitle: {
+      fontSize: 34,
+      fontWeight: 950,
+      letterSpacing: "-0.06em",
+      textTransform: "uppercase",
+      margin: "8px 0 2px",
+      lineHeight: 0.95,
+    },
     tabs: {
       display: "grid",
       gridTemplateColumns: "repeat(3, 1fr)",
@@ -268,7 +411,7 @@ export default function HomePage() {
       marginBottom: 10,
     },
     tab: {
-      padding: "7px 5px",
+      padding: "8px 5px",
       border: `1px solid ${theme.border}`,
       background: theme.card,
       color: theme.text,
@@ -284,6 +427,19 @@ export default function HomePage() {
       background: "#003594",
       color: "#ffffff",
       border: "1px solid #003594",
+    },
+    startButton: {
+      border: "1px solid #EF3B24",
+      background: "#EF3B24",
+      color: "#ffffff",
+      padding: "15px",
+      fontWeight: 950,
+      borderRadius: 0,
+      cursor: "pointer",
+      textTransform: "uppercase",
+      width: "100%",
+      fontSize: 18,
+      letterSpacing: "-0.03em",
     },
     card: {
       background: theme.card,
@@ -304,6 +460,17 @@ export default function HomePage() {
       fontSize: 21,
       fontWeight: 900,
       marginBottom: 2,
+    },
+    teamRow: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+    },
+    logo: {
+      width: 30,
+      height: 30,
+      objectFit: "contain",
+      flexShrink: 0,
     },
     metaRow: {
       display: "flex",
@@ -368,6 +535,19 @@ export default function HomePage() {
       width: "100%",
       fontSize: 13,
     },
+    dangerButton: {
+      border: "1px solid #EF3B24",
+      background: "transparent",
+      color: "#EF3B24",
+      padding: "10px",
+      fontWeight: 900,
+      borderRadius: 0,
+      cursor: "pointer",
+      textTransform: "uppercase",
+      width: "100%",
+      fontSize: 13,
+      marginTop: 8,
+    },
     disabledButton: {
       opacity: 0.45,
       cursor: "not-allowed",
@@ -420,9 +600,11 @@ export default function HomePage() {
   };
 
   const clue = activeChallenge?.starting_clue_json || {};
+  const season = activeChallenge?.season || {};
   const hint1 = activeChallenge?.hint_1_json || {};
   const hint2 = activeChallenge?.hint_2_json || {};
   const hint3 = activeChallenge?.hint_3_json || {};
+  const ended = isSolved || gaveUp || wrongGuesses.length >= 10;
 
   return (
     <main style={styles.page}>
@@ -440,17 +622,54 @@ export default function HomePage() {
           </button>
         </div>
 
-        <input
-          style={styles.dateInput}
-          type="date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-        />
-
         {loading ? (
           <div style={styles.card}>Loading challenges...</div>
         ) : challenges.length === 0 ? (
-          <div style={styles.card}>No challenges found for this date.</div>
+          <>
+            <input
+              style={styles.dateInput}
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            />
+            <div style={styles.card}>No challenges found for this date.</div>
+          </>
+        ) : !hasStarted ? (
+          <>
+            <section style={styles.setupHero}>
+              <div style={styles.label}>Daily Challenge</div>
+              <div style={styles.setupTitle}>Guess The Player</div>
+              <div style={styles.sub}>
+                Pick a date, choose your difficulty, then start the clock.
+              </div>
+            </section>
+
+            <input
+              style={styles.dateInput}
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+            />
+
+            <div style={styles.tabs}>
+              {["easy", "medium", "hard"].map((difficulty) => (
+                <button
+                  key={difficulty}
+                  style={{
+                    ...styles.tab,
+                    ...(selectedDifficulty === difficulty ? styles.activeTab : {}),
+                  }}
+                  onClick={() => chooseDifficulty(difficulty)}
+                >
+                  {difficulty}
+                </button>
+              ))}
+            </div>
+
+            <button style={styles.startButton} onClick={startGame}>
+              Start
+            </button>
+          </>
         ) : (
           <>
             <div style={styles.tabs}>
@@ -461,7 +680,10 @@ export default function HomePage() {
                     ...styles.tab,
                     ...(activeChallenge?.id === c.id ? styles.activeTab : {}),
                   }}
-                  onClick={() => resetGameState(c)}
+                  onClick={() => {
+                    setSelectedDifficulty(c.difficulty);
+                    resetGameState(c, true);
+                  }}
                 >
                   #{c.daily_slot} · {c.difficulty}
                 </button>
@@ -470,83 +692,7 @@ export default function HomePage() {
 
             {activeChallenge && (
               <>
-                <section style={styles.card}>
-                  <div style={styles.metaRow}>
-                    <div>
-                      <div style={styles.label}>Team</div>
-                      <div style={styles.big}>
-                        {activeChallenge.team?.display_name || "Unknown Team"}
-                      </div>
-                      <div style={styles.sub}>{activeChallenge.season_range}</div>
-                    </div>
-
-                    <div style={{ textAlign: "right" }}>
-                      <div style={styles.label}>Timer</div>
-                      <div style={{ ...styles.big, ...styles.orange }}>
-                        {secondsElapsed}s
-                      </div>
-                    </div>
-                  </div>
-
-                  <button
-                    style={{
-                      ...styles.hintButton,
-                      ...(isSolved || hintsShown >= 3 ? styles.disabledButton : {}),
-                    }}
-                    onClick={revealHint}
-                    disabled={isSolved || hintsShown >= 3}
-                  >
-                    {hintsShown >= 3 ? "All Hints Revealed" : `Reveal Hint #${hintsShown + 1}`}
-                  </button>
-
-                  {hintsShown >= 1 && (
-                    <div style={styles.hintText}>Hint 1: {renderHint(hint1)}</div>
-                  )}
-                  {hintsShown >= 2 && (
-                    <div style={styles.hintText}>Hint 2: {renderHint(hint2)}</div>
-                  )}
-                  {hintsShown >= 3 && (
-                    <div style={styles.hintText}>Hint 3: {renderHint(hint3)}</div>
-                  )}
-                </section>
-
-                <section style={styles.card}>
-                  <div style={styles.label}>Stat line</div>
-
-                  <div style={styles.statGrid}>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>PTS</div>
-                      <div style={styles.statValue}>{formatStat(clue.points_per_game)}</div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>REB</div>
-                      <div style={styles.statValue}>{formatStat(clue.rebounds_per_game)}</div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>AST</div>
-                      <div style={styles.statValue}>{formatStat(clue.assists_per_game)}</div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>STL</div>
-                      <div style={styles.statValue}>{formatStat(clue.steals_per_game)}</div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>BLK</div>
-                      <div style={styles.statValue}>{formatStat(clue.blocks_per_game)}</div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>GS</div>
-                      <div style={styles.statValue}>{formatStat(clue.game_score)}</div>
-                    </div>
-                  </div>
-
-                  <div style={styles.pillRow}>
-                    <div style={styles.pill}>Misses {wrongGuesses.length}</div>
-                    <div style={styles.pill}>Hints {hintsShown}</div>
-                  </div>
-                </section>
-
-                {!isSolved && (
+                {!ended && (
                   <section style={styles.card}>
                     <div style={styles.label}>Guess the player</div>
 
@@ -586,29 +732,116 @@ export default function HomePage() {
                       Submit Guess
                     </button>
 
-                    {message && <div style={styles.message}>{message}</div>}
+                    <button style={styles.dangerButton} onClick={giveUp}>
+                      Give Up
+                    </button>
 
-                    {wrongGuesses.length > 0 && (
-                      <div style={{ marginTop: 10 }}>
-                        <div style={styles.label}>Wrong guesses</div>
-                        <div style={styles.pillRow}>
-                          {wrongGuesses.map((g, idx) => (
-                            <div key={`${g.id}-${idx}`} style={styles.pill}>
-                              {g.full_name}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    {message && <div style={styles.message}>{message}</div>}
                   </section>
                 )}
 
-                {isSolved && (
+                <section style={styles.card}>
+                  <div style={styles.metaRow}>
+                    <div>
+                      <div style={styles.label}>Team</div>
+                      <div style={styles.teamRow}>
+                        {activeChallenge.team?.logo_url && (
+                          <img src={activeChallenge.team.logo_url} alt="" style={styles.logo} />
+                        )}
+                        <div style={styles.big}>
+                          {activeChallenge.team?.display_name || "Unknown Team"}
+                        </div>
+                      </div>
+                      <div style={styles.sub}>{activeChallenge.season_range}</div>
+                    </div>
+
+                    <div style={{ textAlign: "right" }}>
+                      <div style={styles.label}>Timer</div>
+                      <div style={{ ...styles.big, ...styles.orange }}>{secondsElapsed}s</div>
+                    </div>
+                  </div>
+
+                  <button
+                    style={{
+                      ...styles.hintButton,
+                      ...(ended || hintsShown >= 3 ? styles.disabledButton : {}),
+                    }}
+                    onClick={revealHint}
+                    disabled={ended || hintsShown >= 3}
+                  >
+                    {hintsShown >= 3 ? "All Hints Revealed" : `Reveal Hint #${hintsShown + 1}`}
+                  </button>
+
+                  {hintsShown >= 1 && <div style={styles.hintText}>Hint 1: {renderHint(hint1)}</div>}
+                  {hintsShown >= 2 && <div style={styles.hintText}>Hint 2: {renderHint(hint2)}</div>}
+                  {hintsShown >= 3 && <div style={styles.hintText}>Hint 3: {renderHint(hint3)}</div>}
+                </section>
+
+                <section style={styles.card}>
+                  <div style={styles.label}>Stat line</div>
+
+                  <div style={styles.statGrid}>
+                    <div style={styles.statBox}>
+                      <div style={styles.statLabel}>PTS</div>
+                      <div style={styles.statValue}>
+                        {formatStat(season.points_per_game ?? clue.points_per_game)}
+                      </div>
+                    </div>
+                    <div style={styles.statBox}>
+                      <div style={styles.statLabel}>REB</div>
+                      <div style={styles.statValue}>
+                        {formatStat(season.rebounds_per_game ?? clue.rebounds_per_game)}
+                      </div>
+                    </div>
+                    <div style={styles.statBox}>
+                      <div style={styles.statLabel}>AST</div>
+                      <div style={styles.statValue}>
+                        {formatStat(season.assists_per_game ?? clue.assists_per_game)}
+                      </div>
+                    </div>
+                    <div style={styles.statBox}>
+                      <div style={styles.statLabel}>STL</div>
+                      <div style={styles.statValue}>
+                        {formatStat(season.steals_per_game ?? clue.steals_per_game)}
+                      </div>
+                    </div>
+                    <div style={styles.statBox}>
+                      <div style={styles.statLabel}>BLK</div>
+                      <div style={styles.statValue}>
+                        {formatStat(season.blocks_per_game ?? clue.blocks_per_game)}
+                      </div>
+                    </div>
+                    <div style={styles.statBox}>
+                      <div style={styles.statLabel}>GS</div>
+                      <div style={styles.statValue}>
+                        {formatStat(season.game_score ?? clue.game_score)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={styles.pillRow}>
+                    <div style={styles.pill}>Misses {wrongGuesses.length}/10</div>
+                    <div style={styles.pill}>Hints {hintsShown}</div>
+                  </div>
+
+                  {wrongGuesses.length > 0 && (
+                    <div style={{ marginTop: 10 }}>
+                      <div style={styles.label}>Wrong guesses</div>
+                      <div style={styles.pillRow}>
+                        {wrongGuesses.map((g, idx) => (
+                          <div key={`${g.id}-${idx}`} style={styles.pill}>
+                            {g.full_name}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </section>
+
+                {ended && (
                   <section style={styles.card}>
                     <div style={styles.label}>Result</div>
-                    <div style={styles.big}>
-                      Correct: {activeChallenge.player?.full_name}
-                    </div>
+                    <div style={styles.big}>Answer: {activeChallenge.player?.full_name}</div>
                     <div style={styles.sub}>
                       {activeChallenge.season_label} · {activeChallenge.team?.abbreviation}
                     </div>
@@ -616,7 +849,7 @@ export default function HomePage() {
                     <div style={styles.statGrid}>
                       <div style={styles.statBox}>
                         <div style={styles.statLabel}>Score</div>
-                        <div style={{ ...styles.statValue, ...styles.orange }}>{score}</div>
+                        <div style={{ ...styles.statValue, ...styles.orange }}>{score ?? 0}</div>
                       </div>
                       <div style={styles.statBox}>
                         <div style={styles.statLabel}>Time</div>

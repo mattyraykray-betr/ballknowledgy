@@ -379,7 +379,7 @@ export default function HomePage() {
       border: `1px solid ${theme.border}`,
       background: theme.card,
       color: theme.text,
-      borderRadius: 0,
+      borderRadius: 6,
       cursor: "pointer",
       display: "flex",
       alignItems: "center",
@@ -391,14 +391,14 @@ export default function HomePage() {
       border: `1px solid ${theme.border}`,
       background: theme.input,
       color: theme.text,
-      borderRadius: 0,
+      borderRadius: 6,
       fontSize: 12,
       marginBottom: 10,
     },
     setupHero: {
       background: theme.card,
       border: `1px solid ${theme.border}`,
-      borderRadius: 0,
+      borderRadius: 6,
       padding: 14,
       marginBottom: 10,
     },
@@ -421,7 +421,7 @@ export default function HomePage() {
       border: `1px solid ${theme.border}`,
       background: theme.card,
       color: theme.text,
-      borderRadius: 0,
+      borderRadius: 6,
       fontWeight: 900,
       cursor: "pointer",
       textAlign: "center",
@@ -430,9 +430,10 @@ export default function HomePage() {
       lineHeight: 1.15,
     },
     activeTab: {
-      background: "#003594",
-      color: "#ffffff",
-      border: "1px solid #003594",
+      background: "transparent",
+      color: theme.text,
+      border: `1px solid ${theme.border}`,
+      borderBottom: "3px solid #EF3B24",
     },
     startButton: {
       border: "1px solid #EF3B24",
@@ -440,7 +441,7 @@ export default function HomePage() {
       color: "#ffffff",
       padding: "15px",
       fontWeight: 950,
-      borderRadius: 0,
+      borderRadius: 6,
       cursor: "pointer",
       textTransform: "uppercase",
       width: "100%",
@@ -450,7 +451,7 @@ export default function HomePage() {
     card: {
       background: theme.card,
       border: `1px solid ${theme.border}`,
-      borderRadius: 0,
+      borderRadius: 6,
       padding: 12,
       marginBottom: 10,
     },
@@ -513,7 +514,7 @@ export default function HomePage() {
       border: `1px solid ${theme.border}`,
       background: theme.input,
       color: theme.text,
-      borderRadius: 0,
+      borderRadius: 6,
       fontSize: 15,
       marginBottom: 7,
     },
@@ -535,7 +536,7 @@ export default function HomePage() {
       color: "#ffffff",
       padding: "11px",
       fontWeight: 900,
-      borderRadius: 0,
+      borderRadius: 6,
       cursor: "pointer",
       textTransform: "uppercase",
       width: "100%",
@@ -547,7 +548,7 @@ export default function HomePage() {
       color: "#EF3B24",
       padding: "10px",
       fontWeight: 900,
-      borderRadius: 0,
+      borderRadius: 6,
       cursor: "pointer",
       textTransform: "uppercase",
       width: "100%",
@@ -564,7 +565,7 @@ export default function HomePage() {
       color: "#ffffff",
       padding: "10px",
       fontWeight: 900,
-      borderRadius: 0,
+      borderRadius: 6,
       cursor: "pointer",
       textTransform: "uppercase",
       width: "100%",
@@ -712,14 +713,14 @@ export default function HomePage() {
             <div style={styles.tabs}>
               {["easy", "medium", "hard"].map((difficulty) => (
                 <button
-                  key={difficulty}
+                  key={difficultyLabel(difficulty)}
                   style={{
                     ...styles.tab,
                     ...(selectedDifficulty === difficulty ? styles.activeTab : {}),
                   }}
                   onClick={() => chooseDifficulty(difficulty)}
                 >
-                  {difficulty}
+                  {difficultyLabel(difficulty)}
                 </button>
               ))}
             </div>
@@ -743,7 +744,7 @@ export default function HomePage() {
                     resetGameState(c, true);
                   }}
                 >
-                  #{c.daily_slot} · {c.difficulty}
+                  #{c.daily_slot} · {difficultyLabel(c.difficulty)}
                 </button>
               ))}
             </div>

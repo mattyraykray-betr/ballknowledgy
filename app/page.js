@@ -37,6 +37,20 @@ function calculateScore({ secondsElapsed, wrongGuessCount, hintsUsed, gaveUp }) 
   );
 }
 
+function getScoreColor(score) {
+  if (score >= 850) return "#00C853";
+  if (score >= 700) return "#64DD17";
+  if (score >= 500) return "#FFD600";
+  if (score >= 300) return "#FF9100";
+  return "#EF3B24";
+}
+
+function getResultColor({ isSolved, gaveUp, wrongGuesses }) {
+  if (isSolved) return "#00C853";
+  if (gaveUp || wrongGuesses.length >= 10) return "#EF3B24";
+  return null;
+}
+
 function cleanLabel(value) {
   if (!value) return "";
   return String(value)
@@ -259,7 +273,7 @@ export default function HomePage() {
   function chooseDifficulty(difficulty) {
     setSelectedDifficulty(difficulty);
     const challenge = challenges.find((c) => c.difficulty === difficulty);
-    resetGameState(challenge || null);
+    resetGameState(challenge || null, false);
   }
 
   function startGame() {
@@ -656,6 +670,49 @@ export default function HomePage() {
       fontWeight: 850,
       lineHeight: 1.25,
     },
+    guessRow: {
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      border: `1px solid ${theme.border}`,
+      background: theme.pane,
+      padding: "5px 7px",
+      fontSize: 10,
+      fontWeight: 900,
+      textTransform: "uppercase",
+      borderRadius: 6,
+    },
+    
+    wrongX: {
+      color: "#EF3B24",
+      fontWeight: 950,
+    },
+    
+    correctCheck: {
+      color: "#00C853",
+      fontWeight: 950,
+      marginRight: 6,
+    },
+    
+    searchSubmitRow: {
+      display: "grid",
+      gridTemplateColumns: "1fr 92px",
+      gap: 7,
+      alignItems: "start",
+    },
+    
+    smallSubmitButton: {
+      border: `1px solid ${selectedPlayer ? "#003594" : theme.border}`,
+      background: selectedPlayer ? "#003594" : theme.pane,
+      color: selectedPlayer ? "#ffffff" : theme.muted,
+      padding: "11px 8px",
+      fontWeight: 900,
+      borderRadius: 6,
+      cursor: selectedPlayer ? "pointer" : "not-allowed",
+      textTransform: "uppercase",
+      width: "100%",
+      fontSize: 12,
+    },
   };
 
   const clue = activeChallenge?.starting_clue_json || {};
@@ -741,64 +798,58 @@ export default function HomePage() {
                   }}
                   onClick={() => {
                     setSelectedDifficulty(c.difficulty);
-                    resetGameState(c, true);
+                    resetGameState(c, false);
                   }}
                 >
                   #{c.daily_slot} · {difficultyLabel(c.difficulty)}
                 </button>
               ))}
+              {!ended && (
+                <section style={styles.card}>
+                  <div style={styles.label}>Guess the player</div>
+
+                    <div style={styles.searchSubmitRow}>
+                      <input
+                        style={styles.input}
+                        value={query}
+                        onChange={(e) => searchPlayers(e.target.value)}
+                        placeholder="Search player..."
+                      />
+                    
+                      <button
+                        style={styles.smallSubmitButton}
+                        disabled={!selectedPlayer}
+                        onClick={submitGuess}
+                      >
+                        Submit
+                      </button>
+                    </div>
+                    
+                    {playerResults.length > 0 && (
+                      <div style={styles.resultList}>
+                      {playerResults.map((p) => (
+                        <div
+                          key={p.id}
+                          style={styles.resultItem}
+                          onClick={() => {
+                            setSelectedPlayer(p);
+                            setQuery(p.full_name);
+                            setPlayerResults([]);
+                          }}
+                        >
+                          {p.full_name}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {message && <div style={styles.message}>{message}</div>}
+                </section>
+              )}                
             </div>
 
             {activeChallenge && (
               <>
-                {!ended && (
-                  <section style={styles.card}>
-                    <div style={styles.label}>Guess the player</div>
-
-                    <input
-                      style={styles.input}
-                      value={query}
-                      onChange={(e) => searchPlayers(e.target.value)}
-                      placeholder="Search player..."
-                    />
-
-                    {playerResults.length > 0 && (
-                      <div style={styles.resultList}>
-                        {playerResults.map((p) => (
-                          <div
-                            key={p.id}
-                            style={styles.resultItem}
-                            onClick={() => {
-                              setSelectedPlayer(p);
-                              setQuery(p.full_name);
-                              setPlayerResults([]);
-                            }}
-                          >
-                            {p.full_name}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    <button
-                      style={{
-                        ...styles.primaryButton,
-                        ...(!selectedPlayer ? styles.disabledButton : {}),
-                      }}
-                      disabled={!selectedPlayer}
-                      onClick={submitGuess}
-                    >
-                      Submit Guess
-                    </button>
-
-                    <button style={styles.dangerButton} onClick={giveUp}>
-                      Give Up
-                    </button>
-
-                    {message && <div style={styles.message}>{message}</div>}
-                  </section>
-                )}
-
                 <section style={styles.card}>
                   <div style={styles.metaRow}>
                     <div>
@@ -834,6 +885,12 @@ export default function HomePage() {
                   >
                     {hintsShown >= 3 ? "All Hints Revealed" : `Reveal Hint #${hintsShown + 1}`}
                   </button>
+
+                  {!ended && (
+                    <button style={styles.dangerButton} onClick={giveUp}>
+                      Give Up
+                    </button>
+                  )}
 
                   {hintsShown >= 1 && (
                     <div style={styles.hintText}>
@@ -903,29 +960,12 @@ export default function HomePage() {
                       </div>
                     </div>
                   </div>
-
-                  <div style={styles.pillRow}>
-                    <div style={styles.pill}>Misses {wrongGuesses.length}/10</div>
-                    <div style={styles.pill}>Hints {hintsShown}</div>
-                  </div>
-
-                  {wrongGuesses.length > 0 && (
-                    <div style={{ marginTop: 10 }}>
-                      <div style={styles.label}>Wrong guesses</div>
-                      <div style={styles.pillRow}>
-                        {wrongGuesses.map((g, idx) => (
-                          <div key={`${g.id}-${idx}`} style={styles.pill}>
-                            {g.full_name}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </section>
 
                 {ended && (
                   <section style={styles.card}>
                     <div style={styles.label}>Result</div>
+                
                     {activeChallenge.player?.headshot_url && (
                       <img
                         src={activeChallenge.player.headshot_url}
@@ -933,26 +973,62 @@ export default function HomePage() {
                         style={styles.headshot}
                       />
                     )}
-                    
-                    <div style={styles.big}>Answer: {activeChallenge.player?.full_name}</div>
+                
+                    <div
+                      style={{
+                        ...styles.big,
+                        color: getResultColor({ isSolved, gaveUp, wrongGuesses }) || theme.text,
+                      }}
+                    >
+                      {isSolved ? (
+                        <span style={styles.correctCheck}>✓</span>
+                      ) : (
+                        <span style={styles.wrongX}>✕</span>
+                      )}
+                      Answer: {activeChallenge.player?.full_name}
+                    </div>
+                
                     <div style={styles.sub}>
                       {activeChallenge.season_label} · {activeChallenge.team?.abbreviation}
                     </div>
-
+                
                     <div style={styles.statGrid}>
                       <div style={styles.statBox}>
                         <div style={styles.statLabel}>Score</div>
-                        <div style={{ ...styles.statValue, ...styles.orange }}>{score ?? 0}</div>
+                        <div
+                          style={{
+                            ...styles.statValue,
+                            color: getScoreColor(score ?? 0),
+                          }}
+                        >
+                          {score ?? 0}
+                        </div>
                       </div>
+                
                       <div style={styles.statBox}>
                         <div style={styles.statLabel}>Time</div>
                         <div style={styles.statValue}>{secondsElapsed}s</div>
                       </div>
+                
                       <div style={styles.statBox}>
                         <div style={styles.statLabel}>Miss</div>
                         <div style={styles.statValue}>{wrongGuesses.length}</div>
                       </div>
                     </div>
+                
+                    {wrongGuesses.length > 0 && (
+                      <div style={{ marginTop: 10 }}>
+                        <div style={styles.label}>Wrong guesses</div>
+                        <div style={styles.pillRow}>
+                          {wrongGuesses.map((g, idx) => (
+                            <div key={`${g.id}-${idx}`} style={styles.guessRow}>
+                              <span style={styles.wrongX}>✕</span>
+                              {g.full_name}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </section>
                 )}
               </>

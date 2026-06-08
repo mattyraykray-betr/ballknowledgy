@@ -696,8 +696,8 @@ export default function HomePage() {
     
     searchSubmitRow: {
       display: "grid",
-      gridTemplateColumns: "1fr 92px",
-      gap: 7,
+      gridTemplateColumns: "4fr 1fr",
+      gap: 8,
       alignItems: "start",
     },
     
@@ -804,49 +804,115 @@ export default function HomePage() {
                   #{c.daily_slot} · {difficultyLabel(c.difficulty)}
                 </button>
               ))}
-              {!ended && (
-                <section style={styles.card}>
-                  <div style={styles.label}>Guess the player</div>
-
-                    <div style={styles.searchSubmitRow}>
-                      <input
-                        style={styles.input}
-                        value={query}
-                        onChange={(e) => searchPlayers(e.target.value)}
-                        placeholder="Search player..."
-                      />
-                    
-                      <button
-                        style={styles.smallSubmitButton}
-                        disabled={!selectedPlayer}
-                        onClick={submitGuess}
-                      >
-                        Submit
-                      </button>
+            </div>
+            
+            {ended && (
+              <section style={styles.card}>
+                <div style={styles.label}>Result</div>
+            
+                {activeChallenge.player?.headshot_url && (
+                  <img
+                    src={activeChallenge.player.headshot_url}
+                    alt={activeChallenge.player.full_name || "Player headshot"}
+                    style={styles.headshot}
+                  />
+                )}
+            
+                <div
+                  style={{
+                    ...styles.big,
+                    color: getResultColor({ isSolved, gaveUp, wrongGuesses }) || theme.text,
+                  }}
+                >
+                  {isSolved ? (
+                    <span style={styles.correctCheck}>✓</span>
+                  ) : (
+                    <span style={styles.wrongX}>✕</span>
+                  )}
+                  Answer: {activeChallenge.player?.full_name}
+                </div>
+            
+                <div style={styles.sub}>
+                  {activeChallenge.season_label} · {activeChallenge.team?.abbreviation}
+                </div>
+            
+                <div style={styles.statGrid}>
+                  <div style={styles.statBox}>
+                    <div style={styles.statLabel}>Score</div>
+                    <div style={{ ...styles.statValue, color: getScoreColor(score ?? 0) }}>
+                      {score ?? 0}
                     </div>
-                    
-                    {playerResults.length > 0 && (
-                      <div style={styles.resultList}>
-                      {playerResults.map((p) => (
-                        <div
-                          key={p.id}
-                          style={styles.resultItem}
-                          onClick={() => {
-                            setSelectedPlayer(p);
-                            setQuery(p.full_name);
-                            setPlayerResults([]);
-                          }}
-                        >
-                          {p.full_name}
+                  </div>
+            
+                  <div style={styles.statBox}>
+                    <div style={styles.statLabel}>Time</div>
+                    <div style={styles.statValue}>{secondsElapsed}s</div>
+                  </div>
+            
+                  <div style={styles.statBox}>
+                    <div style={styles.statLabel}>Miss</div>
+                    <div style={styles.statValue}>{wrongGuesses.length}</div>
+                  </div>
+                </div>
+            
+                {wrongGuesses.length > 0 && (
+                  <div style={{ marginTop: 10 }}>
+                    <div style={styles.label}>Wrong guesses</div>
+                    <div style={styles.pillRow}>
+                      {wrongGuesses.map((g, idx) => (
+                        <div key={`${g.id}-${idx}`} style={styles.guessRow}>
+                          <span style={styles.wrongX}>✕</span>
+                          {g.full_name}
                         </div>
                       ))}
                     </div>
-                  )}
-
-                  {message && <div style={styles.message}>{message}</div>}
-                </section>
-              )}                
-            </div>
+                  </div>
+                )}
+              </section>
+            )}
+            
+            {!ended && (
+              <section style={styles.card}>
+                <div style={styles.label}>Guess the player</div>
+            
+                <div style={styles.searchSubmitRow}>
+                  <input
+                    style={styles.input}
+                    value={query}
+                    onChange={(e) => searchPlayers(e.target.value)}
+                    placeholder="Search player..."
+                  />
+            
+                  <button
+                    style={styles.smallSubmitButton}
+                    disabled={!selectedPlayer}
+                    onClick={submitGuess}
+                  >
+                    Submit
+                  </button>
+                </div>
+            
+                {playerResults.length > 0 && (
+                  <div style={styles.resultList}>
+                    {playerResults.map((p) => (
+                      <div
+                        key={p.id}
+                        style={styles.resultItem}
+                        onClick={() => {
+                          setSelectedPlayer(p);
+                          setQuery(p.full_name);
+                          setPlayerResults([]);
+                        }}
+                      >
+                        {p.full_name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+            
+                {message && <div style={styles.message}>{message}</div>}
+              </section>
+            )}
 
             {activeChallenge && (
               <>

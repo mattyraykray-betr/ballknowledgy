@@ -147,6 +147,11 @@ export default function HomePage() {
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [message, setMessage] = useState("");
 
+  const [user, setUser] = useState(null);
+  const [authEmail, setAuthEmail] = useState("");
+  const [authMessage, setAuthMessage] = useState("");
+  const [attemptSaved, setAttemptSaved] = useState(false);  
+  
   const theme = useMemo(() => {
     return darkMode
       ? {
@@ -191,6 +196,56 @@ export default function HomePage() {
     }
   }
 
+  async function signInWithEmail() {
+    if (!authEmail.trim()) return;
+  
+    const { error } = await supabase.auth.signInWithOtp({
+      email: authEmail.trim(),
+      options: {
+        emailRedirectTo: window.location.origin,
+      },
+    });
+  
+    setAuthMessage(error ? error.message : "Check your email for the login link.");
+  }
+  
+  async function signOut() {
+    await supabase.auth.signOut();
+    setUser(null);
+    setAuthMessage("");
+  }
+  
+  async function saveAttempt({ correct, gaveUpNow, outOfGuesses, finalSeconds, finalScore }) {
+    if (!user || !activeChallenge) return;
+  
+    const { error } = await supabase
+      .from("nba_trivia_attempts")
+      .upsert(
+        {
+          challenge_id: activeChallenge.id,
+          user_id: user.id,
+          guessed_player_id: correct ? activeChallenge.player_id : null,
+          is_correct: correct,
+          seconds_elapsed: finalSeconds,
+          wrong_guess_count: wrongGuesses.length,
+          hints_used: hintsShown,
+          score: finalScore,
+          gave_up: gaveUpNow || outOfGuesses,
+          completed: true,
+          final_guess_count: wrongGuesses.length + (correct ? 1 : 0),
+          difficulty: activeChallenge.difficulty,
+          challenge_date: activeChallenge.challenge_date,
+          completed_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "challenge_id,user_id",
+        }
+      );
+  
+    if (!error) setAttemptSaved(true);
+    else console.error(error);
+  }
+  
   async function loadChallenges(dateValue) {
     setLoading(true);
 
@@ -299,6 +354,15 @@ export default function HomePage() {
     setSecondsElapsed(finalSeconds);
     setScore(finalScore);
 
+    setAttemptSaved(false);
+    saveAttempt({
+      correct,
+      gaveUpNow,
+      outOfGuesses,
+      finalSeconds,
+      finalScore,
+    });    
+    
     if (correct) setMessage("Correct.");
     else if (gaveUpNow) setMessage("Answer revealed.");
     else setMessage("Out of guesses. Answer revealed.");
@@ -353,6 +417,23 @@ export default function HomePage() {
     return () => clearInterval(timer);
   }, [activeChallenge, startedAt, isSolved, gaveUp, hasStarted]);
 
+  useEffect(() => {
+    async function loadUser() {
+      const { data } = await supabase.auth.getUser();
+      setUser(data?.user || null);
+    }
+  
+    loadUser();
+  
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+    });
+  
+    return () => {
+      listener?.subscription?.unsubscribe();
+    };
+  }, []);
+  
   const styles = {
     page: {
       minHeight: "100vh",
@@ -804,7 +885,47 @@ export default function HomePage() {
             </span>
           </button>
         </div>
-
+        <section style={styles.card}>
+          {user ? (
+            <>
+              <div style={styles.label}>Signed in</div>
+              <div style={styles.sub}>{user.email}</div>
+        
+              <button
+                style={styles.dangerButton}
+                onClick={signOut}
+              >
+                Sign Out
+              </button>
+            </>
+          ) : (
+            <>
+              <div style={styles.label}>Save your scores</div>
+        
+              <div style={styles.searchSubmitRow}>
+                <input
+                  style={styles.input}
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  placeholder="Email"
+                />
+        
+                <button
+                  style={styles.smallSubmitButton}
+                  onClick={signInWithEmail}
+                >
+                  Login
+                </button>
+              </div>
+        
+              {authMessage && (
+                <div style={styles.message}>
+                  {authMessage}
+                </div>
+              )}
+            </>
+          )}
+        </section>
         {loading ? (
           <div style={styles.card}>Loading challenges...</div>
         ) : challenges.length === 0 ? (
@@ -924,6 +1045,13 @@ export default function HomePage() {
                         <div style={styles.statLabel}>Miss</div>
                         <div style={styles.statValue}>{wrongGuesses.length}</div>
                       </div>
+                      <div style={{ ...styles.sub, marginTop: 8 }}>
+                        {user
+                          ? attemptSaved
+                            ? "Score saved."
+                            : "Saving score..."
+                          : "Create a login to save your score."}
+                      </div>                          
                     </div>
                   </div>
                 </div>

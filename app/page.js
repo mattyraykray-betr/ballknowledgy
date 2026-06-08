@@ -10,7 +10,7 @@ const supabase = createClient(
 
 function todayLocal() {
   return new Date().toISOString().slice(0, 10);
-}const [showLogin, setShowLogin] = useState(false);
+}
 
 function difficultyLabel(difficulty) {
   if (difficulty === "easy") return "Gimme";
@@ -129,6 +129,7 @@ export default function HomePage() {
   const [hasStarted, setHasStarted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+  const [showLogin, setShowLogin] = useState(false);
   
   useEffect(() => {
     const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
@@ -202,7 +203,7 @@ export default function HomePage() {
     const { error } = await supabase.auth.signInWithOtp({
       email: authEmail.trim(),
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: "https://ball-knowledgy-mattyraykray-betrs-projects.vercel.app/",
       },
     });
   

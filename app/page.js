@@ -190,7 +190,7 @@ export default function HomePage() {
         hint_2_json,
         hint_3_json,
         team:nba_teams(display_name, abbreviation, logo_url),
-        player:nba_players(full_name),
+        player:nba_players(full_name, headshot_url),
         season:nba_player_seasons(
           games_played,
           games_started,
@@ -597,6 +597,14 @@ export default function HomePage() {
       marginTop: 8,
       fontSize: 13,
     },
+    headshot: {
+      width: 92,
+      height: 92,
+      objectFit: "cover",
+      border: `1px solid ${theme.border}`,
+      background: theme.pane,
+      marginBottom: 10,
+    },
   };
 
   const clue = activeChallenge?.starting_clue_json || {};
@@ -841,6 +849,14 @@ export default function HomePage() {
                 {ended && (
                   <section style={styles.card}>
                     <div style={styles.label}>Result</div>
+                    {activeChallenge.player?.headshot_url && (
+                      <img
+                        src={activeChallenge.player.headshot_url}
+                        alt={activeChallenge.player.full_name || "Player headshot"}
+                        style={styles.headshot}
+                      />
+                    )}
+                    
                     <div style={styles.big}>Answer: {activeChallenge.player?.full_name}</div>
                     <div style={styles.sub}>
                       {activeChallenge.season_label} · {activeChallenge.team?.abbreviation}

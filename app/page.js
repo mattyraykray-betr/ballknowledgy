@@ -130,6 +130,8 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
+  const [username, setUsername] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   
   useEffect(() => {
     const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
@@ -151,7 +153,8 @@ export default function HomePage() {
   const [user, setUser] = useState(null);
   const [authEmail, setAuthEmail] = useState("");
   const [authMessage, setAuthMessage] = useState("");
-  const [attemptSaved, setAttemptSaved] = useState(false);  
+  const [attemptSaved, setAttemptSaved] = useState(false);
+  const [leaderboard, setLeaderboard] = useState([]);
   
   const theme = useMemo(() => {
     return darkMode
@@ -205,7 +208,17 @@ export default function HomePage() {
       return;
     }
   
-    setUser(data.user);
+    const newUser = data.user;
+    setUser(newUser);
+  
+    await supabase.from("profiles").upsert({
+      id: newUser.id,
+      username: username.trim() || `guest_${newUser.id.slice(0, 6)}`,
+      display_name: username.trim() || "Guest",
+      avatar_url: avatarUrl.trim() || null,
+      updated_at: new Date().toISOString(),
+    });
+  
     setShowLogin(false);
   }
   
@@ -242,7 +255,10 @@ export default function HomePage() {
         }
       );
   
-    if (!error) setAttemptSaved(true);
+    if (!error) {
+      setAttemptSaved(true);
+      loadLeaderboard();
+    }
     else console.error(error);
   }
   
@@ -325,6 +341,16 @@ export default function HomePage() {
     }
   }
 
+  async function loadLeaderboard() {
+    const { data, error } = await supabase
+      .from("vw_nba_trivia_all_time_leaderboard")
+      .select("username, avatar_url, total_score, avg_score, correct_challenges")
+      .order("total_score", { ascending: false })
+      .limit(10);
+  
+    if (!error) setLeaderboard(data || []);
+  }
+  
   function chooseDifficulty(difficulty) {
     setSelectedDifficulty(difficulty);
     const challenge = challenges.find((c) => c.difficulty === difficulty);
@@ -913,11 +939,24 @@ export default function HomePage() {
                 <div style={styles.sub}>
                   No email required. Continue as a guest to save scores on this device.
                 </div>
-  
+                
+                <input
+                  style={styles.input}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Username"
+                />
+                
+                <input
+                  style={styles.input}
+                  value={avatarUrl}
+                  onChange={(e) => setAvatarUrl(e.target.value)}
+                  placeholder="Profile picture URL"
+                />
+                
                 <button style={styles.primaryButton} onClick={continueAsGuest}>
                   Continue as Guest
-                </button>
-  
+                </button>  
                 {authMessage && (
                   <div style={styles.message}>
                     {authMessage}
@@ -990,7 +1029,7 @@ export default function HomePage() {
                     resetGameState(c, false);
                   }}
                 >
-                  #{c.daily_slot} · {difficultyLabel(c.difficulty)}
+                  {difficultyLabel(c.difficulty)}
                 </button>
               ))}
             </div>
@@ -1072,7 +1111,32 @@ export default function HomePage() {
                 )}
               </section>
             )}
+
+            {leaderboard.length > 0 && (
+              <section style={styles.card}>
+                <div style={styles.label}>Leaderboard</div>
             
+                {leaderboard.map((row, idx) => (
+                  <div key={`${row.username}-${idx}`} style={styles.teammateRow}>
+                    {row.avatar_url && (
+                      <img src={row.avatar_url} alt="" style={styles.teammateHeadshot} />
+                    )}
+            
+                    <div style={{ flex: 1 }}>
+                      <strong>
+                        {idx + 1}. {row.username || "Guest"}
+                      </strong>
+            
+                      <div style={styles.teammateStats}>
+                        {row.total_score || 0} pts · Avg {formatStat(row.avg_score)} · Correct{" "}
+                        {row.correct_challenges || 0}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </section>
+            )}
+
             {!ended && (
               <section style={styles.card}>
                 <div style={styles.label}>Guess the player</div>
@@ -1136,6 +1200,48 @@ export default function HomePage() {
 
             {activeChallenge && (
               <>
+                <section style={styles.card}>
+                  <div style={styles.label}>Stat line in selected year</div>
+
+                  <div style={styles.statGrid}>
+                    <div style={styles.statBox}>
+                      <div style={styles.statLabel}>PTS</div>
+                      <div style={styles.statValue}>
+                        {formatStat(season.points_per_game ?? clue.points_per_game)}
+                      </div>
+                    </div>
+                    <div style={styles.statBox}>
+                      <div style={styles.statLabel}>REB</div>
+                      <div style={styles.statValue}>
+                        {formatStat(season.rebounds_per_game ?? clue.rebounds_per_game)}
+                      </div>
+                    </div>
+                    <div style={styles.statBox}>
+                      <div style={styles.statLabel}>AST</div>
+                      <div style={styles.statValue}>
+                        {formatStat(season.assists_per_game ?? clue.assists_per_game)}
+                      </div>
+                    </div>
+                    <div style={styles.statBox}>
+                      <div style={styles.statLabel}>STL</div>
+                      <div style={styles.statValue}>
+                        {formatStat(season.steals_per_game ?? clue.steals_per_game)}
+                      </div>
+                    </div>
+                    <div style={styles.statBox}>
+                      <div style={styles.statLabel}>BLK</div>
+                      <div style={styles.statValue}>
+                        {formatStat(season.blocks_per_game ?? clue.blocks_per_game)}
+                      </div>
+                    </div>
+                    <div style={styles.statBox}>
+                      <div style={styles.statLabel}>GmSc</div>
+                      <div style={styles.statValue}>
+                        {formatStat(season.game_score ?? clue.game_score)}
+                      </div>
+                    </div>
+                  </div>
+                </section>              
                 <section style={styles.card}>
                   <div style={styles.metaRow}>
                     <div>
@@ -1219,49 +1325,6 @@ export default function HomePage() {
                       {renderHint3(hint3, styles)}
                     </div>
                   )}
-                </section>
-
-                <section style={styles.card}>
-                  <div style={styles.label}>Stat line</div>
-
-                  <div style={styles.statGrid}>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>PTS</div>
-                      <div style={styles.statValue}>
-                        {formatStat(season.points_per_game ?? clue.points_per_game)}
-                      </div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>REB</div>
-                      <div style={styles.statValue}>
-                        {formatStat(season.rebounds_per_game ?? clue.rebounds_per_game)}
-                      </div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>AST</div>
-                      <div style={styles.statValue}>
-                        {formatStat(season.assists_per_game ?? clue.assists_per_game)}
-                      </div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>STL</div>
-                      <div style={styles.statValue}>
-                        {formatStat(season.steals_per_game ?? clue.steals_per_game)}
-                      </div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>BLK</div>
-                      <div style={styles.statValue}>
-                        {formatStat(season.blocks_per_game ?? clue.blocks_per_game)}
-                      </div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>GmSc</div>
-                      <div style={styles.statValue}>
-                        {formatStat(season.game_score ?? clue.game_score)}
-                      </div>
-                    </div>
-                  </div>
                 </section>
               </>
             )}

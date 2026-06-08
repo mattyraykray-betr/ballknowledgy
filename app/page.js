@@ -257,7 +257,7 @@ export default function HomePage() {
 
     const { data, error } = await supabase
       .from("nba_players")
-      .select("id, full_name")
+      .select("id, full_name, headshot_url")
       .ilike("full_name", `%${value.trim()}%`)
       .order("full_name", { ascending: true })
       .limit(8);
@@ -488,8 +488,8 @@ export default function HomePage() {
       gap: 8,
     },
     logo: {
-      width: 30,
-      height: 30,
+      width: 42,
+      height: 42,
       objectFit: "contain",
       flexShrink: 0,
     },
@@ -713,6 +713,73 @@ export default function HomePage() {
       width: "100%",
       fontSize: 12,
     },
+    topStatusRow: {
+      display: "flex",
+      justifyContent: "space-between",
+      gap: 8,
+      marginTop: 8,
+    },
+    
+    statusMini: {
+      flex: 1,
+      background: theme.pane,
+      border: `1px solid ${theme.border}`,
+      borderRadius: 6,
+      padding: "6px 8px",
+      textAlign: "center",
+    },
+    
+    resultRow: {
+      display: "flex",
+      gap: 12,
+      alignItems: "center",
+    },
+    
+    resultHeadshot: {
+      width: 82,
+      height: 82,
+      objectFit: "cover",
+      border: `1px solid ${theme.border}`,
+      background: theme.pane,
+      borderRadius: 8,
+      flexShrink: 0,
+    },
+    
+    completeBanner: {
+      border: `1px solid ${isSolved ? "#00C853" : "#EF3B24"}`,
+      color: isSolved ? "#00C853" : "#EF3B24",
+      background: "transparent",
+      borderRadius: 6,
+      padding: "8px 10px",
+      fontSize: 12,
+      fontWeight: 950,
+      textTransform: "uppercase",
+      marginBottom: 10,
+    },
+    
+    searchResultRow: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+    },
+    
+    searchHeadshot: {
+      width: 28,
+      height: 28,
+      objectFit: "cover",
+      borderRadius: 5,
+      background: theme.pane,
+      border: `1px solid ${theme.border}`,
+    },
+    
+    teammateHeader: {
+      color: "#EF3B24",
+      fontSize: 11,
+      fontWeight: 950,
+      textTransform: "uppercase",
+      letterSpacing: "0.06em",
+      marginBottom: 6,
+    },  
   };
 
   const clue = activeChallenge?.starting_clue_json || {};
@@ -808,50 +875,56 @@ export default function HomePage() {
             
             {ended && (
               <section style={styles.card}>
-                <div style={styles.label}>Result</div>
+                <div style={styles.completeBanner}>
+                  {isSolved ? "✓ Challenge Complete" : "✕ Challenge Failed"}
+                </div>
             
-                {activeChallenge.player?.headshot_url && (
-                  <img
-                    src={activeChallenge.player.headshot_url}
-                    alt={activeChallenge.player.full_name || "Player headshot"}
-                    style={styles.headshot}
-                  />
-                )}
-            
-                <div
-                  style={{
-                    ...styles.big,
-                    color: getResultColor({ isSolved, gaveUp, wrongGuesses }) || theme.text,
-                  }}
-                >
-                  {isSolved ? (
-                    <span style={styles.correctCheck}>✓</span>
-                  ) : (
-                    <span style={styles.wrongX}>✕</span>
+                <div style={styles.resultRow}>
+                  {activeChallenge.player?.headshot_url && (
+                    <img
+                      src={activeChallenge.player.headshot_url}
+                      alt={activeChallenge.player.full_name || "Player headshot"}
+                      style={styles.resultHeadshot}
+                    />
                   )}
-                  Answer: {activeChallenge.player?.full_name}
-                </div>
             
-                <div style={styles.sub}>
-                  {activeChallenge.season_label} · {activeChallenge.team?.abbreviation}
-                </div>
-            
-                <div style={styles.statGrid}>
-                  <div style={styles.statBox}>
-                    <div style={styles.statLabel}>Score</div>
-                    <div style={{ ...styles.statValue, color: getScoreColor(score ?? 0) }}>
-                      {score ?? 0}
+                  <div>
+                    <div
+                      style={{
+                        ...styles.big,
+                        color: getResultColor({ isSolved, gaveUp, wrongGuesses }) || theme.text,
+                      }}
+                    >
+                      {isSolved ? (
+                        <span style={styles.correctCheck}>✓</span>
+                      ) : (
+                        <span style={styles.wrongX}>✕</span>
+                      )}
+                      Answer: {activeChallenge.player?.full_name}
                     </div>
-                  </div>
             
-                  <div style={styles.statBox}>
-                    <div style={styles.statLabel}>Time</div>
-                    <div style={styles.statValue}>{secondsElapsed}s</div>
-                  </div>
+                    <div style={styles.sub}>
+                      {activeChallenge.season_label} · {activeChallenge.team?.abbreviation}
+                    </div>
             
-                  <div style={styles.statBox}>
-                    <div style={styles.statLabel}>Miss</div>
-                    <div style={styles.statValue}>{wrongGuesses.length}</div>
+                    <div style={styles.topStatusRow}>
+                      <div style={styles.statusMini}>
+                        <div style={styles.statLabel}>Score</div>
+                        <div style={{ ...styles.statValue, color: getScoreColor(score ?? 0) }}>
+                          {score ?? 0}
+                        </div>
+                      </div>
+            
+                      <div style={styles.statusMini}>
+                        <div style={styles.statLabel}>Time</div>
+                        <div style={styles.statValue}>{secondsElapsed}s</div>
+                      </div>
+            
+                      <div style={styles.statusMini}>
+                        <div style={styles.statLabel}>Miss</div>
+                        <div style={styles.statValue}>{wrongGuesses.length}</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
             
@@ -904,7 +977,12 @@ export default function HomePage() {
                           setPlayerResults([]);
                         }}
                       >
-                        {p.full_name}
+                        <div style={styles.searchResultRow}>
+                          {p.headshot_url && (
+                            <img src={p.headshot_url} alt="" style={styles.searchHeadshot} />
+                          )}
+                          <span>{p.full_name}</span>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -941,6 +1019,18 @@ export default function HomePage() {
                     </div>
                   </div>
 
+                  <div style={styles.topStatusRow}>
+                    <div style={styles.statusMini}>
+                      <div style={styles.statLabel}>Misses</div>
+                      <div style={styles.statValue}>{wrongGuesses.length}/10</div>
+                    </div>
+                  
+                    <div style={styles.statusMini}>
+                      <div style={styles.statLabel}>Hints</div>
+                      <div style={styles.statValue}>{hintsShown}/3</div>
+                    </div>
+                  </div>
+                          
                   <button
                     style={{
                       ...styles.hintButton,
@@ -981,7 +1071,11 @@ export default function HomePage() {
                       ))}
                     </div>
                   )}
-                  {hintsShown >= 3 && (<div style={styles.hintText}>Hint 3: {renderHint3(hint3, styles)}</div>
+                  {hintsShown >= 3 && (
+                    <div style={styles.hintText}>
+                      <div style={styles.teammateHeader}>Teammates</div>
+                      {renderHint3(hint3, styles)}
+                    </div>
                   )}
                 </section>
 

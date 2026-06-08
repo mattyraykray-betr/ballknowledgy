@@ -221,6 +221,21 @@ export default function HomePage() {
   
     setShowLogin(false);
   }
+
+  async function saveProfile() {
+    if (!user) return;
+  
+    const { error } = await supabase.from("profiles").upsert({
+      id: user.id,
+      username: username.trim() || `guest_${user.id.slice(0, 6)}`,
+      display_name: username.trim() || "Guest",
+      avatar_url: avatarUrl.trim() || null,
+      updated_at: new Date().toISOString(),
+    });
+  
+    setAuthMessage(error ? error.message : "Profile saved.");
+    if (!error) loadLeaderboard();
+  }
   
   async function signOut() {
     await supabase.auth.signOut();
@@ -886,7 +901,47 @@ export default function HomePage() {
       textTransform: "uppercase",
       letterSpacing: "0.06em",
       marginBottom: 6,
-    },  
+    },
+    modalBackdrop: {
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      zIndex: 50,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 14,
+    },
+    
+    modalCard: {
+      width: "100%",
+      maxWidth: 520,
+      maxHeight: "82vh",
+      overflowY: "auto",
+      background: theme.card,
+      color: theme.text,
+      border: `1px solid ${theme.border}`,
+      borderRadius: 10,
+      padding: 14,
+    },
+    
+    modalHeader: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 12,
+    },
+    
+    closeButton: {
+      border: `1px solid ${theme.border}`,
+      background: theme.pane,
+      color: theme.text,
+      borderRadius: 6,
+      cursor: "pointer",
+      width: 34,
+      height: 34,
+      fontWeight: 950,
+    },
   };
 
   const clue = activeChallenge?.starting_clue_json || {};
@@ -904,7 +959,18 @@ export default function HomePage() {
             <h1 style={styles.title}>Ball Knowledgy</h1>
             <div style={styles.sub}>Daily player challenge</div>
           </div>
-  
+
+          <button
+            style={styles.iconButton} onClick={() => {
+              loadLeaderboard();
+              setShowLeaderboard(true);
+            }}
+          >
+            <span className="material-symbols-outlined">
+              leaderboard
+            </span>
+          </button>    
+    
           <div style={{ display: "flex", gap: 8 }}>
             <button style={styles.iconButton} onClick={() => setShowLogin(!showLogin)}>
               <span className="material-symbols-outlined">
@@ -921,51 +987,123 @@ export default function HomePage() {
         </div>
   
         {showLogin && (
-          <section style={styles.card}>
-            {user ? (
-              <>
-                <div style={styles.label}>Signed in</div>
-                <div style={styles.sub}>
-                  {user.is_anonymous ? "Guest account" : user.email}
+          <div style={styles.modalBackdrop}>
+            <section style={styles.modalCard}>
+              <div style={styles.modalHeader}>
+                <div>
+                  <div style={styles.label}>Profile</div>
+                  <div style={styles.big}>{user ? "Your Account" : "Save Scores"}</div>
                 </div>
-  
-                <button style={styles.dangerButton} onClick={signOut}>
-                  Sign Out
+        
+                <button style={styles.closeButton} onClick={() => setShowLogin(false)}>
+                  ×
                 </button>
-              </>
-            ) : (
-              <>
-                <div style={styles.label}>Save your scores</div>
-                <div style={styles.sub}>
-                  No email required. Continue as a guest to save scores on this device.
-                </div>
-                
-                <input
-                  style={styles.input}
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Username"
-                />
-                
-                <input
-                  style={styles.input}
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                  placeholder="Profile picture URL"
-                />
-                
-                <button style={styles.primaryButton} onClick={continueAsGuest}>
-                  Continue as Guest
-                </button>  
-                {authMessage && (
-                  <div style={styles.message}>
-                    {authMessage}
+              </div>
+        
+              {user ? (
+                <>
+                  <div style={styles.sub}>
+                    {user.is_anonymous ? "Guest account" : user.email}
                   </div>
-                )}
-              </>
-            )}
-          </section>
+        
+                  <input
+                    style={styles.input}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Username"
+                  />
+        
+                  <input
+                    style={styles.input}
+                    value={avatarUrl}
+                    onChange={(e) => setAvatarUrl(e.target.value)}
+                    placeholder="Profile picture/avatar URL"
+                  />
+        
+                  <button style={styles.primaryButton} onClick={saveProfile}>
+                    Save Profile
+                  </button>
+        
+                  <button style={styles.dangerButton} onClick={signOut}>
+                    Sign Out
+                  </button>
+        
+                  {authMessage && <div style={styles.message}>{authMessage}</div>}
+                </>
+              ) : (
+                <>
+                  <div style={styles.sub}>
+                    No email required. Create a guest profile to save scores on this device.
+                  </div>
+        
+                  <input
+                    style={styles.input}
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Username"
+                  />
+        
+                  <input
+                    style={styles.input}
+                    value={avatarUrl}
+                    onChange={(e) => setAvatarUrl(e.target.value)}
+                    placeholder="Profile picture/avatar URL"
+                  />
+        
+                  <button style={styles.primaryButton} onClick={continueAsGuest}>
+                    Continue as Guest
+                  </button>
+        
+                  {authMessage && <div style={styles.message}>{authMessage}</div>}
+                </>
+              )}
+            </section>
+          </div>
         )}
+
+        {showLeaderboard && (
+          <div style={styles.modalBackdrop}>
+            <section style={styles.modalCard}>
+              <div style={styles.modalHeader}>
+                <div>
+                  <div style={styles.label}>Leaderboard</div>
+                  <div style={styles.big}>All-Time</div>
+                </div>
+        
+                <button
+                  style={styles.closeButton}
+                  onClick={() => setShowLeaderboard(false)}
+                >
+                  ×
+                </button>
+              </div>
+        
+              {leaderboard.length === 0 ? (
+                <div style={styles.sub}>No leaderboard results yet.</div>
+              ) : (
+                leaderboard.map((row, idx) => (
+                  <div key={`${row.username}-${idx}`} style={styles.teammateRow}>
+                    {row.avatar_url && (
+                      <img src={row.avatar_url} alt="" style={styles.teammateHeadshot} />
+                    )}
+        
+                    <div style={{ flex: 1 }}>
+                      <strong>
+                        {idx + 1}. {row.username || "Guest"}
+                      </strong>
+        
+                      <div style={styles.teammateStats}>
+                        {row.total_score || 0} pts · Avg {formatStat(row.avg_score)} · Correct{" "}
+                        {row.correct_challenges || 0}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </section>
+          </div>
+        )}
+
         {loading ? (
           <div style={styles.card}>Loading challenges...</div>
         ) : challenges.length === 0 ? (
@@ -1109,31 +1247,6 @@ export default function HomePage() {
                     </div>
                   </div>
                 )}
-              </section>
-            )}
-
-            {leaderboard.length > 0 && (
-              <section style={styles.card}>
-                <div style={styles.label}>Leaderboard</div>
-            
-                {leaderboard.map((row, idx) => (
-                  <div key={`${row.username}-${idx}`} style={styles.teammateRow}>
-                    {row.avatar_url && (
-                      <img src={row.avatar_url} alt="" style={styles.teammateHeadshot} />
-                    )}
-            
-                    <div style={{ flex: 1 }}>
-                      <strong>
-                        {idx + 1}. {row.username || "Guest"}
-                      </strong>
-            
-                      <div style={styles.teammateStats}>
-                        {row.total_score || 0} pts · Avg {formatStat(row.avg_score)} · Correct{" "}
-                        {row.correct_challenges || 0}
-                      </div>
-                    </div>
-                  </div>
-                ))}
               </section>
             )}
 

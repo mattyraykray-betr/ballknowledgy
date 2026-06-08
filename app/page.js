@@ -12,6 +12,13 @@ function todayLocal() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function difficultyLabel(difficulty) {
+  if (difficulty === "easy") return "Gimme";
+  if (difficulty === "medium") return "Ball Knowledge";
+  if (difficulty === "hard") return "ELITE Ball Knowledge";
+  return difficulty;
+}
+
 function formatStat(value) {
   if (value === null || value === undefined || value === "") return "-";
   const num = Number(value);
@@ -40,70 +47,31 @@ function cleanLabel(value) {
 function renderHint(hint) {
   if (!hint || Object.keys(hint).length === 0) return null;
 
-  if (hint.college_name) return `College: ${hint.college_name}`;
-  if (hint.college && typeof hint.college === "string" && !/^\d+$/.test(hint.college)) {
-    return `College: ${hint.college}`;
+  const rows = [];
+
+  if (hint.height) rows.push({ label: "Height", value: hint.height });
+  if (hint.weight) rows.push({ label: "Weight", value: hint.weight });
+  if (hint.depth_chart_position) {
+    rows.push({ label: "Depth Chart Position", value: hint.depth_chart_position });
   }
 
+  if (hint.draft_info) rows.push({ label: "Draft Info", value: hint.draft_info });
+  if (hint.college_or_previous_team) {
+    rows.push({ label: "Drafted From", value: hint.college_or_previous_team });
+  }
+  if (hint.hometown) rows.push({ label: "Hometown", value: hint.hometown });
+
   if (hint.label && hint.value) {
-    const label = cleanLabel(hint.label);
-    if (label.toLowerCase().includes("college") && /^\d+$/.test(String(hint.value))) {
-      return "College: available after college-name lookup";
-    }
-    return `${label}: ${hint.value}`;
+    rows.push({ label: cleanLabel(hint.label), value: hint.value });
   }
 
   if (hint.type && hint.value) {
-    const label = cleanLabel(hint.type);
-    if (label.toLowerCase().includes("college") && /^\d+$/.test(String(hint.value))) {
-      return "College: available after college-name lookup";
-    }
-    return `${label}: ${hint.value}`;
+    rows.push({ label: cleanLabel(hint.type), value: hint.value });
   }
 
-  if (hint.text) return hint.text;
+  if (hint.text) rows.push({ label: "Hint", value: hint.text });
 
-  const teammates =
-    hint.teammates || hint.top_teammates || hint.players || hint.names || hint.value;
-
-  if (Array.isArray(teammates)) {
-    const cleaned = teammates
-      .map((t) => {
-        if (typeof t === "string") return t;
-        if (t?.full_name) return t.full_name;
-        if (t?.name) return t.name;
-        if (t?.player_name) return t.player_name;
-        return null;
-      })
-      .filter(Boolean);
-
-    if (cleaned.length > 0) {
-      return `Exact year: ${hint.season_label || hint.season_year || ""}. Teammates: ${cleaned.join(", ")}`;
-    }
-  }
-
-  return Object.entries(hint)
-    .filter(([key]) => !["player_id", "college_id", "team_id"].includes(key))
-    .map(([key, value]) => {
-      if (Array.isArray(value)) {
-        const arr = value
-          .map((v) => {
-            if (typeof v === "string") return v;
-            if (v?.full_name) return v.full_name;
-            if (v?.name) return v.name;
-            if (v?.player_name) return v.player_name;
-            return null;
-          })
-          .filter(Boolean);
-
-        return `${cleanLabel(key)}: ${arr.join(", ")}`;
-      }
-
-      if (typeof value === "object") return null;
-      return `${cleanLabel(key)}: ${value}`;
-    })
-    .filter(Boolean)
-    .join(" · ");
+  return rows;
 }
 
 function renderHint3(hint, styles) {
@@ -147,6 +115,11 @@ export default function HomePage() {
   const [hasStarted, setHasStarted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
+  
+  useEffect(() => {
+    const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
+    setDarkMode(Boolean(prefersDark));
+  }, []);
 
   const [query, setQuery] = useState("");
   const [playerResults, setPlayerResults] = useState([]);
@@ -662,6 +635,26 @@ export default function HomePage() {
       fontWeight: 800,
       marginTop: 2,
     },
+    hintRow: {
+      display: "grid",
+      gap: 2,
+      marginTop: 9,
+    },
+    
+    hintLabelSmall: {
+      fontSize: 9,
+      color: theme.muted,
+      fontWeight: 900,
+      textTransform: "uppercase",
+      letterSpacing: "0.05em",
+    },
+    
+    hintValueBig: {
+      fontSize: 14,
+      color: theme.text,
+      fontWeight: 850,
+      lineHeight: 1.25,
+    },
   };
 
   const clue = activeChallenge?.starting_clue_json || {};
@@ -676,7 +669,7 @@ export default function HomePage() {
       <div style={styles.wrap}>
         <div style={styles.topbar}>
           <div>
-            <h1 style={styles.title}>NBA Trivia</h1>
+            <h1 style={styles.title}>Ball Knowledgy</h1>
             <div style={styles.sub}>Daily player challenge</div>
           </div>
 
@@ -841,8 +834,29 @@ export default function HomePage() {
                     {hintsShown >= 3 ? "All Hints Revealed" : `Reveal Hint #${hintsShown + 1}`}
                   </button>
 
-                  {hintsShown >= 1 && <div style={styles.hintText}>Hint 1: {renderHint(hint1)}</div>}
-                  {hintsShown >= 2 && <div style={styles.hintText}>Hint 2: {renderHint(hint2)}</div>}
+                  {hintsShown >= 1 && (
+                    <div style={styles.hintText}>
+                      <div style={styles.label}>Hint 1</div>
+                      {(renderHint(hint1) || []).map((row) => (
+                        <div key={row.label} style={styles.hintRow}>
+                          <div style={styles.hintLabelSmall}>{row.label}</div>
+                          <div style={styles.hintValueBig}>{row.value || "-"}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {hintsShown >= 2 && (
+                    <div style={styles.hintText}>
+                      <div style={styles.label}>Hint 2</div>
+                      {(renderHint(hint2) || []).map((row) => (
+                        <div key={row.label} style={styles.hintRow}>
+                          <div style={styles.hintLabelSmall}>{row.label}</div>
+                          <div style={styles.hintValueBig}>{row.value || "-"}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   {hintsShown >= 3 && (<div style={styles.hintText}>Hint 3: {renderHint3(hint3, styles)}</div>
                   )}
                 </section>
@@ -882,7 +896,7 @@ export default function HomePage() {
                       </div>
                     </div>
                     <div style={styles.statBox}>
-                      <div style={styles.statLabel}>GS</div>
+                      <div style={styles.statLabel}>GmSc</div>
                       <div style={styles.statValue}>
                         {formatStat(season.game_score ?? clue.game_score)}
                       </div>

@@ -132,7 +132,7 @@ export default function HomePage() {
   const [showLogin, setShowLogin] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [username, setUsername] = useState("");
-  const [avatarUrl, setAvatarUrl] = useState("");
+  const [avatarFile, setAvatarFile] = useState(null);
   
   useEffect(() => {
     const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
@@ -201,7 +201,32 @@ export default function HomePage() {
     }
   }
 
+  async function uploadAvatarForUser(userId) {
+    if (!avatarFile) return null;
+  
+    const fileExt = avatarFile.name.split(".").pop();
+    const filePath = `${userId}/avatar.${fileExt}`;
+  
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(filePath, avatarFile, {
+        upsert: true,
+      });
+  
+    if (uploadError) {
+      throw uploadError;
+    }
+  
+    const { data } = supabase.storage
+      .from("avatars")
+      .getPublicUrl(filePath);
+  
+    return data.publicUrl;
+  }
+  
   async function continueAsGuest() {
+    setAuthMessage("");
+  
     const { data, error } = await supabase.auth.signInAnonymously();
   
     if (error) {
@@ -212,30 +237,64 @@ export default function HomePage() {
     const newUser = data.user;
     setUser(newUser);
   
-    await supabase.from("profiles").upsert({
-      id: newUser.id,
-      username: username.trim() || `guest_${newUser.id.slice(0, 6)}`,
-      display_name: username.trim() || "Guest",
-      avatar_url: avatarUrl.trim() || null,
-      updated_at: new Date().toISOString(),
-    });
+    try {
+      const uploadedAvatarUrl = await uploadAvatarForUser(newUser.id);
   
-    setShowLogin(false);
+      const profileUsername =
+        username.trim() || `guest_${newUser.id.slice(0, 6)}`;
+  
+      const { error: profileError } = await supabase.from("profiles").upsert({
+        id: newUser.id,
+        username: profileUsername,
+        display_name: profileUsername,
+        avatar_url: uploadedAvatarUrl,
+        updated_at: new Date().toISOString(),
+      });
+  
+      if (profileError) {
+        setAuthMessage(profileError.message);
+        return;
+      }
+  
+      setShowLogin(false);
+      loadLeaderboard();
+    } catch (err) {
+      setAuthMessage(err.message || "Could not create profile.");
+    }
   }
 
   async function saveProfile() {
     if (!user) return;
   
-    const { error } = await supabase.from("profiles").upsert({
-      id: user.id,
-      username: username.trim() || `guest_${user.id.slice(0, 6)}`,
-      display_name: username.trim() || "Guest",
-      avatar_url: avatarUrl.trim() || null,
-      updated_at: new Date().toISOString(),
-    });
+    setAuthMessage("");
   
-    setAuthMessage(error ? error.message : "Profile saved.");
-    if (!error) loadLeaderboard();
+    try {
+      const uploadedAvatarUrl = await uploadAvatarForUser(user.id);
+  
+      const profileUsername =
+        username.trim() || `guest_${user.id.slice(0, 6)}`;
+  
+      const profileUpdate = {
+        id: user.id,
+        username: profileUsername,
+        display_name: profileUsername,
+        updated_at: new Date().toISOString(),
+      };
+  
+      if (uploadedAvatarUrl) {
+        profileUpdate.avatar_url = uploadedAvatarUrl;
+      }
+  
+      const { error } = await supabase.from("profiles").upsert(profileUpdate);
+  
+      setAuthMessage(error ? error.message : "Profile saved.");
+  
+      if (!error) {
+        loadLeaderboard();
+      }
+    } catch (err) {
+      setAuthMessage(err.message || "Could not save profile.");
+    }
   }
   
   async function signOut() {
@@ -961,24 +1020,25 @@ export default function HomePage() {
             <div style={styles.sub}>Daily player challenge</div>
           </div>
 
-          <button
-            style={styles.iconButton} onClick={() => {
-              loadLeaderboard();
-              setShowLeaderboard(true);
-            }}
-          >
-            <span className="material-symbols-outlined">
-              leaderboard
-            </span>
-          </button>    
-    
           <div style={{ display: "flex", gap: 8 }}>
             <button style={styles.iconButton} onClick={() => setShowLogin(!showLogin)}>
               <span className="material-symbols-outlined">
                 {user ? "account_circle" : "login"}
               </span>
             </button>
-  
+          
+            <button
+              style={styles.iconButton}
+              onClick={() => {
+                loadLeaderboard();
+                setShowLeaderboard(true);
+              }}
+            >
+              <span className="material-symbols-outlined">
+                leaderboard
+              </span>
+            </button>
+          
             <button style={styles.iconButton} onClick={() => setDarkMode(!darkMode)}>
               <span className="material-symbols-outlined">
                 {darkMode ? "light_mode" : "dark_mode"}
@@ -1016,9 +1076,9 @@ export default function HomePage() {
         
                   <input
                     style={styles.input}
-                    value={avatarUrl}
-                    onChange={(e) => setAvatarUrl(e.target.value)}
-                    placeholder="Profile picture/avatar URL"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
                   />
         
                   <button style={styles.primaryButton} onClick={saveProfile}>
@@ -1046,9 +1106,9 @@ export default function HomePage() {
         
                   <input
                     style={styles.input}
-                    value={avatarUrl}
-                    onChange={(e) => setAvatarUrl(e.target.value)}
-                    placeholder="Profile picture/avatar URL"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
                   />
         
                   <button style={styles.primaryButton} onClick={continueAsGuest}>

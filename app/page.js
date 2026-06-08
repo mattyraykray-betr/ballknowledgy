@@ -106,6 +106,39 @@ function renderHint(hint) {
     .join(" · ");
 }
 
+function renderHint3(hint, styles) {
+  const teammates = hint?.teammates || [];
+
+  return (
+    <div>
+      <div>Exact year: {hint?.exact_year || "-"}</div>
+
+      <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
+        {teammates.map((t) => (
+          <div key={t.full_name} style={styles.teammateRow}>
+            {t.headshot_url && (
+              <img
+                src={t.headshot_url}
+                alt={t.full_name}
+                style={styles.teammateHeadshot}
+              />
+            )}
+
+            <div>
+              <strong>{t.full_name}</strong>
+              <div style={styles.teammateStats}>
+                {formatStat(t.points_per_game)} PPG ·{" "}
+                {formatStat(t.rebounds_per_game)} RPG ·{" "}
+                {formatStat(t.assists_per_game)} APG
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const [selectedDate, setSelectedDate] = useState(todayLocal());
   const [challenges, setChallenges] = useState([]);
@@ -605,6 +638,30 @@ export default function HomePage() {
       background: theme.pane,
       marginBottom: 10,
     },
+    teammateRow: {
+      display: "flex",
+      alignItems: "center",
+      gap: 8,
+      background: theme.input,
+      border: `1px solid ${theme.border}`,
+      padding: 7,
+    },
+    
+    teammateHeadshot: {
+      width: 34,
+      height: 34,
+      objectFit: "cover",
+      background: theme.pane,
+      border: `1px solid ${theme.border}`,
+      flexShrink: 0,
+    },
+    
+    teammateStats: {
+      fontSize: 11,
+      color: theme.muted,
+      fontWeight: 800,
+      marginTop: 2,
+    },
   };
 
   const clue = activeChallenge?.starting_clue_json || {};
@@ -757,7 +814,11 @@ export default function HomePage() {
                           <img src={activeChallenge.team.logo_url} alt="" style={styles.logo} />
                         )}
                         <div style={styles.big}>
-                          {activeChallenge.team?.display_name || "Unknown Team"}
+                          {(activeChallenge.starting_clue_json?.team_names || [])
+                            .filter(Boolean)
+                            .join(" / ") ||
+                            activeChallenge.team?.display_name ||
+                            "Unknown Team"}
                         </div>
                       </div>
                       <div style={styles.sub}>{activeChallenge.season_range}</div>
@@ -782,7 +843,8 @@ export default function HomePage() {
 
                   {hintsShown >= 1 && <div style={styles.hintText}>Hint 1: {renderHint(hint1)}</div>}
                   {hintsShown >= 2 && <div style={styles.hintText}>Hint 2: {renderHint(hint2)}</div>}
-                  {hintsShown >= 3 && <div style={styles.hintText}>Hint 3: {renderHint(hint3)}</div>}
+                  {hintsShown >= 3 && (<div style={styles.hintText}>Hint 3: {renderHint3(hint3, styles)}</div>
+                  )}
                 </section>
 
                 <section style={styles.card}>

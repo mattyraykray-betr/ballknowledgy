@@ -10,7 +10,7 @@ const supabase = createClient(
 
 function todayLocal() {
   return new Date().toISOString().slice(0, 10);
-}
+}const [showLogin, setShowLogin] = useState(false);
 
 function difficultyLabel(difficulty) {
   if (difficulty === "easy") return "Gimme";
@@ -879,12 +879,21 @@ export default function HomePage() {
             <div style={styles.sub}>Daily player challenge</div>
           </div>
 
-          <button style={styles.iconButton} onClick={() => setDarkMode(!darkMode)}>
-            <span className="material-symbols-outlined">
-              {darkMode ? "light_mode" : "dark_mode"}
-            </span>
-          </button>
+          <div style={{ display: "flex", gap: 8 }}>
+            <button style={styles.iconButton} onClick={() => setShowLogin(!showLogin)}>
+              <span className="material-symbols-outlined">
+                {user ? "account_circle" : "login"}
+              </span>
+            </button>
+          
+            <button style={styles.iconButton} onClick={() => setDarkMode(!darkMode)}>
+              <span className="material-symbols-outlined">
+                {darkMode ? "light_mode" : "dark_mode"}
+              </span>
+            </button>
+          </div>
         </div>
+                
         <section style={styles.card}>
           {user ? (
             <>

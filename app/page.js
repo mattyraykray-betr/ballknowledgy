@@ -197,17 +197,16 @@ export default function HomePage() {
     }
   }
 
-  async function signInWithEmail() {
-    if (!authEmail.trim()) return;
+  async function continueAsGuest() {
+    const { data, error } = await supabase.auth.signInAnonymously();
   
-    const { error } = await supabase.auth.signInWithOtp({
-      email: authEmail.trim(),
-      options: {
-        emailRedirectTo: "https://ball-knowledgy-mattyraykray-betrs-projects.vercel.app/",
-      },
-    });
+    if (error) {
+      setAuthMessage(error.message);
+      return;
+    }
   
-    setAuthMessage(error ? error.message : "Check your email for the login link.");
+    setUser(data.user);
+    setShowLogin(false);
   }
   
   async function signOut() {
@@ -879,14 +878,14 @@ export default function HomePage() {
             <h1 style={styles.title}>Ball Knowledgy</h1>
             <div style={styles.sub}>Daily player challenge</div>
           </div>
-
+  
           <div style={{ display: "flex", gap: 8 }}>
             <button style={styles.iconButton} onClick={() => setShowLogin(!showLogin)}>
               <span className="material-symbols-outlined">
                 {user ? "account_circle" : "login"}
               </span>
             </button>
-          
+  
             <button style={styles.iconButton} onClick={() => setDarkMode(!darkMode)}>
               <span className="material-symbols-outlined">
                 {darkMode ? "light_mode" : "dark_mode"}
@@ -894,48 +893,40 @@ export default function HomePage() {
             </button>
           </div>
         </div>
-                
-        <section style={styles.card}>
-          {user ? (
-            <>
-              <div style={styles.label}>Signed in</div>
-              <div style={styles.sub}>{user.email}</div>
-        
-              <button
-                style={styles.dangerButton}
-                onClick={signOut}
-              >
-                Sign Out
-              </button>
-            </>
-          ) : (
-            <>
-              <div style={styles.label}>Save your scores</div>
-        
-              <div style={styles.searchSubmitRow}>
-                <input
-                  style={styles.input}
-                  value={authEmail}
-                  onChange={(e) => setAuthEmail(e.target.value)}
-                  placeholder="Email"
-                />
-        
-                <button
-                  style={styles.smallSubmitButton}
-                  onClick={signInWithEmail}
-                >
-                  Login
-                </button>
-              </div>
-        
-              {authMessage && (
-                <div style={styles.message}>
-                  {authMessage}
+  
+        {showLogin && (
+          <section style={styles.card}>
+            {user ? (
+              <>
+                <div style={styles.label}>Signed in</div>
+                <div style={styles.sub}>
+                  {user.is_anonymous ? "Guest account" : user.email}
                 </div>
-              )}
-            </>
-          )}
-        </section>
+  
+                <button style={styles.dangerButton} onClick={signOut}>
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <>
+                <div style={styles.label}>Save your scores</div>
+                <div style={styles.sub}>
+                  No email required. Continue as a guest to save scores on this device.
+                </div>
+  
+                <button style={styles.primaryButton} onClick={continueAsGuest}>
+                  Continue as Guest
+                </button>
+  
+                {authMessage && (
+                  <div style={styles.message}>
+                    {authMessage}
+                  </div>
+                )}
+              </>
+            )}
+          </section>
+        )}
         {loading ? (
           <div style={styles.card}>Loading challenges...</div>
         ) : challenges.length === 0 ? (

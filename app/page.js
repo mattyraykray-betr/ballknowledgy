@@ -989,6 +989,19 @@ export default function HomePage() {
                 )}
             
                 {message && <div style={styles.message}>{message}</div>}
+                {wrongGuesses.length > 0 && (
+                  <div style={{ marginTop: 10 }}>
+                    <div style={styles.label}>Wrong guesses</div>
+                    <div style={styles.pillRow}>
+                      {wrongGuesses.map((g, idx) => (
+                        <div key={`${g.id}-${idx}`} style={styles.guessRow}>
+                          <span style={styles.wrongX}>✕</span>
+                          {g.full_name}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}                  
               </section>
             )}
 

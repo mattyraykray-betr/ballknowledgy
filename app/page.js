@@ -156,6 +156,7 @@ export default function HomePage() {
   const [authMessage, setAuthMessage] = useState("");
   const [attemptSaved, setAttemptSaved] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
+  const [leaderboardType, setLeaderboardType] = useState("daily");
   
   const theme = useMemo(() => {
     return darkMode
@@ -416,7 +417,19 @@ export default function HomePage() {
     }
   }
 
-  async function loadLeaderboard() {
+  async function loadLeaderboard(type = leaderboardType) {
+    if (type === "daily" && activeChallenge) {
+      const { data, error } = await supabase
+        .from("vw_nba_trivia_daily_challenge_leaderboard")
+        .select("username, avatar_url, best_score, best_time, fewest_misses, correct")
+        .eq("challenge_id", activeChallenge.id)
+        .order("best_score", { ascending: false })
+        .limit(10);
+  
+      if (!error) setLeaderboard(data || []);
+      return;
+    }
+  
     const { data, error } = await supabase
       .from("vw_nba_trivia_all_time_leaderboard")
       .select("username, avatar_url, total_score, avg_score, correct_challenges")
@@ -815,17 +828,16 @@ export default function HomePage() {
       background: theme.input,
       border: `1px solid ${theme.border}`,
       padding: 7,
-    },
-    
+    },    
     teammateHeadshot: {
       width: 34,
       height: 34,
       objectFit: "cover",
       background: theme.pane,
       border: `1px solid ${theme.border}`,
+      borderRadius: "50%",
       flexShrink: 0,
-    },
-    
+    },   
     teammateStats: {
       fontSize: 11,
       color: theme.muted,
@@ -1030,7 +1042,9 @@ export default function HomePage() {
             <button
               style={styles.iconButton}
               onClick={() => {
-                loadLeaderboard();
+                const type = activeChallenge ? "daily" : "alltime";
+                setLeaderboardType(type);
+                loadLeaderboard(type);
                 setShowLeaderboard(true);
               }}
             >
@@ -1128,7 +1142,9 @@ export default function HomePage() {
               <div style={styles.modalHeader}>
                 <div>
                   <div style={styles.label}>Leaderboard</div>
-                  <div style={styles.big}>All-Time</div>
+                  <div style={styles.big}>
+                    {leaderboardType === "daily" ? "Daily Challenge" : "All-Time"}
+                  </div>
                 </div>
         
                 <button
@@ -1138,7 +1154,35 @@ export default function HomePage() {
                   ×
                 </button>
               </div>
-        
+
+              <div style={styles.tabs}>
+                <button
+                  style={{
+                    ...styles.tab,
+                    ...(leaderboardType === "daily" ? styles.activeTab : {}),
+                  }}
+                  onClick={() => {
+                    setLeaderboardType("daily");
+                    loadLeaderboard("daily");
+                  }}
+                >
+                  Daily
+                </button>
+              
+                <button
+                  style={{
+                    ...styles.tab,
+                    ...(leaderboardType === "alltime" ? styles.activeTab : {}),
+                  }}
+                  onClick={() => {
+                    setLeaderboardType("alltime");
+                    loadLeaderboard("alltime");
+                  }}
+                >
+                  All Time
+                </button>
+              </div>
+
               {leaderboard.length === 0 ? (
                 <div style={styles.sub}>No leaderboard results yet.</div>
               ) : (
@@ -1154,8 +1198,9 @@ export default function HomePage() {
                       </strong>
         
                       <div style={styles.teammateStats}>
-                        {row.total_score || 0} pts · Avg {formatStat(row.avg_score)} · Correct{" "}
-                        {row.correct_challenges || 0}
+                        {leaderboardType === "daily"
+                          ? `${row.best_score || 0} pts · ${formatStat(row.best_time)}s · Misses ${row.fewest_misses || 0}`
+                          : `${row.total_score || 0} pts · Avg ${formatStat(row.avg_score)} · Correct ${row.correct_challenges || 0}`}
                       </div>
                     </div>
                   </div>
@@ -1438,7 +1483,7 @@ export default function HomePage() {
                             "Unknown Team"}
                         </div>
                       </div>
-                      <div style={styles.sub}>{activeChallenge.season_range}</div>
+                      <div style={styles.sub}>Era: {activeChallenge.season_range}</div>
                     </div>
 
                     <div style={{ textAlign: "right" }}>

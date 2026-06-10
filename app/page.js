@@ -1379,6 +1379,18 @@ export default function HomePage() {
 
                   <div style={styles.statGrid}>
                     <div style={styles.statBox}>
+                      <div style={styles.statLabel}>GP</div>
+                      <div style={styles.statValue}>
+                        {formatStat(season.games_played ?? clue.games_played)}
+                      </div>
+                    </div>
+                    <div style={styles.statBox}>
+                      <div style={styles.statLabel}>GS</div>
+                      <div style={styles.statValue}>
+                        {formatStat(season.games_started ?? clue.games_started)}
+                      </div>
+                    </div>                        
+                    <div style={styles.statBox}>
                       <div style={styles.statLabel}>PTS</div>
                       <div style={styles.statValue}>
                         {formatStat(season.points_per_game ?? clue.points_per_game)}
@@ -1406,12 +1418,6 @@ export default function HomePage() {
                       <div style={styles.statLabel}>BLK</div>
                       <div style={styles.statValue}>
                         {formatStat(season.blocks_per_game ?? clue.blocks_per_game)}
-                      </div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>GmSc</div>
-                      <div style={styles.statValue}>
-                        {formatStat(season.game_score ?? clue.game_score)}
                       </div>
                     </div>
                   </div>

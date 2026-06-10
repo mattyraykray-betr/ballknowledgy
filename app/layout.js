@@ -1,18 +1,20 @@
 export const metadata = {
   title: "Ball Knowledgy",
-  description: "Daily NBA player trivia",
+  description: "Daily NBA player challenge",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" style={{ margin: 0, padding: 0 }}>
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
           rel="stylesheet"
         />
       </head>
-      <body>{children}</body>
+      <body style={{ margin: 0, padding: 0, background: "#050505" }}>
+        {children}
+      </body>
     </html>
   );
 }

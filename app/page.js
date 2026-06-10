@@ -608,7 +608,7 @@ export default function HomePage() {
     },
     tabs: {
       display: "grid",
-       "repeat(3, 1fr)",
+      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
       gap: 6,
       marginBottom: 10,
     },
@@ -683,7 +683,7 @@ export default function HomePage() {
     },
     statGrid: {
       display: "grid",
-       "repeat(7, 1fr)",
+       gridTemplateColumns: "repeat(7, 1fr)",
       gap: 2,
       marginTop: 10,
     },

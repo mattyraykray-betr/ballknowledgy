@@ -1236,7 +1236,7 @@ export default function HomePage() {
             {ended && (
               <section style={styles.card}>
                 <div style={styles.completeBanner}>
-                  {isSolved ? "✓ Challenge Complete" : "✕ Challenge Failed"}
+                  {isSolved ? "✓ Challenge Complete" : " Challenge Failed"}
                 </div>
             
                 <div style={styles.resultRow}>
@@ -1258,7 +1258,7 @@ export default function HomePage() {
                       {isSolved ? (
                         <span style={styles.correctCheck}>✓</span>
                       ) : (
-                        <span style={styles.wrongX}>✕</span>
+                        <span style={styles.wrongX}>✕ </span>
                       )}
                       Answer: {activeChallenge.player?.full_name}
                     </div>

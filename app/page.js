@@ -1016,8 +1016,8 @@ export default function HomePage() {
       <div style={styles.wrap}>
         <div style={styles.topbar}>
           <div>
-            <h1 style={styles.title}>Ball Knowledgy</h1>
-            <div style={styles.sub}>Daily player challenge</div>
+            <h1 style={styles.title}>That Guy Rocked</h1>
+            <div style={styles.sub}>NBA player challenge</div>
           </div>
 
           <div style={{ display: "flex", gap: 8 }}>

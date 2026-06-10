@@ -1379,12 +1379,6 @@ export default function HomePage() {
 
                   <div style={styles.statGrid}>
                     <div style={styles.statBox}>
-                      <div style={styles.statLabel}>GP</div>
-                      <div style={styles.statValue}>
-                        {formatStat(season.games_played ?? clue.games_played)}
-                      </div>
-                    </div>
-                    <div style={styles.statBox}>
                       <div style={styles.statLabel}>GS</div>
                       <div style={styles.statValue}>
                         {formatStat(season.games_started ?? clue.games_started)}

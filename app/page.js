@@ -683,7 +683,7 @@ export default function HomePage() {
     },
     statGrid: {
       display: "grid",
-        "repeat(7, minmax(0, 1fr))",
+       "repeat(7, 1fr)",
       gap: 2,
       marginTop: 10,
     },

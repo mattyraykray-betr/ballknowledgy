@@ -1067,18 +1067,19 @@ export default function HomePage() {
       flexShrink: 0,
     },
     leaderboardAvatarFallback: {
-      width: 34,
-      height: 34,
+      width: 40,
+      height: 40,
       borderRadius: "50%",
-      background: theme.accent,
-      color: "#fff",
+      background: darkMode ? "#003594" : "#E8F0FF",
+      color: darkMode ? "#ffffff" : "#003594",
+      border: `1px solid ${theme.border}`,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
       fontWeight: 900,
-      fontSize: 14,
+      fontSize: 16,
       flexShrink: 0,
-    },  
+    }, 
   };
 
   const clue = activeChallenge?.starting_clue_json || {};

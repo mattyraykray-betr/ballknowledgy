@@ -608,7 +608,7 @@ export default function HomePage() {
     },
     tabs: {
       display: "grid",
-      gridTemplateColumns: "repeat(3, 1fr)",
+       "repeat(3, 1fr)",
       gap: 6,
       marginBottom: 10,
     },
@@ -683,14 +683,14 @@ export default function HomePage() {
     },
     statGrid: {
       display: "grid",
-      gridTemplateColumns: "repeat(6, 1fr)",
-      gap: 4,
+      gridTemplateColumns: "repeat(7, minmax(0, 1fr))",
+      gap: 2,
       marginTop: 10,
     },
     statBox: {
       background: theme.input,
       borderTop: `2px solid ${theme.border}`,
-      padding: "6px 3px",
+      padding: "6px 2px",
       textAlign: "center",
     },
     statLabel: {
@@ -699,7 +699,7 @@ export default function HomePage() {
       fontWeight: 900,
     },
     statValue: {
-      fontSize: 14,
+      fontSize: 12,
       fontWeight: 900,
       marginTop: 2,
     },
@@ -878,7 +878,7 @@ export default function HomePage() {
     
     searchSubmitRow: {
       display: "grid",
-      gridTemplateColumns: "4fr 1fr",
+       "4fr 1fr",
       gap: 8,
       alignItems: "start",
     },
@@ -1379,9 +1379,15 @@ export default function HomePage() {
 
                   <div style={styles.statGrid}>
                     <div style={styles.statBox}>
+                      <div style={styles.statLabel}>GP</div>
+                      <div style={styles.statValue}>
+                        {parseInt(season.games_played ?? clue.games_played, 10)}
+                      </div>
+                    </div> 
+                    <div style={styles.statBox}>
                       <div style={styles.statLabel}>GS</div>
                       <div style={styles.statValue}>
-                        {formatStat(season.games_started ?? clue.games_started)}
+                        {parseInt(season.games_started ?? clue.games_started, 10)}
                       </div>
                     </div>                        
                     <div style={styles.statBox}>

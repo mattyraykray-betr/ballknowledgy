@@ -19,6 +19,10 @@ function difficultyLabel(difficulty) {
   return difficulty;
 }
 
+function getCompletionForDifficulty(completionStatus, difficulty) {
+  return completionStatus.find((row) => row.difficulty === difficulty);
+}
+
 function formatStat(value) {
   if (value === null || value === undefined || value === "") return "-";
   const num = Number(value);
@@ -157,6 +161,8 @@ export default function HomePage() {
   const [attemptSaved, setAttemptSaved] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
   const [leaderboardType, setLeaderboardType] = useState("daily");
+  const [completionStatus, setCompletionStatus] = useState([]);
+  const [userStreaks, setUserStreaks] = useState(null);
   
   const theme = useMemo(() => {
     return darkMode
@@ -303,6 +309,23 @@ export default function HomePage() {
     setUser(null);
     setAuthMessage("");
   }
+
+  async function loadUserStreaks() {
+    if (!user) {
+      setUserStreaks(null);
+      return;
+    }
+  
+    const { data, error } = await supabase
+      .from("vw_nba_trivia_user_streaks")
+      .select("current_streak, best_streak")
+      .eq("user_id", user.id)
+      .maybeSingle();
+  
+    if (!error) {
+      setUserStreaks(data || { current_streak: 0, best_streak: 0 });
+    }
+  }
   
   async function saveAttempt({ correct, gaveUpNow, outOfGuesses, finalSeconds, finalScore }) {
     if (!user || !activeChallenge) return;
@@ -334,6 +357,8 @@ export default function HomePage() {
     if (!error) {
       setAttemptSaved(true);
       loadLeaderboard();
+      loadCompletionStatus();
+      loadUserStreaks();
     }
     else console.error(error);
   }
@@ -438,6 +463,21 @@ export default function HomePage() {
   
     if (!error) setLeaderboard(data || []);
   }
+
+  async function loadCompletionStatus() {
+    if (!user) {
+      setCompletionStatus([]);
+      return;
+    }
+  
+    const { data, error } = await supabase
+      .from("vw_nba_trivia_daily_completion_status")
+      .select("challenge_id, difficulty, completed, is_correct, score")
+      .eq("user_id", user.id)
+      .eq("challenge_date", selectedDate);
+  
+    if (!error) setCompletionStatus(data || []);
+  }
   
   function chooseDifficulty(difficulty) {
     setSelectedDifficulty(difficulty);
@@ -531,6 +571,10 @@ export default function HomePage() {
     return () => clearInterval(timer);
   }, [activeChallenge, startedAt, isSolved, gaveUp, hasStarted]);
 
+  useEffect(() => {
+    loadCompletionStatus();
+  }, [user, selectedDate]);
+  
   useEffect(() => {
     async function loadUser() {
       const { data } = await supabase.auth.getUser();
@@ -1080,7 +1124,21 @@ export default function HomePage() {
                   <div style={styles.sub}>
                     {user.is_anonymous ? "Guest account" : user.email}
                   </div>
-        
+
+                  {userStreaks && (
+                    <div style={styles.topStatusRow}>
+                      <div style={styles.statusMini}>
+                        <div style={styles.statLabel}>Current Streak</div>
+                        <div style={styles.statValue}>{userStreaks.current_streak || 0}</div>
+                      </div>
+                  
+                      <div style={styles.statusMini}>
+                        <div style={styles.statLabel}>Best Streak</div>
+                        <div style={styles.statValue}>{userStreaks.best_streak || 0}</div>
+                      </div>
+                    </div>
+                  )}
+                
                   <input
                     style={styles.input}
                     value={username}
@@ -1242,14 +1300,21 @@ export default function HomePage() {
             <div style={styles.tabs}>
               {["easy", "medium", "hard"].map((difficulty) => (
                 <button
-                  key={difficultyLabel(difficulty)}
+                  key=
+                    {(() => {
+                      const status = getCompletionForDifficulty(completionStatus, difficulty);
+                      return `${status?.completed ? (status.is_correct ? "✓ " : "✕ ") : ""}${difficultyLabel(difficulty)}`;
+                    })()}                
                   style={{
                     ...styles.tab,
                     ...(selectedDifficulty === difficulty ? styles.activeTab : {}),
                   }}
                   onClick={() => chooseDifficulty(difficulty)}
                 >
-                  {difficultyLabel(difficulty)}
+                  {(() => {
+                    const status = getCompletionForDifficulty(completionStatus, difficulty);
+                    return `${status?.completed ? (status.is_correct ? "✓ " : "✕ ") : ""}${difficultyLabel(difficulty)}`;
+                  })()}
                 </button>
               ))}
             </div>
@@ -1273,7 +1338,10 @@ export default function HomePage() {
                     resetGameState(c, false);
                   }}
                 >
-                  {difficultyLabel(c.difficulty)}
+                  {(() => {
+                    const status = getCompletionForDifficulty(completionStatus, c.difficulty);
+                    return `${status?.completed ? (status.is_correct ? "✓ " : "✕ ") : ""}${difficultyLabel(c.difficulty)}`;
+                  })()}
                 </button>
               ))}
             </div>

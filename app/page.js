@@ -878,7 +878,7 @@ export default function HomePage() {
     
     searchSubmitRow: {
       display: "grid",
-       "4fr 1fr",
+      gridTemplateColumns: "4fr 1fr",
       gap: 8,
       alignItems: "start",
     },

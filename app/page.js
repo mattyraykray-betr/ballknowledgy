@@ -1226,9 +1226,9 @@ export default function HomePage() {
           <>
             <section style={styles.setupHero}>
               <div style={styles.label}>Daily Challenge</div>
-              <div style={styles.setupTitle}>Guess The Player</div>
+              <div style={styles.setupTitle}>Ball Knowledgy</div>
               <div style={styles.sub}>
-                Pick a date, choose your difficulty, then start the clock.
+                Choose your difficulty, start the clock, and try to guess the player.
               </div>
             </section>
 

@@ -1058,6 +1058,27 @@ export default function HomePage() {
       height: 34,
       fontWeight: 950,
     },
+    leaderboardAvatar: {
+      width: 40,
+      height: 40,
+      borderRadius: "50%",
+      objectFit: "cover",
+      border: `1px solid ${theme.border}`,
+      flexShrink: 0,
+    },
+    leaderboardAvatarFallback: {
+      width: 34,
+      height: 34,
+      borderRadius: "50%",
+      background: theme.accent,
+      color: "#fff",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontWeight: 900,
+      fontSize: 14,
+      flexShrink: 0,
+    },  
   };
 
   const clue = activeChallenge?.starting_clue_json || {};
@@ -1246,8 +1267,16 @@ export default function HomePage() {
               ) : (
                 leaderboard.map((row, idx) => (
                   <div key={`${row.username}-${idx}`} style={styles.teammateRow}>
-                    {row.avatar_url && (
-                      <img src={row.avatar_url} alt="" style={styles.teammateHeadshot} />
+                    {row.avatar_url ? (
+                      <img
+                        src={row.avatar_url}
+                        alt=""
+                        style={styles.leaderboardAvatar}
+                      />
+                    ) : (
+                      <div style={styles.leaderboardAvatarFallback}>
+                        {(row.username || "?").charAt(0).toUpperCase()}
+                      </div>
                     )}
         
                     <div style={{ flex: 1 }}>

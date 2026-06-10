@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "Ball Knowledgy",
-  description: "Daily NBA player challenge",
+  title: "That Guy Rocked",
+  description: "NBA player challenge",
 };
 
 export default function RootLayout({ children }) {

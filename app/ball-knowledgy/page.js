@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { robotoSlab } from "../layout";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -615,6 +616,7 @@ export default function HomePage() {
       marginBottom: 10,
     },
     title: {
+      fontFamily: robotoSlab.style.fontFamily,
       fontSize: 24,
       fontWeight: 900,
       margin: 0,

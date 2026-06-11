@@ -12,7 +12,7 @@ export default function HomePage() {
       }}
     >
       <div style={{ maxWidth: 520, margin: "0 auto" }}>
-        <h1 style={{ fontSize: 36, marginBottom: 4 }}>That Guy Rocked</h1>
+        <h1 style={{ fontFamily: "'Roboto Slab', Rockwell, serif", fontSize: 36, marginBottom: 4 }}>That Guy Rocked</h1>
         <p style={{ color: "#b5b5b5", marginBottom: 20 }}>
           Daily basketball games for sickos.
         </p>

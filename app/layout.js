@@ -3,15 +3,6 @@ export const metadata = {
   description: "NBA player challenge",
 };
 
-import { Roboto_Slab } from "next/font/google";
-
-const robotoSlab = Roboto_Slab({
-  subsets: ["latin"],
-  weight: ["700", "800", "900"],
-});
-
-export { robotoSlab };
-
 export default function RootLayout({ children }) {
   return (
     <html lang="en" style={{ margin: 0, padding: 0 }}>
@@ -20,6 +11,10 @@ export default function RootLayout({ children }) {
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined"
           rel="stylesheet"
         />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@700;800;900&display=swap"
+          rel="stylesheet"
+        />            
       </head>
       <body style={{ margin: 0, padding: 0, background: "#050505" }}>
         {children}

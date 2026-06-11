@@ -12,7 +12,7 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@700;800;900&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@700;800;900&amp;display=swap"
           rel="stylesheet"
         />            
       </head>

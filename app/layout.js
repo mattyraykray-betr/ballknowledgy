@@ -14,7 +14,7 @@ export default function RootLayout({ children }) {
         <link
           href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@700;800;900&amp;display=swap"
           rel="stylesheet"
-        />            
+        />
       </head>
       <body style={{ margin: 0, padding: 0, background: "#050505" }}>
         {children}

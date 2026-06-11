@@ -1,4 +1,12 @@
 import Link from "next/link";
+import { Roboto_Slab } from "next/font/google";
+
+const robotoSlab = Roboto_Slab({
+  subsets: ["latin"],
+  weight: ["700", "800", "900"],
+});
+
+export { robotoSlab };
 
 export default function HomePage() {
   return (

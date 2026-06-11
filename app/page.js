@@ -36,7 +36,7 @@ export default function HomePage() {
           </Link>
 
           <Link
-            href="/stat-ladder"
+            href="/ladder-golf"
             style={{
               color: "inherit",
               textDecoration: "none",

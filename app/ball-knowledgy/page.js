@@ -615,7 +615,7 @@ export default function HomePage() {
       marginBottom: 10,
     },
     title: {
-      fontFamily: robotoSlab.style.fontFamily,
+      fontFamily: "'Roboto Slab', Rockwell, serif",
       fontSize: 24,
       fontWeight: 900,
       margin: 0,

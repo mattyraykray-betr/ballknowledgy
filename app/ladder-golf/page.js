@@ -392,8 +392,9 @@ export default function StatLadderPage() {
       marginBottom: 10,
     },
     title: {
+      fontFamily: "'Roboto Slab', Rockwell, serif",
       fontSize: 24,
-      fontWeight: 900,
+      fontWeight: 800,
       margin: 0,
       letterSpacing: "-0.04em",
       textTransform: "uppercase",

@@ -606,10 +606,10 @@ export default function StatLadderPage() {
       <div style={styles.wrap}>
         <div style={styles.topbar}>
           <div>
-            <h1 style={styles.title}>Stat Ladder Golf</h1>
+            <h1 style={styles.title}>That Guy Rocked</h1>
             <div style={styles.sub}>
               <Link href="/" style={{ color: "inherit" }}>
-                Back to Ball Knowledgy
+                Back to Games Home
               </Link>
             </div>
           </div>
@@ -635,8 +635,8 @@ export default function StatLadderPage() {
         ) : !hasStarted ? (
           <>
             <section style={styles.card}>
-              <div style={styles.label}>Daily Stat Ladder Golf</div>
-              <div style={styles.big}>{difficultyLabel(challenge.difficulty)}</div>
+              <div style={styles.label}>Daily Challenge</div>
+              <div style={styles.big}>Stat Ladder Golf</div>
               <div style={styles.sub}>
                 Name players with a lower career value than the previous player.
               </div>
@@ -808,7 +808,7 @@ export default function StatLadderPage() {
                     ? attemptSaved
                       ? "Score saved."
                       : "Saving score..."
-                    : "Create a guest profile on Ball Knowledgy to save scores."}
+                    : "Create a guest profile on to save scores."}
                 </div>
               </section>
             )}

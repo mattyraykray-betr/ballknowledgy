@@ -115,13 +115,11 @@ function renderHint3(hint, styles) {
       <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
         {teammates.map((t) => (
           <div key={t.full_name} style={styles.teammateRow}>
-            {t.headshot_url && (
               <img
-                src={t.headshot_url}
+                src={t.headshot_url || HEADSHOT_FALLBACK}
                 alt={t.full_name}
                 style={styles.teammateHeadshot}
               />
-            )}
 
             <div>
               <strong>{t.full_name}</strong>
@@ -1397,13 +1395,11 @@ export default function HomePage() {
                 </div>
             
                 <div style={styles.resultRow}>
-                  {activeChallenge.player?.headshot_url && (
                     <img
-                      src={activeChallenge.player.headshot_url}
+                      src={activeChallenge.player.headshot_url || HEADSHOT_FALLBACK}
                       alt={activeChallenge.player.full_name || "Player headshot"}
                       style={styles.resultHeadshot}
                     />
-                  )}
             
                   <div>
                     <div
@@ -1502,9 +1498,7 @@ export default function HomePage() {
                         }}
                       >
                         <div style={styles.searchResultRow}>
-                          {p.headshot_url && (
-                            <img src={p.headshot_url} alt="" style={styles.searchHeadshot} />
-                          )}
+                            <img src={p.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
                           <span>{p.full_name}</span>
                         </div>
                       </div>

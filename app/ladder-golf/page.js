@@ -781,17 +781,13 @@ export default function StatLadderPage() {
                   setShowLogin(true);
                 }}
               >
-                {profile?.avatar_url ? (
-                  <img src={profile.avatar_url} alt="" style={styles.drawerAvatar} />
-                ) : (
-                  <div style={styles.drawerAvatarFallback}>
-                    {(profile?.username || username || "G").charAt(0).toUpperCase()}
-                  </div>
-                )}
-        
+                <div style={styles.drawerAvatarFallback}>
+                  {(username || user?.email || "P").charAt(0).toUpperCase()}
+                </div>
+              
                 <div>
                   <div style={{ fontWeight: 900 }}>
-                    {profile?.username || username || "Profile"}
+                    {username || "Profile"}
                   </div>
                   <div style={styles.sub}>View profile</div>
                 </div>

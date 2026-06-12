@@ -880,9 +880,7 @@ export default function StatLadderPage() {
               <div style={styles.label}>Starting Player</div>
             
               <div style={styles.playerRow}>
-                {challenge.player?.headshot_url && (
                   <img src={challenge.player.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.headshot} />
-                )}
             
                 <div>
                   <div style={styles.big}>{challenge.player?.full_name}</div>
@@ -960,9 +958,7 @@ export default function StatLadderPage() {
                         }}
                       >
                         <div style={styles.searchResultRow}>
-                          {p.headshot_url && (
                             <img src={p.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
-                          )}
                           <span>{p.full_name}</span>
                         </div>
                       </div>
@@ -1004,9 +1000,7 @@ export default function StatLadderPage() {
 
               {chain.map((row, idx) => (
                 <div key={`${row.player_id}-${idx}`} style={styles.chainRow}>
-                  {row.headshot_url && (
                     <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
-                  )}
                   <div style={{ flex: 1 }}>
                     <strong>
                       ✓ {row.player_name}
@@ -1020,9 +1014,7 @@ export default function StatLadderPage() {
 
               {misses.map((row, idx) => (
                 <div key={`${row.player_id}-${idx}`} style={styles.chainRow}>
-                  {row.headshot_url && (
                     <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
-                  )}
                   <div style={{ flex: 1 }}>
                     <strong style={styles.orange}>✕ {row.player_name}</strong>
                     <div style={styles.sub}>

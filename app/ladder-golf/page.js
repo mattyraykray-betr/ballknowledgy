@@ -623,11 +623,46 @@ export default function StatLadderPage() {
       textDecoration: "none",
       cursor: "pointer",
       marginBottom: 8,
-    },
-    
+    },   
     menuIcon: {
       fontSize: 20,
       color: "#EF3B24",
+    },
+    drawerBackdrop: {
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.62)",
+      zIndex: 100,
+      display: "flex",
+      justifyContent: "flex-end",
+    },  
+    drawerPanel: {
+      width: "58%",
+      maxWidth: 340,
+      minWidth: 235,
+      height: "100vh",
+      background: theme.card,
+      color: theme.text,
+      borderLeft: `1px solid ${theme.border}`,
+      padding: 14,
+      boxSizing: "border-box",
+      boxShadow: "-12px 0 30px rgba(0,0,0,0.35)",
+    },   
+    drawerHeader: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 14,
+    },    
+    drawerCloseButton: {
+      border: `1px solid ${theme.border}`,
+      background: theme.pane,
+      color: theme.text,
+      borderRadius: 6,
+      cursor: "pointer",
+      width: 34,
+      height: 34,
+      fontWeight: 950,
     },    
   };
 
@@ -650,15 +685,15 @@ export default function StatLadderPage() {
         </div>
 
         {showMenu && (
-          <div style={styles.modalBackdrop}>
-            <section style={styles.modalCard}>
-              <div style={styles.modalHeader}>
+          <div style={styles.drawerBackdrop} onClick={() => setShowMenu(false)}>
+            <aside style={styles.drawerPanel} onClick={(e) => e.stopPropagation()}>
+              <div style={styles.drawerHeader}>
                 <div>
                   <div style={styles.label}>Menu</div>
                   <div style={styles.big}>That Guy Rocked</div>
                 </div>
         
-                <button style={styles.closeButton} onClick={() => setShowMenu(false)}>
+                <button style={styles.drawerCloseButton} onClick={() => setShowMenu(false)}>
                   ×
                 </button>
               </div>
@@ -687,33 +722,6 @@ export default function StatLadderPage() {
               <button
                 style={styles.menuItem}
                 onClick={() => {
-                  setShowMenu(false);
-                  setShowLogin(true);
-                }}
-              >
-                <span className="material-symbols-outlined" style={styles.menuIcon}>
-                  account_circle
-                </span>
-                Profile
-              </button>
-        
-              <button
-                style={styles.menuItem}
-                onClick={() => {
-                  setShowMenu(false);
-                  loadLeaderboard();
-                  setShowLeaderboard(true);
-                }}
-              >
-                <span className="material-symbols-outlined" style={styles.menuIcon}>
-                  trophy
-                </span>
-                Leaderboard
-              </button>
-        
-              <button
-                style={styles.menuItem}
-                onClick={() => {
                   setDarkMode(!darkMode);
                   setShowMenu(false);
                 }}
@@ -723,7 +731,7 @@ export default function StatLadderPage() {
                 </span>
                 {darkMode ? "Light Mode" : "Dark Mode"}
               </button>
-            </section>
+            </aside>
           </div>
         )}                  
                   

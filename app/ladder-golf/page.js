@@ -648,8 +648,7 @@ export default function StatLadderPage() {
       boxShadow: "-12px 0 30px rgba(0,0,0,0.35)",
       display: "flex",
       flexDirection: "column",
-      justifyContent: "space-between",
-    },
+    }
     drawerHeader: {
       display: "flex",
       justifyContent: "space-between",
@@ -726,7 +725,15 @@ export default function StatLadderPage() {
                 <div style={styles.drawerHeader}>
                   <div>
                     <div style={styles.label}>Menu</div>
-                    <div style={styles.big}>That Guy Rocked</div>
+                    <div
+                      style={{
+                        ...styles.big,
+                        fontFamily: "'Roboto Slab', Rockwell, serif",
+                        fontWeight: 900,
+                      }}
+                    >
+                      That Guy Rocked
+                    </div>
                   </div>
         
                   <button style={styles.drawerCloseButton} onClick={() => setShowMenu(false)}>
@@ -769,12 +776,12 @@ export default function StatLadderPage() {
                 </button>
               </div>
         
-              <button
-                style={styles.profileMenuItem}
+              <div style={{ marginTop: 24 }}>
+                <button style={styles.profileMenuItem}>
                 onClick={() => {
                   setShowMenu(false);
                 }}
-              >
+                >
                 <div style={styles.drawerAvatarFallback}>
                   {(user?.email || "P").charAt(0).toUpperCase()}
                 </div>
@@ -785,7 +792,8 @@ export default function StatLadderPage() {
                   </div>
                   <div style={styles.sub}>Profile coming soon</div>
                 </div>
-              </button>
+                </button>
+              </div>
             </aside>
           </div>
         )}                

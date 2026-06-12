@@ -1021,7 +1021,7 @@ export default function StatLadderPage() {
               {misses.map((row, idx) => (
                 <div key={`${row.player_id}-${idx}`} style={styles.chainRow}>
                   {row.headshot_url && (
-                    <img src={row.headshot_url} alt="" style={styles.searchHeadshot} />
+                    <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
                   )}
                   <div style={{ flex: 1 }}>
                     <strong style={styles.orange}>✕ {row.player_name}</strong>

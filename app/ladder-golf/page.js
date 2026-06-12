@@ -111,6 +111,8 @@ export default function StatLadderPage() {
   const startingValue = Number(clue.starting_value);
   const currentThreshold =
     chain.length > 0 ? Number(chain[chain.length - 1].value) : startingValue;
+  const currentTargetPlayer =
+    chain.length > 0 ? chain[chain.length - 1] : null;
 
   function resetGame(row) {
     setChallenge(row);
@@ -840,7 +842,7 @@ export default function StatLadderPage() {
           <>
             <section style={styles.card}>
               <div style={styles.label}>Starting Player</div>
-
+            
               <div style={styles.playerRow}>
                 {challenge.player?.headshot_url && (
                   <img
@@ -849,7 +851,7 @@ export default function StatLadderPage() {
                     style={styles.headshot}
                   />
                 )}
-
+            
                 <div>
                   <div style={styles.big}>{challenge.player?.full_name}</div>
                   <div style={styles.sub}>
@@ -857,15 +859,15 @@ export default function StatLadderPage() {
                   </div>
                 </div>
               </div>
-
+            
               <div style={styles.statHero}>
                 <div style={styles.statBox}>
-                  <div style={styles.statLabel}>{statLabel}</div>
+                  <div style={styles.statLabel}>Original {statLabel}</div>
                   <div style={styles.statValue}>
-                    {formatValue(currentThreshold, statKey)}
+                    {formatValue(startingValue, statKey)}
                   </div>
                 </div>
-
+            
                 <div style={styles.statBox}>
                   <div style={styles.statLabel}>Timer</div>
                   <div style={{ ...styles.statValue, ...styles.orange }}>
@@ -874,7 +876,32 @@ export default function StatLadderPage() {
                 </div>
               </div>
             </section>
-
+            <section style={styles.card}>
+              <div style={styles.label}>Current Target</div>
+            
+              <div style={styles.statHero}>
+                <div style={styles.statBox}>
+                  <div style={styles.statLabel}>Beat This Number</div>
+                  <div style={styles.statValue}>
+                    {formatValue(currentThreshold, statKey)}
+                  </div>
+                </div>
+            
+                <div style={styles.statBox}>
+                  <div style={styles.statLabel}>Set By</div>
+                  <div style={styles.statValue}>
+                    {currentTargetPlayer
+                      ? currentTargetPlayer.player_name
+                      : challenge.player?.full_name}
+                  </div>
+                </div>
+              </div>
+            
+              <div style={styles.sub}>
+                Next valid answer must be lower than{" "}
+                {formatValue(currentThreshold, statKey)} {statLabel}.
+              </div>
+            </section>
             {!ended && (
               <section style={styles.card}>
                 <div style={styles.label}>Name a lower player</div>

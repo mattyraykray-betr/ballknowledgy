@@ -626,7 +626,7 @@ export default function StatLadderPage() {
     },   
     menuIcon: {
       fontSize: 20,
-      color: "#EF3B24",
+      color: theme.text,
     },
     drawerBackdrop: {
       position: "fixed",
@@ -647,7 +647,10 @@ export default function StatLadderPage() {
       padding: 14,
       boxSizing: "border-box",
       boxShadow: "-12px 0 30px rgba(0,0,0,0.35)",
-    },   
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "space-between",
+    },
     drawerHeader: {
       display: "flex",
       justifyContent: "space-between",
@@ -663,6 +666,43 @@ export default function StatLadderPage() {
       width: 34,
       height: 34,
       fontWeight: 950,
+    },
+    profileMenuItem: {
+      width: "100%",
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      border: `1px solid ${theme.border}`,
+      background: theme.input,
+      color: theme.text,
+      borderRadius: 6,
+      padding: "11px 10px",
+      fontWeight: 900,
+      fontSize: 14,
+      cursor: "pointer",
+      boxSizing: "border-box",
+    },    
+    drawerAvatar: {
+      width: 36,
+      height: 36,
+      borderRadius: "50%",
+      objectFit: "cover",
+      border: `1px solid ${theme.border}`,
+      flexShrink: 0,
+    },    
+    drawerAvatarFallback: {
+      width: 36,
+      height: 36,
+      borderRadius: "50%",
+      background: darkMode ? "#003594" : "#E8F0FF",
+      color: darkMode ? "#ffffff" : "#003594",
+      border: `1px solid ${theme.border}`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontWeight: 900,
+      fontSize: 16,
+      flexShrink: 0,
     },    
   };
 
@@ -687,53 +727,78 @@ export default function StatLadderPage() {
         {showMenu && (
           <div style={styles.drawerBackdrop} onClick={() => setShowMenu(false)}>
             <aside style={styles.drawerPanel} onClick={(e) => e.stopPropagation()}>
-              <div style={styles.drawerHeader}>
-                <div>
-                  <div style={styles.label}>Menu</div>
-                  <div style={styles.big}>That Guy Rocked</div>
+              <div>
+                <div style={styles.drawerHeader}>
+                  <div>
+                    <div style={styles.label}>Menu</div>
+                    <div style={styles.big}>That Guy Rocked</div>
+                  </div>
+        
+                  <button style={styles.drawerCloseButton} onClick={() => setShowMenu(false)}>
+                    ×
+                  </button>
                 </div>
         
-                <button style={styles.drawerCloseButton} onClick={() => setShowMenu(false)}>
-                  ×
+                <Link href="/" style={styles.menuItem}>
+                  <span className="material-symbols-outlined" style={styles.menuIcon}>
+                    home
+                  </span>
+                  Home
+                </Link>
+        
+                <Link href="/ball-knowledgy" style={styles.menuItem}>
+                  <span className="material-symbols-outlined" style={styles.menuIcon}>
+                    quiz
+                  </span>
+                  Ball Knowledgy
+                </Link>
+        
+                <Link href="/stat-ladder" style={styles.menuItem}>
+                  <span className="material-symbols-outlined" style={styles.menuIcon}>
+                    tools_ladder
+                  </span>
+                  Stat Ladder
+                </Link>
+        
+                <button
+                  style={styles.menuItem}
+                  onClick={() => {
+                    setDarkMode(!darkMode);
+                    setShowMenu(false);
+                  }}
+                >
+                  <span className="material-symbols-outlined" style={styles.menuIcon}>
+                    {darkMode ? "light_mode" : "dark_mode"}
+                  </span>
+                  {darkMode ? "Light Mode" : "Dark Mode"}
                 </button>
               </div>
         
-              <Link href="/" style={styles.menuItem}>
-                <span className="material-symbols-outlined" style={styles.menuIcon}>
-                  home
-                </span>
-                Home
-              </Link>
-        
-              <Link href="/ball-knowledgy" style={styles.menuItem}>
-                <span className="material-symbols-outlined" style={styles.menuIcon}>
-                  sports_basketball
-                </span>
-                Ball Knowledgy
-              </Link>
-        
-              <Link href="/stat-ladder" style={styles.menuItem}>
-                <span className="material-symbols-outlined" style={styles.menuIcon}>
-                  leaderboard
-                </span>
-                Stat Ladder
-              </Link>
-        
               <button
-                style={styles.menuItem}
+                style={styles.profileMenuItem}
                 onClick={() => {
-                  setDarkMode(!darkMode);
                   setShowMenu(false);
+                  setShowLogin(true);
                 }}
               >
-                <span className="material-symbols-outlined" style={styles.menuIcon}>
-                  {darkMode ? "light_mode" : "dark_mode"}
-                </span>
-                {darkMode ? "Light Mode" : "Dark Mode"}
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="" style={styles.drawerAvatar} />
+                ) : (
+                  <div style={styles.drawerAvatarFallback}>
+                    {(profile?.username || username || "G").charAt(0).toUpperCase()}
+                  </div>
+                )}
+        
+                <div>
+                  <div style={{ fontWeight: 900 }}>
+                    {profile?.username || username || "Profile"}
+                  </div>
+                  <div style={styles.sub}>View profile</div>
+                </div>
               </button>
             </aside>
           </div>
-        )}                  
+        )}                
                   
         <input
           style={styles.dateInput}

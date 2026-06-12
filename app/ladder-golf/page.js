@@ -77,6 +77,7 @@ export default function StatLadderPage() {
 
   const [darkMode, setDarkMode] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [profile, setProfile] = useState(...)
 
   useEffect(() => {
     const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;

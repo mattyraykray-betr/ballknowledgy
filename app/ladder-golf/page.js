@@ -13,6 +13,16 @@ function todayLocal() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function formatTimer(totalSeconds) {
+  const seconds = Math.max(0, Number(totalSeconds) || 0);
+
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  return `${hrs}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+}
+
 function difficultyLabel(difficulty) {
   if (difficulty === "easy") return "Gimme";
   if (difficulty === "medium") return "Ball Knowledge";
@@ -826,7 +836,7 @@ export default function StatLadderPage() {
           {hasStarted && (
             <div style={{ textAlign: "right" }}>
               <div style={styles.label}>Timer</div>
-              <div style={{ ...styles.big, ...styles.orange }}>{secondsElapsed}s</div>
+              <div style={styles.big}>{formatTimer(secondsElapsed)}</div>
             </div>
           )}
         </div>
@@ -882,7 +892,7 @@ export default function StatLadderPage() {
                   </div>
             
                   <div style={styles.sub}>
-                    Original {statLabel}: {formatValue(startingValue, statKey)}
+                    {statLabel}: {formatValue(startingValue, statKey)}
                   </div>
                 </div>
               </div>
@@ -1025,7 +1035,7 @@ export default function StatLadderPage() {
                 <div style={styles.label}>Result</div>
                 <div style={styles.big}>Score: {score ?? 0}</div>
                 <div style={styles.sub}>
-                  Chain {chain.length} · Misses {misses.length} · Time {secondsElapsed}s
+                  Chain {chain.length} · Misses {misses.length} · Time {formatTimer(secondsElapsed)}
                 </div>
 
                 <div style={{ ...styles.sub, marginTop: 8 }}>

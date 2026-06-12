@@ -8,8 +8,21 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
+const HEADSHOT_FALLBACK =
+  "https://i.ibb.co/1YmfgNKs/TPR-Blank-Headshot-MBB.png";
+
 function todayLocal() {
   return new Date().toISOString().slice(0, 10);
+}
+
+function formatTimer(totalSeconds) {
+  const seconds = Math.max(0, Number(totalSeconds) || 0);
+
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  return `${hrs}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 }
 
 function difficultyLabel(difficulty) {
@@ -1421,7 +1434,7 @@ export default function HomePage() {
             
                       <div style={styles.statusMini}>
                         <div style={styles.statLabel}>Time</div>
-                        <div style={styles.statValue}>{secondsElapsed}s</div>
+                        <div style={styles.statValue}>{formatTimer(secondsElapsed)}</div>
                       </div>
             
                       <div style={styles.statusMini}>
@@ -1587,7 +1600,7 @@ export default function HomePage() {
 
                     <div style={{ textAlign: "right" }}>
                       <div style={styles.label}>Timer</div>
-                      <div style={{ ...styles.big, ...styles.orange }}>{secondsElapsed}s</div>
+                      <div style={styles.big}>{formatTimer(secondsElapsed)}/div>
                     </div>
                   </div>
 

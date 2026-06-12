@@ -778,18 +778,17 @@ export default function StatLadderPage() {
                 style={styles.profileMenuItem}
                 onClick={() => {
                   setShowMenu(false);
-                  setShowLogin(true);
                 }}
               >
                 <div style={styles.drawerAvatarFallback}>
-                  {(username || user?.email || "P").charAt(0).toUpperCase()}
+                  {(user?.email || "P").charAt(0).toUpperCase()}
                 </div>
               
                 <div>
                   <div style={{ fontWeight: 900 }}>
-                    {username || "Profile"}
+                    {user ? "Profile" : "Guest"}
                   </div>
-                  <div style={styles.sub}>View profile</div>
+                  <div style={styles.sub}>Profile coming soon</div>
                 </div>
               </button>
             </aside>

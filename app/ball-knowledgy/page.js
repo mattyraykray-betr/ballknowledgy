@@ -1600,7 +1600,7 @@ export default function HomePage() {
 
                     <div style={{ textAlign: "right" }}>
                       <div style={styles.label}>Timer</div>
-                      <div style={styles.big}>{formatTimer(secondsElapsed)}/div>
+                      <div style={styles.big}>{formatTimer(secondsElapsed)}</div>
                     </div>
                   </div>
 

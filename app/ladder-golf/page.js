@@ -777,10 +777,11 @@ export default function StatLadderPage() {
               </div>
         
               <div style={{ marginTop: 24 }}>
-                <button style={styles.profileMenuItem}>
-                onClick={() => {
-                  setShowMenu(false);
-                }}
+                <button
+                  style={styles.profileMenuItem}
+                  onClick={() => {
+                    setShowMenu(false);
+                  }}
                 >
                 <div style={styles.drawerAvatarFallback}>
                   {(user?.email || "P").charAt(0).toUpperCase()}

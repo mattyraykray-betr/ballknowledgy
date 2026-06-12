@@ -610,6 +610,20 @@ export default function StatLadderPage() {
     orange: {
       color: "#EF3B24",
     },
+    miniTeamRow: {
+      display: "flex",
+      alignItems: "center",
+      gap: 6,
+      color: theme.muted,
+      fontSize: 12,
+      marginTop: 2,
+    },
+    
+    miniLogo: {
+      width: 18,
+      height: 18,
+      objectFit: "contain",
+    },    
     menuItem: {
       width: "100%",
       display: "flex",
@@ -801,12 +815,21 @@ export default function StatLadderPage() {
           </div>
         )}                
                   
-        <input
-          style={styles.dateInput}
-          type="date"
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-        />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <input
+            style={styles.dateInput}
+            type="date"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+          />
+        
+          {hasStarted && (
+            <div style={{ textAlign: "right" }}>
+              <div style={styles.label}>Timer</div>
+              <div style={{ ...styles.big, ...styles.orange }}>{secondsElapsed}s</div>
+            </div>
+          )}
+        </div>
 
         {loading ? (
           <section style={styles.card}>Loading challenge...</section>
@@ -845,33 +868,21 @@ export default function StatLadderPage() {
             
               <div style={styles.playerRow}>
                 {challenge.player?.headshot_url && (
-                  <img
-                    src={challenge.player.headshot_url}
-                    alt=""
-                    style={styles.headshot}
-                  />
+                  <img src={challenge.player.headshot_url} alt="" style={styles.headshot} />
                 )}
             
                 <div>
                   <div style={styles.big}>{challenge.player?.full_name}</div>
+            
+                  <div style={styles.miniTeamRow}>
+                    {challenge.team?.logo_url && (
+                      <img src={challenge.team.logo_url} alt="" style={styles.miniLogo} />
+                    )}
+                    <span>{challenge.team?.display_name || "Primary team unavailable"}</span>
+                  </div>
+            
                   <div style={styles.sub}>
-                    {challenge.team?.display_name || "Primary team unavailable"}
-                  </div>
-                </div>
-              </div>
-            
-              <div style={styles.statHero}>
-                <div style={styles.statBox}>
-                  <div style={styles.statLabel}>Original {statLabel}</div>
-                  <div style={styles.statValue}>
-                    {formatValue(startingValue, statKey)}
-                  </div>
-                </div>
-            
-                <div style={styles.statBox}>
-                  <div style={styles.statLabel}>Timer</div>
-                  <div style={{ ...styles.statValue, ...styles.orange }}>
-                    {secondsElapsed}s
+                    Original {statLabel}: {formatValue(startingValue, statKey)}
                   </div>
                 </div>
               </div>

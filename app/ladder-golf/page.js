@@ -69,12 +69,14 @@ export default function StatLadderPage() {
   const [chain, setChain] = useState([]);
   const [misses, setMisses] = useState([]);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("info");
   const [score, setScore] = useState(null);
 
   const [user, setUser] = useState(null);
   const [attemptSaved, setAttemptSaved] = useState(false);
 
   const [darkMode, setDarkMode] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
   useEffect(() => {
     const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
@@ -122,6 +124,7 @@ export default function StatLadderPage() {
     setChain([]);
     setMisses([]);
     setMessage("");
+    setMessageType("info");
     setScore(null);
     setAttemptSaved(false);
   }
@@ -211,11 +214,13 @@ export default function StatLadderPage() {
     if (!challenge || !selectedPlayer || ended) return;
 
     if (chain.some((row) => row.player_id === selectedPlayer.id)) {
+      setMessageType("error");
       setMessage("Already used that player.");
       return;
     }
 
     if (selectedPlayer.id === challenge.player_id) {
+      setMessageType("error");
       setMessage("You cannot use the starting player.");
       return;
     }
@@ -224,6 +229,7 @@ export default function StatLadderPage() {
     const value = getStatValue(career, statKey);
 
     if (value === null || value === undefined) {
+      setMessageType("error");
       setMessage("No career stat found for that player.");
       return;
     }
@@ -237,6 +243,7 @@ export default function StatLadderPage() {
       };
 
       setChain((prev) => [...prev, validRow]);
+      setMessageType("success");
       setMessage("Correct. Keep going.");
       setQuery("");
       setSelectedPlayer(null);
@@ -253,6 +260,7 @@ export default function StatLadderPage() {
 
     const nextMisses = [...misses, missRow];
     setMisses(nextMisses);
+    setMessageType("error");
     setMessage(
       `${selectedPlayer.full_name} was too high: ${formatValue(value, statKey)}`
     );
@@ -276,6 +284,7 @@ export default function StatLadderPage() {
     setEnded(true);
     setSecondsElapsed(finalSeconds);
     setScore(finalScore);
+    setMessageType("info");
     setMessage("Run complete.");
 
     await saveAttempt({
@@ -599,6 +608,27 @@ export default function StatLadderPage() {
     orange: {
       color: "#EF3B24",
     },
+    menuItem: {
+      width: "100%",
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      border: `1px solid ${theme.border}`,
+      background: theme.input,
+      color: theme.text,
+      borderRadius: 6,
+      padding: "11px 10px",
+      fontWeight: 900,
+      fontSize: 14,
+      textDecoration: "none",
+      cursor: "pointer",
+      marginBottom: 8,
+    },
+    
+    menuIcon: {
+      fontSize: 20,
+      color: "#EF3B24",
+    },    
   };
 
   return (
@@ -614,13 +644,89 @@ export default function StatLadderPage() {
             </div>
           </div>
 
-          <button style={styles.iconButton} onClick={() => setDarkMode(!darkMode)}>
-            <span className="material-symbols-outlined">
-              {darkMode ? "light_mode" : "dark_mode"}
-            </span>
+          <button style={styles.iconButton} onClick={() => setShowMenu(true)}>
+            <span className="material-symbols-outlined">menu</span>
           </button>
         </div>
 
+        {showMenu && (
+          <div style={styles.modalBackdrop}>
+            <section style={styles.modalCard}>
+              <div style={styles.modalHeader}>
+                <div>
+                  <div style={styles.label}>Menu</div>
+                  <div style={styles.big}>That Guy Rocked</div>
+                </div>
+        
+                <button style={styles.closeButton} onClick={() => setShowMenu(false)}>
+                  ×
+                </button>
+              </div>
+        
+              <Link href="/" style={styles.menuItem}>
+                <span className="material-symbols-outlined" style={styles.menuIcon}>
+                  home
+                </span>
+                Home
+              </Link>
+        
+              <Link href="/ball-knowledgy" style={styles.menuItem}>
+                <span className="material-symbols-outlined" style={styles.menuIcon}>
+                  sports_basketball
+                </span>
+                Ball Knowledgy
+              </Link>
+        
+              <Link href="/stat-ladder" style={styles.menuItem}>
+                <span className="material-symbols-outlined" style={styles.menuIcon}>
+                  leaderboard
+                </span>
+                Stat Ladder
+              </Link>
+        
+              <button
+                style={styles.menuItem}
+                onClick={() => {
+                  setShowMenu(false);
+                  setShowLogin(true);
+                }}
+              >
+                <span className="material-symbols-outlined" style={styles.menuIcon}>
+                  account_circle
+                </span>
+                Profile
+              </button>
+        
+              <button
+                style={styles.menuItem}
+                onClick={() => {
+                  setShowMenu(false);
+                  loadLeaderboard();
+                  setShowLeaderboard(true);
+                }}
+              >
+                <span className="material-symbols-outlined" style={styles.menuIcon}>
+                  trophy
+                </span>
+                Leaderboard
+              </button>
+        
+              <button
+                style={styles.menuItem}
+                onClick={() => {
+                  setDarkMode(!darkMode);
+                  setShowMenu(false);
+                }}
+              >
+                <span className="material-symbols-outlined" style={styles.menuIcon}>
+                  {darkMode ? "light_mode" : "dark_mode"}
+                </span>
+                {darkMode ? "Light Mode" : "Dark Mode"}
+              </button>
+            </section>
+          </div>
+        )}                  
+                  
         <input
           style={styles.dateInput}
           type="date"
@@ -745,7 +851,16 @@ export default function StatLadderPage() {
                   Give Up
                 </button>
 
-                {message && <div style={styles.message}>{message}</div>}
+                {message && (
+                  <div
+                    style={{
+                      ...styles.message,
+                      color: messageType === "success" ? "#00C853" : "#EF3B24",
+                    }}
+                  >
+                    {message}
+                  </div>
+                )}
               </section>
             )}
 

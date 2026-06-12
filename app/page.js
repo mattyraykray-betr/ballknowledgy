@@ -29,7 +29,18 @@ export default function HomePage() {
               padding: 16,
             }}
           >
-            <div style={{ fontSize: 22, fontWeight: 900 }}>Ball Knowledgy</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: 28 }}
+              >
+                quiz
+              </span>
+            
+              <div style={{ fontSize: 22, fontWeight: 900 }}>
+                Ball Knowledgy
+              </div>
+            </div>
             <div style={{ color: "#b5b5b5", marginTop: 4 }}>
               Guess the player from team, era, stats, and hints.
             </div>
@@ -46,7 +57,18 @@ export default function HomePage() {
               padding: 16,
             }}
           >
-            <div style={{ fontSize: 22, fontWeight: 900 }}>Ladder Golf</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: 28 }}
+              >
+                tools_ladder
+              </span>
+            
+              <div style={{ fontSize: 22, fontWeight: 900 }}>
+                Ladder Golf
+              </div>
+            </div>
             <div style={{ color: "#b5b5b5", marginTop: 4 }}>
               Name players lower than the previous career stat value.
             </div>

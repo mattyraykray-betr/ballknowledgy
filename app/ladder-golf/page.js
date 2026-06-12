@@ -648,7 +648,7 @@ export default function StatLadderPage() {
       boxShadow: "-12px 0 30px rgba(0,0,0,0.35)",
       display: "flex",
       flexDirection: "column",
-    }
+    },
     drawerHeader: {
       display: "flex",
       justifyContent: "space-between",

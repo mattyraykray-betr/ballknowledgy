@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
+import SiteNav from "../../components/SiteNav";
+import ProfileModal from "../../components/ProfileModal";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -90,6 +92,8 @@ export default function StatLadderPage() {
 
   const [darkMode, setDarkMode] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [username, setUsername] = useState("");  
 
   useEffect(() => {
     const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
@@ -637,96 +641,6 @@ export default function StatLadderPage() {
       height: 18,
       objectFit: "contain",
     },    
-    menuItem: {
-      width: "100%",
-      display: "flex",
-      alignItems: "center",
-      gap: 12,
-      color: theme.text,
-      padding: "10px 2px",
-      fontWeight: 900,
-      fontSize: 16,
-      textDecoration: "none",
-      cursor: "pointer",
-      background: "transparent",
-      border: "none",
-      marginBottom: 12,
-    },  
-    menuIcon: {
-      fontSize: 20,
-      color: theme.text,
-    },
-    drawerBackdrop: {
-      position: "fixed",
-      inset: 0,
-      background: "rgba(0,0,0,0.62)",
-      zIndex: 100,
-      display: "flex",
-      justifyContent: "flex-end",
-    },  
-    drawerPanel: {
-      width: "58%",
-      maxWidth: 340,
-      minWidth: 235,
-      height: "100vh",
-      background: theme.card,
-      color: theme.text,
-      borderLeft: `1px solid ${theme.border}`,
-      padding: 14,
-      boxSizing: "border-box",
-      boxShadow: "-12px 0 30px rgba(0,0,0,0.35)",
-      display: "flex",
-      flexDirection: "column",
-    },
-    drawerHeader: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: 14,
-    },    
-    drawerCloseButton: {
-      border: `1px solid ${theme.border}`,
-      background: theme.pane,
-      color: theme.text,
-      borderRadius: 6,
-      cursor: "pointer",
-      width: 34,
-      height: 34,
-      fontWeight: 950,
-    },
-    profileMenuItem: {
-      width: "100%",
-      display: "flex",
-      alignItems: "center",
-      gap: 12,
-      background: "transparent",
-      border: "none",
-      color: theme.text,
-      padding: "8px 2px",
-      cursor: "pointer",
-    },   
-    drawerAvatar: {
-      width: 36,
-      height: 36,
-      borderRadius: "50%",
-      objectFit: "cover",
-      border: `1px solid ${theme.border}`,
-      flexShrink: 0,
-    },    
-    drawerAvatarFallback: {
-      width: 36,
-      height: 36,
-      borderRadius: "50%",
-      background: darkMode ? "#003594" : "#E8F0FF",
-      color: darkMode ? "#ffffff" : "#003594",
-      border: `1px solid ${theme.border}`,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontWeight: 900,
-      fontSize: 16,
-      flexShrink: 0,
-    },    
   };
 
   return (
@@ -745,88 +659,27 @@ export default function StatLadderPage() {
           <button style={styles.iconButton} onClick={() => setShowMenu(true)}>
             <span className="material-symbols-outlined">menu</span>
           </button>
-        </div>
+        </div>              
 
-        {showMenu && (
-          <div style={styles.drawerBackdrop} onClick={() => setShowMenu(false)}>
-            <aside style={styles.drawerPanel} onClick={(e) => e.stopPropagation()}>
-              <div>
-                <div style={styles.drawerHeader}>
-                  <div>
-                    <div style={styles.label}>Menu</div>
-                    <div
-                      style={{
-                        ...styles.big,
-                        fontFamily: "'Roboto Slab', Rockwell, serif",
-                        fontWeight: 900,
-                      }}
-                    >
-                      That Guy Rocked
-                    </div>
-                  </div>
+        <SiteNav
+          showMenu={showMenu}
+          setShowMenu={setShowMenu}
+          setShowProfile={setShowProfile}
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
+          theme={theme}
+          user={user}
+          username={username}
+        />
         
-                  <button style={styles.drawerCloseButton} onClick={() => setShowMenu(false)}>
-                    ×
-                  </button>
-                </div>
-        
-                <Link href="/" style={styles.menuItem}>
-                  <span className="material-symbols-outlined" style={styles.menuIcon}>
-                    home
-                  </span>
-                  Home
-                </Link>
-        
-                <Link href="/ball-knowledgy" style={styles.menuItem}>
-                  <span className="material-symbols-outlined" style={styles.menuIcon}>
-                    quiz
-                  </span>
-                  Ball Knowledgy
-                </Link>
-        
-                <Link href="/ladder-golf" style={styles.menuItem}>
-                  <span className="material-symbols-outlined" style={styles.menuIcon}>
-                    tools_ladder
-                  </span>
-                  Stat Ladder
-                </Link>
-        
-                <button
-                  style={styles.menuItem}
-                  onClick={() => {
-                    setDarkMode(!darkMode);
-                    setShowMenu(false);
-                  }}
-                >
-                  <span className="material-symbols-outlined" style={styles.menuIcon}>
-                    {darkMode ? "light_mode" : "dark_mode"}
-                  </span>
-                  {darkMode ? "Light Mode" : "Dark Mode"}
-                </button>
-              </div>
-        
-              <div style={{ marginTop: 24 }}>
-                <button
-                  style={styles.profileMenuItem}
-                  onClick={() => {
-                    setShowMenu(false);
-                  }}
-                >
-                <div style={styles.drawerAvatarFallback}>
-                  {(user?.email || "P").charAt(0).toUpperCase()}
-                </div>
-              
-                <div>
-                  <div style={{ fontWeight: 900 }}>
-                    {user ? "Profile" : "Guest"}
-                  </div>
-                  <div style={styles.sub}>Profile coming soon</div>
-                </div>
-                </button>
-              </div>
-            </aside>
-          </div>
-        )}                
+        <ProfileModal
+          show={showProfile}
+          onClose={() => setShowProfile(false)}
+          user={user}
+          setUser={setUser}
+          darkMode={darkMode}
+          theme={theme}
+        />
                   
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <input

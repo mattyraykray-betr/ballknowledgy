@@ -1171,26 +1171,6 @@ export default function HomePage() {
           </>
         ) : (
           <>
-            <div style={styles.tabs}>
-              {challenges.map((c) => (
-                <button
-                  key={c.id}
-                  style={{
-                    ...styles.tab,
-                    ...(activeChallenge?.id === c.id ? styles.activeTab : {}),
-                  }}
-                  onClick={() => {
-                    setSelectedDifficulty(c.difficulty);
-                    resetGameState(c, false);
-                  }}
-                >
-                  {(() => {
-                    const status = getCompletionForDifficulty(completionStatus, c.difficulty);
-                    return `${status?.completed ? (status.is_correct ? "✓ " : "✕ ") : ""}${difficultyLabel(c.difficulty)}`;
-                  })()}
-                </button>
-              ))}
-            </div>
             
             {ended && (
               <section style={styles.card}>

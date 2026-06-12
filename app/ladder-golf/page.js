@@ -9,6 +9,9 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
+const HEADSHOT_FALLBACK =
+  "https://i.ibb.co/1YmfgNKs/TPR-Blank-Headshot-MBB.png";
+
 function todayLocal() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -781,7 +784,7 @@ export default function StatLadderPage() {
                   Ball Knowledgy
                 </Link>
         
-                <Link href="/stat-ladder" style={styles.menuItem}>
+                <Link href="/ladder-golf" style={styles.menuItem}>
                   <span className="material-symbols-outlined" style={styles.menuIcon}>
                     tools_ladder
                   </span>
@@ -878,7 +881,7 @@ export default function StatLadderPage() {
             
               <div style={styles.playerRow}>
                 {challenge.player?.headshot_url && (
-                  <img src={challenge.player.headshot_url} alt="" style={styles.headshot} />
+                  <img src={challenge.player.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.headshot} />
                 )}
             
                 <div>
@@ -958,7 +961,7 @@ export default function StatLadderPage() {
                       >
                         <div style={styles.searchResultRow}>
                           {p.headshot_url && (
-                            <img src={p.headshot_url} alt="" style={styles.searchHeadshot} />
+                            <img src={p.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
                           )}
                           <span>{p.full_name}</span>
                         </div>
@@ -1002,7 +1005,7 @@ export default function StatLadderPage() {
               {chain.map((row, idx) => (
                 <div key={`${row.player_id}-${idx}`} style={styles.chainRow}>
                   {row.headshot_url && (
-                    <img src={row.headshot_url} alt="" style={styles.searchHeadshot} />
+                    <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
                   )}
                   <div style={{ flex: 1 }}>
                     <strong>

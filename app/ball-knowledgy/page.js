@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
+import SiteNav from "@/components/SiteNav";
+import ProfileModal from "@/components/ProfileModal";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -144,10 +146,9 @@ export default function HomePage() {
   const [hasStarted, setHasStarted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [username, setUsername] = useState("");
-  const [avatarFile, setAvatarFile] = useState(null);
   
   useEffect(() => {
     const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
@@ -165,10 +166,8 @@ export default function HomePage() {
   const [startedAt, setStartedAt] = useState(null);
   const [secondsElapsed, setSecondsElapsed] = useState(0);
   const [message, setMessage] = useState("");
-
+  const [username, setUsername] = useState("");
   const [user, setUser] = useState(null);
-  const [authEmail, setAuthEmail] = useState("");
-  const [authMessage, setAuthMessage] = useState("");
   const [attemptSaved, setAttemptSaved] = useState(false);
   const [leaderboard, setLeaderboard] = useState([]);
   const [leaderboardType, setLeaderboardType] = useState("daily");
@@ -218,109 +217,7 @@ export default function HomePage() {
       setHasStarted(false);
     }
   }
-
-  async function uploadAvatarForUser(userId) {
-    if (!avatarFile) return null;
   
-    const fileExt = avatarFile.name.split(".").pop();
-    const filePath = `${userId}/avatar.${fileExt}`;
-  
-    const { error: uploadError } = await supabase.storage
-      .from("avatars")
-      .upload(filePath, avatarFile, {
-        upsert: true,
-      });
-  
-    if (uploadError) {
-      throw uploadError;
-    }
-  
-    const { data } = supabase.storage
-      .from("avatars")
-      .getPublicUrl(filePath);
-  
-    return data.publicUrl;
-  }
-  
-  async function continueAsGuest() {
-    setAuthMessage("");
-  
-    const { data, error } = await supabase.auth.signInAnonymously();
-  
-    if (error) {
-      setAuthMessage(error.message);
-      return;
-    }
-  
-    const newUser = data.user;
-    setUser(newUser);
-  
-    try {
-      const uploadedAvatarUrl = await uploadAvatarForUser(newUser.id);
-  
-      const profileUsername =
-        username.trim() || `guest_${newUser.id.slice(0, 6)}`;
-  
-      const { error: profileError } = await supabase.from("profiles").upsert({
-        id: newUser.id,
-        username: profileUsername,
-        display_name: profileUsername,
-        avatar_url: uploadedAvatarUrl,
-        updated_at: new Date().toISOString(),
-      });
-  
-      if (profileError) {
-        setAuthMessage(profileError.message);
-        return;
-      }
-  
-      setShowLogin(false);
-      loadLeaderboard();
-    } catch (err) {
-      setAuthMessage(err.message || "Could not create profile.");
-    }
-  }
-
-  async function saveProfile() {
-    if (!user) return;
-  
-    setAuthMessage("");
-  
-    try {
-      const uploadedAvatarUrl = await uploadAvatarForUser(user.id);
-  
-      const profileUsername =
-        username.trim() || `guest_${user.id.slice(0, 6)}`;
-  
-      const profileUpdate = {
-        id: user.id,
-        username: profileUsername,
-        display_name: profileUsername,
-        updated_at: new Date().toISOString(),
-      };
-  
-      if (uploadedAvatarUrl) {
-        profileUpdate.avatar_url = uploadedAvatarUrl;
-      }
-  
-      const { error } = await supabase.from("profiles").upsert(profileUpdate);
-  
-      setAuthMessage(error ? error.message : "Profile saved.");
-  
-      if (!error) {
-        loadLeaderboard();
-      }
-    } catch (err) {
-      setAuthMessage(err.message || "Could not save profile.");
-    }
-  }
-  
-  async function signOut() {
-    await supabase.auth.signOut();
-    setUser(null);
-    setAuthMessage("");
-  }
-
   async function loadUserStreaks() {
     if (!user) {
       setUserStreaks(null);
@@ -1110,124 +1007,31 @@ export default function HomePage() {
             <div style={styles.sub}>NBA player challenge</div>
           </div>
 
-          <div style={{ display: "flex", gap: 8 }}>
-            <button style={styles.iconButton} onClick={() => setShowLogin(!showLogin)}>
-              <span className="material-symbols-outlined">
-                {user ? "account_circle" : "login"}
-              </span>
-            </button>
-          
-            <button
-              style={styles.iconButton}
-              onClick={() => {
-                const type = activeChallenge ? "daily" : "alltime";
-                setLeaderboardType(type);
-                loadLeaderboard(type);
-                setShowLeaderboard(true);
-              }}
-            >
-              <span className="material-symbols-outlined">
-                leaderboard
-              </span>
-            </button>
-          
-            <button style={styles.iconButton} onClick={() => setDarkMode(!darkMode)}>
-              <span className="material-symbols-outlined">
-                {darkMode ? "light_mode" : "dark_mode"}
-              </span>
-            </button>
-          </div>
+          <button style={styles.iconButton} onClick={() => setShowMenu(true)}>
+            <span className="material-symbols-outlined">menu</span>
+          </button>
         </div>
+
+        <SiteNav
+          showMenu={showMenu}
+          setShowMenu={setShowMenu}
+          setShowProfile={setShowProfile}
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
+          theme={theme}
+          user={user}
+          username={username}
+        />
+        
+        <ProfileModal
+          show={showProfile}
+          onClose={() => setShowProfile(false)}
+          user={user}
+          setUser={setUser}
+          darkMode={darkMode}
+          theme={theme}
+        />
   
-        {showLogin && (
-          <div style={styles.modalBackdrop}>
-            <section style={styles.modalCard}>
-              <div style={styles.modalHeader}>
-                <div>
-                  <div style={styles.label}>Profile</div>
-                  <div style={styles.big}>{user ? "Your Account" : "Save Scores"}</div>
-                </div>
-        
-                <button style={styles.closeButton} onClick={() => setShowLogin(false)}>
-                  ×
-                </button>
-              </div>
-        
-              {user ? (
-                <>
-                  <div style={styles.sub}>
-                    {user.is_anonymous ? "Guest account" : user.email}
-                  </div>
-
-                  {userStreaks && (
-                    <div style={styles.topStatusRow}>
-                      <div style={styles.statusMini}>
-                        <div style={styles.statLabel}>Current Streak</div>
-                        <div style={styles.statValue}>{userStreaks.current_streak || 0}</div>
-                      </div>
-                  
-                      <div style={styles.statusMini}>
-                        <div style={styles.statLabel}>Best Streak</div>
-                        <div style={styles.statValue}>{userStreaks.best_streak || 0}</div>
-                      </div>
-                    </div>
-                  )}
-                
-                  <input
-                    style={styles.input}
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Username"
-                  />
-        
-                  <input
-                    style={styles.input}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
-                  />
-        
-                  <button style={styles.primaryButton} onClick={saveProfile}>
-                    Save Profile
-                  </button>
-        
-                  <button style={styles.dangerButton} onClick={signOut}>
-                    Sign Out
-                  </button>
-        
-                  {authMessage && <div style={styles.message}>{authMessage}</div>}
-                </>
-              ) : (
-                <>
-                  <div style={styles.sub}>
-                    No email required. Create a guest profile to save scores on this device.
-                  </div>
-        
-                  <input
-                    style={styles.input}
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Username"
-                  />
-        
-                  <input
-                    style={styles.input}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
-                  />
-        
-                  <button style={styles.primaryButton} onClick={continueAsGuest}>
-                    Continue as Guest
-                  </button>
-        
-                  {authMessage && <div style={styles.message}>{authMessage}</div>}
-                </>
-              )}
-            </section>
-          </div>
-        )}
-
         {showLeaderboard && (
           <div style={styles.modalBackdrop}>
             <section style={styles.modalCard}>

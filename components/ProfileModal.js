@@ -81,7 +81,12 @@ export default function ProfileModal({
       const { error } = await supabase.from("profiles").upsert(payload);
   
       if (error) {
-        setAuthMessage(error.message);
+        if (error.code === "23505") {
+          setAuthMessage("Username already taken, please try another username!");
+        } else {
+          setAuthMessage(error.message);
+        }
+      
         return false;
       }
   

@@ -4,10 +4,18 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import SiteNav from "../../components/SiteNav";
 import ProfileModal from "../../components/ProfileModal";
+import Link from "next/link";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+    },
+  }
 );
 
 const HEADSHOT_FALLBACK =
@@ -1004,7 +1012,11 @@ export default function HomePage() {
         <div style={styles.topbar}>
           <div>
             <h1 style={styles.title}>That Guy Rocked</h1>
-            <div style={styles.sub}>NBA player challenge</div>
+            <div style={styles.sub}>
+              <Link href="/" style={{ color: "inherit" }}>
+                Back to Games Home
+              </Link>
+            </div>
           </div>
 
           <button style={styles.iconButton} onClick={() => setShowMenu(true)}>

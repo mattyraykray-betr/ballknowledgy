@@ -40,43 +40,56 @@ export default function ProfileModal({
 
   async function continueAsGuest() {
     setAuthMessage("");
-
+  
     const { data, error } = await supabase.auth.signInAnonymously();
-
+  
     if (error) {
       setAuthMessage(error.message);
       return;
     }
-
+  
     const newUser = data.user;
     setUser(newUser);
-
-    await saveProfileForUser(newUser);
-    onClose();
+  
+    const saved = await saveProfileForUser(newUser);
+  
+    if (saved) {
+      onClose();
+    }
   }
 
   async function saveProfileForUser(profileUser = user) {
-    if (!profileUser) return;
-
+    if (!profileUser) return false;
+  
     try {
       const uploadedAvatarUrl = await uploadAvatarForUser(profileUser.id);
+  
       const profileUsername =
         username.trim() || `guest_${profileUser.id.slice(0, 6)}`;
-
+  
       const payload = {
         id: profileUser.id,
         username: profileUsername,
         display_name: profileUsername,
         updated_at: new Date().toISOString(),
       };
-
-      if (uploadedAvatarUrl) payload.avatar_url = uploadedAvatarUrl;
-
+  
+      if (uploadedAvatarUrl) {
+        payload.avatar_url = uploadedAvatarUrl;
+      }
+  
       const { error } = await supabase.from("profiles").upsert(payload);
-
-      setAuthMessage(error ? error.message : "Profile saved.");
+  
+      if (error) {
+        setAuthMessage(error.message);
+        return false;
+      }
+  
+      setAuthMessage("Profile saved.");
+      return true;
     } catch (err) {
       setAuthMessage(err.message || "Could not save profile.");
+      return false;
     }
   }
 
@@ -224,7 +237,13 @@ export default function ProfileModal({
 
         {user ? (
           <>
-            <button style={styles.primaryButton} onClick={() => saveProfileForUser(user)}>
+            <button
+              style={styles.primaryButton}
+              onClick={async () => {
+                const saved = await saveProfileForUser(user);
+                if (saved) onClose();
+              }}
+            >
               Save Profile
             </button>
 
@@ -234,7 +253,7 @@ export default function ProfileModal({
           </>
         ) : (
           <button style={styles.primaryButton} onClick={continueAsGuest}>
-            Continue as Guest
+            Save Profile
           </button>
         )}
 

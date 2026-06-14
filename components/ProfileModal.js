@@ -79,6 +79,28 @@ export default function ProfileModal({
       "Profile found. Next step is linking this device to the recovered profile."
     );
   }
+
+  async function loadProfile() {
+    if (!user) return;
+  
+    const { data } = await supabase
+      .from("profiles")
+      .select("username, avatar_url, recovery_key")
+      .eq("id", user.id)
+      .maybeSingle();
+  
+    if (!data) return;
+  
+    setUsername(data.username || "");
+    setRecoveryKey(data.recovery_key || "");
+  }
+  import { useEffect, useState } from "react";
+  useEffect(() => {
+    if (show && user) {
+      loadProfile();
+    }
+  }, [show, user]);  
+  
   
   async function continueAsGuest() {
     setAuthMessage("");

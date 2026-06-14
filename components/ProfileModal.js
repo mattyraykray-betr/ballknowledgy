@@ -36,7 +36,27 @@ export default function ProfileModal({
   const [recoveryKey, setRecoveryKey] = useState("");
   const [recoverUsername, setRecoverUsername] = useState("");
   const [recoverKey, setRecoverKey] = useState("");  
-
+  
+  async function loadProfile() {
+    if (!user) return;
+  
+    const { data } = await supabase
+      .from("profiles")
+      .select("username, avatar_url, recovery_key")
+      .eq("id", user.id)
+      .maybeSingle();
+  
+    if (!data) return;
+  
+    setUsername(data.username || "");
+    setRecoveryKey(data.recovery_key || "");
+  }
+  useEffect(() => {
+    if (show && user) {
+      loadProfile();
+    }
+  }, [show, user]);  
+  
   if (!show) return null;
 
   async function uploadAvatarForUser(userId) {
@@ -79,28 +99,6 @@ export default function ProfileModal({
       "Profile found. Next step is linking this device to the recovered profile."
     );
   }
-
-  async function loadProfile() {
-    if (!user) return;
-  
-    const { data } = await supabase
-      .from("profiles")
-      .select("username, avatar_url, recovery_key")
-      .eq("id", user.id)
-      .maybeSingle();
-  
-    if (!data) return;
-  
-    setUsername(data.username || "");
-    setRecoveryKey(data.recovery_key || "");
-  }
-
-  useEffect(() => {
-    if (show && user) {
-      loadProfile();
-    }
-  }, [show, user]);  
-  
   
   async function continueAsGuest() {
     setAuthMessage("");

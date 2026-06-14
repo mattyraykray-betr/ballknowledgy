@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
@@ -94,7 +94,7 @@ export default function ProfileModal({
     setUsername(data.username || "");
     setRecoveryKey(data.recovery_key || "");
   }
-  import { useEffect, useState } from "react";
+
   useEffect(() => {
     if (show && user) {
       loadProfile();

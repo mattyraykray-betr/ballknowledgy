@@ -18,11 +18,29 @@ const supabase = createClient(
   }
 );
 
+const [profile, setProfile] = useState(null);
 const HEADSHOT_FALLBACK =
   "https://i.ibb.co/1YmfgNKs/TPR-Blank-Headshot-MBB.png";
 
 function todayLocal() {
   return new Date().toISOString().slice(0, 10);
+}
+
+async function loadProfile(userId) {
+  if (!userId) {
+    setProfile(null);
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("username, display_name, avatar_url")
+    .eq("id", userId)
+    .maybeSingle();
+
+  if (!error) {
+    setProfile(data || null);
+  }
 }
 
 function formatTimer(totalSeconds) {
@@ -494,13 +512,17 @@ export default function HomePage() {
   useEffect(() => {
     async function loadUser() {
       const { data } = await supabase.auth.getUser();
-      setUser(data?.user || null);
+      const currentUser = data?.user || null;
+      setUser(currentUser);
+      loadProfile(currentUser?.id);
     }
   
     loadUser();
   
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user || null);
+      const currentUser = session?.user || null;
+      setUser(currentUser);
+      loadProfile(currentUser?.id);
     });
   
     return () => {
@@ -1032,7 +1054,8 @@ export default function HomePage() {
           setDarkMode={setDarkMode}
           theme={theme}
           user={user}
-          username={username}
+          profile={profile}
+          username={profile?.username || username}
         />
         
         <ProfileModal

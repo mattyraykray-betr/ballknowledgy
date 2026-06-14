@@ -96,7 +96,7 @@ export default function ProfileModal({
     const saved = await saveProfileForUser(newUser);
   
     if (saved) {
-      onClose();
+      setAuthMessage("Profile saved. Save your recovery key somewhere safe.");
     }
   }
 
@@ -248,6 +248,21 @@ export default function ProfileModal({
       marginTop: 8,
       fontSize: 13,
     },
+    recoveryBox: {
+      border: `1px solid ${theme.border}`,
+      background: theme.input,
+      borderRadius: 8,
+      padding: 10,
+      marginTop: 10,
+    },
+    
+    recoveryKey: {
+      fontFamily: "monospace",
+      fontSize: 18,
+      fontWeight: 900,
+      letterSpacing: "0.04em",
+      marginBottom: 6,
+    },    
   };
 
   return (
@@ -331,10 +346,14 @@ export default function ProfileModal({
 
         {authMessage && <div style={styles.message}>{authMessage}</div>}
         {recoveryKey && (
-          <div style={styles.message}>
-            Recovery Key: {recoveryKey}
+          <div style={styles.recoveryBox}>
+            <div style={styles.label}>Recovery Key</div>
+            <div style={styles.recoveryKey}>{recoveryKey}</div>
+            <div style={styles.sub}>
+              Save this key. You will need it to use this profile on another device.
+            </div>
           </div>
-        )}          
+        )}         
       </section>
     </div>
   );

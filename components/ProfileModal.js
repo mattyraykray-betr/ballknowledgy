@@ -8,6 +8,20 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
+function generateRecoveryKey() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+
+  function part(length) {
+    let value = "";
+    for (let i = 0; i < length; i++) {
+      value += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return value;
+  }
+
+  return `TGR-${part(4)}-${part(4)}`;
+}
+
 export default function ProfileModal({
   show,
   onClose,
@@ -19,6 +33,9 @@ export default function ProfileModal({
   const [username, setUsername] = useState("");
   const [avatarFile, setAvatarFile] = useState(null);
   const [authMessage, setAuthMessage] = useState("");
+  const [recoveryKey, setRecoveryKey] = useState("");
+  const [recoverUsername, setRecoverUsername] = useState("");
+  const [recoverKey, setRecoverKey] = useState("");  
 
   if (!show) return null;
 
@@ -38,6 +55,31 @@ export default function ProfileModal({
     return data.publicUrl;
   }
 
+  async function recoverProfile() {
+    setAuthMessage("");
+  
+    if (!recoverUsername.trim() || !recoverKey.trim()) {
+      setAuthMessage("Enter your username and recovery key.");
+      return;
+    }
+  
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("id, username, recovery_key")
+      .eq("username", recoverUsername.trim())
+      .eq("recovery_key", recoverKey.trim().toUpperCase())
+      .maybeSingle();
+  
+    if (error || !profile) {
+      setAuthMessage("Profile not found. Check your username and recovery key.");
+      return;
+    }
+  
+    setAuthMessage(
+      "Profile found. Next step is linking this device to the recovered profile."
+    );
+  }
+  
   async function continueAsGuest() {
     setAuthMessage("");
   
@@ -66,12 +108,16 @@ export default function ProfileModal({
   
       const profileUsername =
         username.trim() || `guest_${profileUser.id.slice(0, 6)}`;
-  
+
+      const finalRecoveryKey = recoveryKey || generateRecoveryKey();
+      
       const payload = {
         id: profileUser.id,
         username: profileUsername,
         display_name: profileUsername,
         updated_at: new Date().toISOString(),
+        recovery_key: finalRecoveryKey,
+        recovery_enabled: true,        
       };
   
       if (uploadedAvatarUrl) {
@@ -261,8 +307,34 @@ export default function ProfileModal({
             Save Profile
           </button>
         )}
+        <div style={{ marginTop: 14 }}>
+          <div style={styles.label}>Recover Profile</div>
+        
+          <input
+            style={styles.input}
+            value={recoverUsername}
+            onChange={(e) => setRecoverUsername(e.target.value)}
+            placeholder="Username"
+          />
+        
+          <input
+            style={styles.input}
+            value={recoverKey}
+            onChange={(e) => setRecoverKey(e.target.value)}
+            placeholder="Recovery Key"
+          />
+        
+          <button style={styles.primaryButton} onClick={recoverProfile}>
+            Recover Profile
+          </button>
+        </div>          
 
         {authMessage && <div style={styles.message}>{authMessage}</div>}
+        {recoveryKey && (
+          <div style={styles.message}>
+            Recovery Key: {recoveryKey}
+          </div>
+        )}          
       </section>
     </div>
   );

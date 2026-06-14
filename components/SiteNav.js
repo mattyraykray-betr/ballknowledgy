@@ -10,6 +10,7 @@ export default function SiteNav({
   setDarkMode,
   theme,
   user,
+  profile,
   username,
 }) {
   if (!showMenu) return null;
@@ -102,6 +103,14 @@ export default function SiteNav({
       cursor: "pointer",
       marginTop: 24,
     },
+    drawerAvatar: {
+      width: 36,
+      height: 36,
+      borderRadius: "50%",
+      objectFit: "cover",
+      border: `1px solid ${theme.border}`,
+      flexShrink: 0,
+    },    
     drawerAvatarFallback: {
       width: 36,
       height: 36,
@@ -173,12 +182,24 @@ export default function SiteNav({
             setShowProfile(true);
           }}
         >
-          <div style={styles.drawerAvatarFallback}>
-            {(username || user?.email || "P").charAt(0).toUpperCase()}
-          </div>
-
+          {profile?.avatar_url ? (
+            <img
+              src={profile.avatar_url}
+              alt=""
+              style={styles.drawerAvatar}
+            />
+          ) : (
+            <div style={styles.drawerAvatarFallback}>
+              {(profile?.username || username || user?.email || "P")
+                .charAt(0)
+                .toUpperCase()}
+            </div>
+          )}
+          
           <div>
-            <div style={{ fontWeight: 900 }}>{username || "Profile"}</div>
+            <div style={{ fontWeight: 900 }}>
+              {profile?.username || username || "Profile"}
+            </div>
             <div style={styles.sub}>View profile</div>
           </div>
         </button>

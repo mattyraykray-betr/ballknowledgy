@@ -18,7 +18,6 @@ const supabase = createClient(
   }
 );
 
-const [profile, setProfile] = useState(null);
 const HEADSHOT_FALLBACK =
   "https://i.ibb.co/1YmfgNKs/TPR-Blank-Headshot-MBB.png";
 
@@ -199,6 +198,7 @@ export default function HomePage() {
   const [leaderboardType, setLeaderboardType] = useState("daily");
   const [completionStatus, setCompletionStatus] = useState([]);
   const [userStreaks, setUserStreaks] = useState(null);
+  const [profile, setProfile] = useState(null);
   
   const theme = useMemo(() => {
     return darkMode

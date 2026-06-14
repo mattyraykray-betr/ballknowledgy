@@ -136,7 +136,8 @@ export default function ProfileModal({
         return false;
       }
   
-      setAuthMessage("Profile saved.");
+      setRecoveryKey(finalRecoveryKey);
+      setAuthMessage("Profile saved. Save your recovery key somewhere safe.");
       return true;
     } catch (err) {
       setAuthMessage(err.message || "Could not save profile.");
@@ -306,8 +307,7 @@ export default function ProfileModal({
             <button
               style={styles.primaryButton}
               onClick={async () => {
-                const saved = await saveProfileForUser(user);
-                if (saved) onClose();
+                await saveProfileForUser(user);
               }}
             >
               Save Profile

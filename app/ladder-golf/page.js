@@ -29,64 +29,6 @@ function isFutureDate(dateValue) {
   return dateValue > todayLocal();
 }
 
-function formatShareDate(dateString) {
-  const d = new Date(dateString + "T00:00:00");
-
-  return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
-}
-
-function getShareText(gameName, scoreText) {
-  return (
-    `That Guy Rocked\n` +
-    `${gameName} | ${formatShareDate(challenge.challenge_date)}\n` +
-    `${scoreText}\n\n` +
-    `Play here: ${window.location.origin}`
-  );
-}
-
-async function shareResult(gameName, scoreText) {
-  const shareText = getShareText(gameName, scoreText);
-
-  if (navigator.share) {
-    await navigator.share({
-      title: "That Guy Rocked",
-      text: shareText,
-    });
-  } else {
-    await navigator.clipboard.writeText(shareText);
-    alert("Score copied to clipboard.");
-  }
-}
-
-function openTwitterShare(gameName, scoreText) {
-  const shareText = getShareText(gameName, scoreText);
-  window.open(
-    `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
-    "_blank",
-    "noopener,noreferrer"
-  );
-}
-
-function openFacebookShare(gameName, scoreText) {
-  const shareText = getShareText(gameName, scoreText);
-  window.open(
-    `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin)}&quote=${encodeURIComponent(shareText)}`,
-    "_blank",
-    "noopener,noreferrer"
-  );
-}
-
-async function copyShareText(gameName, scoreText) {
-  await navigator.clipboard.writeText(getShareText(gameName, scoreText));
-  alert("Score copied to clipboard.");
-}
-
-function openEmailShare(gameName, scoreText) {
-  window.location.href = `mailto:?subject=${encodeURIComponent(
-    "That Guy Rocked score"
-  )}&body=${encodeURIComponent(getShareText(gameName, scoreText))}`;
-}
-
 async function loadProfile(userId) {
   if (!userId) {
     setProfile(null);
@@ -403,6 +345,64 @@ export default function StatLadderPage() {
   
     if (!error) setLeaderboard(data || []);
   }  
+
+  function formatShareDate(dateString) {
+    const d = new Date(dateString + "T00:00:00");
+  
+    return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+  }
+  
+  function getShareText(gameName, scoreText) {
+    return (
+      `That Guy Rocked\n` +
+      `${gameName} | ${formatShareDate(challenge?.challenge_date || selectedDate)}\n` +
+      `${scoreText}\n\n` +
+      `Try to beat my score: ${window.location.origin}`
+    );
+  }
+  
+  async function shareResult(gameName, scoreText) {
+    const shareText = getShareText(gameName, scoreText);
+  
+    if (navigator.share) {
+      await navigator.share({
+        title: "That Guy Rocked",
+        text: shareText,
+      });
+    } else {
+      await navigator.clipboard.writeText(shareText);
+      alert("Score copied to clipboard.");
+    }
+  }
+  
+  function openTwitterShare(gameName, scoreText) {
+    const shareText = getShareText(gameName, scoreText);
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+  
+  function openFacebookShare(gameName, scoreText) {
+    const shareText = getShareText(gameName, scoreText);
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin)}&quote=${encodeURIComponent(shareText)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+  
+  async function copyShareText(gameName, scoreText) {
+    await navigator.clipboard.writeText(getShareText(gameName, scoreText));
+    alert("Score copied to clipboard.");
+  }
+  
+  function openEmailShare(gameName, scoreText) {
+    window.location.href = `mailto:?subject=${encodeURIComponent(
+      "That Guy Rocked score"
+    )}&body=${encodeURIComponent(getShareText(gameName, scoreText))}`;
+  }
   
   async function finishGame(finalMisses = misses, finalChain = chain) {
     const finalSeconds = startedAt ? Math.floor((Date.now() - startedAt) / 1000) : 0;

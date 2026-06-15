@@ -828,22 +828,26 @@ export default function NameADudePage() {
     },
 
     shareGrid: {
-      display: "grid",
-      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-      gap: 8,
-      marginTop: 12,
+      display: "flex",
+      gap: 10,
+      marginTop: 8,
+      marginBottom: 12,
+      alignItems: "center",
     },
     
-    shareButton: {
+    shareIconButton: {
       border: `1px solid ${theme.border}`,
       background: theme.input,
       color: theme.text,
-      padding: "10px 8px",
-      fontWeight: 900,
-      borderRadius: 6,
+      width: 44,
+      height: 44,
+      borderRadius: "50%",
       cursor: "pointer",
-      textTransform: "uppercase",
-      fontSize: 12,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontWeight: 950,
+      fontSize: 18,
     },    
   };
 
@@ -967,43 +971,79 @@ export default function NameADudePage() {
                 ))
               )}
               {ended && (
-                <div style={{ marginTop: 12 }}>
-                  <div style={styles.shareGrid}>
-                    <button
-                      style={styles.shareButton}
-                      onClick={() => openTwitterShare("Name a Dude", `Score: ${score ?? 0}\nCorrect: ${correctPlayers.length}\nMisses: ${misses.length}\nTime: ${formatTimer(secondsElapsed)}`)}
-                    >
-                      Twitter
-                    </button>
-                  
-                    <button
-                      style={styles.shareButton}
-                      onClick={() => openFacebookShare("Name a Dude", `Score: ${score ?? 0}\nCorrect: ${correctPlayers.length}\nMisses: ${misses.length}\nTime: ${formatTimer(secondsElapsed)}`)}
-                    >
-                      Facebook
-                    </button>
-                  
-                    <button
-                      style={styles.shareButton}
-                      onClick={() => copyShareText("Name a Dude", `Score: ${score ?? 0}\nCorrect: ${correctPlayers.length}\nMisses: ${misses.length}\nTime: ${formatTimer(secondsElapsed)}`)}
-                    >
-                      Copy
-                    </button>
-                  
-                    <button
-                      style={styles.shareButton}
-                      onClick={() => shareResult("Name a Dude", `Score: ${score ?? 0}\nCorrect: ${correctPlayers.length}\nMisses: ${misses.length}\nTime: ${formatTimer(secondsElapsed)}`)}
-                    >
-                      Messages
-                    </button>
-                  
-                    <button
-                      style={styles.shareButton}
-                      onClick={() => openEmailShare("Name a Dude", `Score: ${score ?? 0}\nCorrect: ${correctPlayers.length}\nMisses: ${misses.length}\nTime: ${formatTimer(secondsElapsed)}`)}
-                    >
-                      Email
-                    </button>
-                  </div>
+                <div style={{ ...styles.label, marginTop: 14 }}>Share</div>
+                
+                <div style={styles.shareGrid}>
+                  <button
+                    style={styles.shareIconButton}
+                    onClick={() =>
+                      openTwitterShare(
+                        "Name a Dude",
+                        `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                      )
+                    }
+                    aria-label="Share on X"
+                    title="Share on X"
+                  >
+                    𝕏
+                  </button>
+                
+                  <button
+                    style={styles.shareIconButton}
+                    onClick={() =>
+                      openFacebookShare(
+                        "Name a Dude",
+                        `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                      )
+                    }
+                    aria-label="Share on Facebook"
+                    title="Share on Facebook"
+                  >
+                    f
+                  </button>
+                
+                  <button
+                    style={styles.shareIconButton}
+                    onClick={() =>
+                      copyShareText(
+                        "Name a Dude",
+                        `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                      )
+                    }
+                    aria-label="Copy score"
+                    title="Copy score"
+                  >
+                    <span className="material-symbols-outlined">content_copy</span>
+                  </button>
+                
+                  <button
+                    style={styles.shareIconButton}
+                    onClick={() =>
+                      shareResult(
+                        "Name a Dude",
+                        `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                      )
+                    }
+                    aria-label="Share by message"
+                    title="Share by message"
+                  >
+                    <span className="material-symbols-outlined">chat_bubble</span>
+                  </button>
+                
+                  <button
+                    style={styles.shareIconButton}
+                    onClick={() =>
+                      openEmailShare(
+                        "Name a Dude",
+                        `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                      )
+                    }
+                    aria-label="Share by email"
+                    title="Share by email"
+                  >
+                    <span className="material-symbols-outlined">drafts</span>
+                  </button>
+                </div>
               
                   <button
                     style={styles.primaryButton}

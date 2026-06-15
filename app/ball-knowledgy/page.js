@@ -37,7 +37,9 @@ async function loadProfile(userId) {
     .eq("id", userId)
     .maybeSingle();
 
-  if (!error) setProfile(data || null);
+  if (!error) {
+    setProfile(data || null);
+  }
 }
 
 function formatTimer(totalSeconds) {
@@ -510,6 +512,7 @@ export default function HomePage() {
   useEffect(() => {
     async function loadUser() {
       const { data } = await supabase.auth.getUser();
+  
       const currentUser = data?.user || null;
       setUser(currentUser);
       loadProfile(currentUser?.id);

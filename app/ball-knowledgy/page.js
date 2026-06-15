@@ -1173,6 +1173,31 @@ export default function HomePage() {
                   </div>
                 ))
               )}
+              {ended && (
+                <div style={{ marginTop: 12 }}>
+                  <button
+                    style={styles.primaryButton}
+                    onClick={() =>
+                      shareResult(
+                        "Ball Knowledgy",
+                        `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
+                      )
+                    }
+                  >
+                    Share Score
+                  </button>
+              
+                  <button
+                    style={styles.primaryButton}
+                    onClick={() => {
+                      setShowLeaderboard(false);
+                      resetGameState(activeChallenge, false);
+                    }}
+                  >
+                    Play Again
+                  </button>
+                </div>
+              )}                      
             </section>
           </div>
         )}

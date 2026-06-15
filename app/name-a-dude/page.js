@@ -21,6 +21,10 @@ const supabase = createClient(
 const HEADSHOT_FALLBACK =
   "https://i.ibb.co/1YmfgNKs/TPR-Blank-Headshot-MBB.png";
 
+function todayLocal() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 function formatTimer(totalSeconds) {
   const seconds = Math.max(0, Number(totalSeconds) || 0);
   const hrs = Math.floor(seconds / 3600);
@@ -66,6 +70,13 @@ export default function NameADudePage() {
   const [showMenu, setShowMenu] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
+  const [dailyChallengeId, setDailyChallengeId] = useState(null);
+  const [attemptSaved, setAttemptSaved] = useState(false);
+
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [leaderboardType, setLeaderboardType] = useState("daily");
+  const [leaderboard, setLeaderboard] = useState([]);
+
   useEffect(() => {
     const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
     setDarkMode(Boolean(prefersDark));
@@ -108,6 +119,85 @@ export default function NameADudePage() {
     if (!error) setProfile(data || null);
   }
 
+  async function loadDailyChallenge() {
+    const { data, error } = await supabase
+      .from("nba_trivia_challenges")
+      .select("id")
+      .eq("challenge_type", "name_a_dude")
+      .eq("challenge_date", todayLocal())
+      .eq("is_active", true)
+      .maybeSingle();
+  
+    if (!error && data) {
+      setDailyChallengeId(data.id);
+    }
+  }
+
+  async function saveAttempt({ finalScore, finalSeconds, finalMisses, finalCorrect }) {
+    if (!user || !dailyChallengeId) return;
+  
+    const { error } = await supabase
+      .from("nba_trivia_attempts")
+      .upsert(
+        {
+          challenge_id: dailyChallengeId,
+          user_id: user.id,
+          guessed_player_id:
+            finalCorrect.length > 0
+              ? finalCorrect[finalCorrect.length - 1].player_id
+              : null,
+          is_correct: finalCorrect.length > 0,
+          seconds_elapsed: finalSeconds,
+          wrong_guess_count: finalMisses.length,
+          hints_used: 0,
+          score: finalScore,
+          gave_up: finalMisses.length < 3,
+          completed: true,
+          final_guess_count: finalCorrect.length + finalMisses.length,
+          difficulty: "open",
+          challenge_date: todayLocal(),
+          completed_at: new Date().toISOString(),
+          chain_length: finalCorrect.length,
+          result_json: {
+            game: "name_a_dude",
+            sport: "basketball",
+            league: "nba",
+            correct_players: finalCorrect,
+            misses: finalMisses,
+          },
+        },
+        {
+          onConflict: "challenge_id,user_id",
+        }
+      );
+  
+    if (!error) setAttemptSaved(true);
+    else console.error(error);
+  }
+
+  async function loadLeaderboard(type = leaderboardType) {
+    if (type === "daily" && dailyChallengeId) {
+      const { data, error } = await supabase
+        .from("vw_nba_trivia_daily_challenge_leaderboard")
+        .select("username, avatar_url, best_score, best_time, fewest_misses, correct")
+        .eq("challenge_id", dailyChallengeId)
+        .order("best_score", { ascending: false })
+        .limit(10);
+  
+      if (!error) setLeaderboard(data || []);
+      return;
+    }
+  
+    const { data, error } = await supabase
+      .from("vw_nba_trivia_all_time_leaderboard")
+      .select("username, avatar_url, total_score, avg_score, correct_challenges")
+      .eq("challenge_type", "name_a_dude")
+      .order("total_score", { ascending: false })
+      .limit(10);
+  
+    if (!error) setLeaderboard(data || []);
+  }
+  
   async function loadPool() {
     setLoading(true);
 
@@ -271,6 +361,15 @@ export default function NameADudePage() {
     setScore(finalScore);
     setMessageType("info");
     setMessage("Run complete.");
+
+    setAttemptSaved(false);
+    
+    saveAttempt({
+      finalScore,
+      finalSeconds,
+      finalMisses,
+      finalCorrect,
+    });    
   }
 
   function giveUp() {
@@ -279,6 +378,7 @@ export default function NameADudePage() {
 
   useEffect(() => {
     loadPool();
+    loadDailyChallenge();
   }, []);
 
   useEffect(() => {
@@ -530,6 +630,97 @@ export default function NameADudePage() {
     orange: {
       color: "#EF3B24",
     },
+    modalBackdrop: {
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      zIndex: 50,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 14,
+    },
+    
+    modalCard: {
+      width: "100%",
+      maxWidth: 520,
+      maxHeight: "82vh",
+      overflowY: "auto",
+      background: theme.card,
+      color: theme.text,
+      border: `1px solid ${theme.border}`,
+      borderRadius: 10,
+      padding: 14,
+    },
+    
+    modalHeader: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 12,
+    },
+    
+    closeButton: {
+      border: `1px solid ${theme.border}`,
+      background: theme.pane,
+      color: theme.text,
+      borderRadius: 6,
+      cursor: "pointer",
+      width: 34,
+      height: 34,
+      fontWeight: 950,
+    },
+    
+    tabs: {
+      display: "grid",
+      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+      gap: 6,
+      marginBottom: 10,
+    },
+    
+    tab: {
+      padding: "8px 5px",
+      border: `1px solid ${theme.border}`,
+      background: theme.card,
+      color: theme.text,
+      borderRadius: 6,
+      fontWeight: 900,
+      cursor: "pointer",
+      textAlign: "center",
+      textTransform: "uppercase",
+      fontSize: 10,
+    },
+    
+    activeTab: {
+      background: "transparent",
+      color: theme.text,
+      border: `1px solid ${theme.border}`,
+      borderBottom: "3px solid #EF3B24",
+    },
+    
+    leaderboardAvatar: {
+      width: 40,
+      height: 40,
+      borderRadius: "50%",
+      objectFit: "cover",
+      border: `1px solid ${theme.border}`,
+      flexShrink: 0,
+    },
+    
+    leaderboardAvatarFallback: {
+      width: 40,
+      height: 40,
+      borderRadius: "50%",
+      background: darkMode ? "#003594" : "#E8F0FF",
+      color: darkMode ? "#ffffff" : "#003594",
+      border: `1px solid ${theme.border}`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontWeight: 900,
+      fontSize: 16,
+      flexShrink: 0,
+    },    
   };
 
   return (
@@ -560,6 +751,12 @@ export default function NameADudePage() {
           user={user}
           profile={profile}
           username={profile?.username || username}
+          showLeaderboardButton={true}
+          onLeaderboardClick={() => {
+            setLeaderboardType("daily");
+            loadLeaderboard("daily");
+            setShowLeaderboard(true);
+          }}
         />
 
         <ProfileModal
@@ -773,6 +970,36 @@ export default function NameADudePage() {
                   {formatTimer(secondsElapsed)}
                 </div>
 
+                {challenge?.valid_players?.length > 0 && (
+                  <div style={{ marginTop: 12 }}>
+                    <div style={styles.label}>Possible Answers</div>
+                
+                    <div style={{ display: "grid", gap: 6 }}>
+                      {challenge.valid_players
+                        .slice()
+                        .sort((a, b) => String(a.full_name).localeCompare(String(b.full_name)))
+                        .map((p) => (
+                          <div key={p.player_id} style={styles.chainRow}>
+                            <img
+                              src={p.headshot_url || HEADSHOT_FALLBACK}
+                              alt=""
+                              style={styles.searchHeadshot}
+                            />
+                
+                            <div>
+                              <strong>{p.full_name}</strong>
+                              <div style={styles.sub}>
+                                {[p.position, p.jersey ? `#${p.jersey}` : null]
+                                  .filter(Boolean)
+                                  .join(" · ")}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+                  
                 <button style={styles.primaryButton} onClick={startGame}>
                   Play Again
                 </button>

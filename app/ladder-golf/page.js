@@ -941,7 +941,18 @@ export default function StatLadderPage() {
                   onClick={() => resetGame(challenge)}
                 >
                   Play Again
-                </button>                  
+                </button>
+                <button
+                  style={styles.primaryButton}
+                  onClick={() =>
+                    shareResult(
+                      "Ladder Golf",
+                      `${chain.length} chain, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                    )
+                  }
+                >
+                  Share
+                </button>                    
               </section>
             )}
           </>

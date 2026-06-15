@@ -1509,23 +1509,26 @@ export default function HomePage() {
                     </div>
                   </div>
                 )}
-                <button
-                  style={styles.primaryButton}
-                  onClick={() => resetGameState(activeChallenge, false)}
-                >
-                  Play Again
-                </button>
-                <button
-                  style={styles.primaryButton}
-                  onClick={() =>
-                    shareResult(
-                      "Ball Knowledgy",
-                      `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
-                    )
-                  }
-                >
-                  Share
-                </button>                    
+                <div style={styles.postGameButtonRow}>
+                  <button
+                    style={styles.primaryButton}
+                    onClick={() => resetGame(challenge)}
+                  >
+                    Play Again
+                  </button>
+                
+                  <button
+                    style={styles.primaryButton}
+                    onClick={() =>
+                      shareResult(
+                        "Ball Knowledgy",
+                        `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
+                      )
+                    }
+                  >
+                    Share
+                  </button>
+                </div>                   
               </section>
             )}
 

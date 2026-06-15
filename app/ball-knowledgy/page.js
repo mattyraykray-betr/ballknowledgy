@@ -1071,6 +1071,13 @@ export default function HomePage() {
           user={user}
           profile={profile}
           username={profile?.username || username}
+          showLeaderboardButton={true}
+          onLeaderboardClick={() => {
+            const type = activeChallenge ? "daily" : "alltime";
+            setLeaderboardType(type);
+            loadLeaderboard(type);
+            setShowLeaderboard(true);
+          }}
         />
         
         <ProfileModal

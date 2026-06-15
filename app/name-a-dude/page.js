@@ -392,7 +392,7 @@ export default function NameADudePage() {
       `That Guy Rocked\n` +
       `${gameName}\n` +
       `${scoreText}\n\n` +
-      `Play here: ${window.location.origin}`;
+      `Try to beat me here: ${window.location.origin}`;
   
     if (navigator.share) {
       await navigator.share({

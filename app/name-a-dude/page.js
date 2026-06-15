@@ -849,6 +849,12 @@ export default function NameADudePage() {
       fontWeight: 950,
       fontSize: 18,
     },    
+    postGameButtonRow: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 8,
+      marginTop: 8,
+    },    
   };
 
   return (
@@ -1046,15 +1052,27 @@ export default function NameADudePage() {
                     </button>
                   </div>
               
-                  <button
-                    style={styles.primaryButton}
-                    onClick={() => {
-                      setShowLeaderboard(false);
-                      startGame();
-                    }}
-                  >
-                    Play Again
-                  </button>
+                  <div style={styles.postGameButtonRow}>
+                    <button
+                      style={styles.primaryButton}
+                      onClick={() => {
+                        setShowLeaderboard(false);
+                        startGame();
+                      }}
+                    >
+                      Play Again
+                    </button>
+                  
+                    <button
+                      style={styles.primaryButton}
+                      onClick={() => {
+                        setShowLeaderboard(false);
+                        setShowProfile(true);
+                      }}
+                    >
+                      {user ? "Profile" : "Create Profile/Login"}
+                    </button>
+                  </div>
                 </div>
               )}
             </section>

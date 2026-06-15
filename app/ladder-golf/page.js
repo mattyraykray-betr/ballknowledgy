@@ -1254,23 +1254,26 @@ export default function StatLadderPage() {
                       : "Saving score..."
                     : "Create a guest profile on to save scores."}
                 </div>
-                <button
-                  style={styles.primaryButton}
-                  onClick={() => resetGame(challenge)}
-                >
-                  Play Again
-                </button>
-                <button
-                  style={styles.primaryButton}
-                  onClick={() =>
-                    shareResult(
-                      "Ladder Golf",
-                      `${chain.length} chain, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
-                    )
-                  }
-                >
-                  Share
-                </button>                    
+                <div style={styles.postGameButtonRow}>
+                  <button
+                    style={styles.primaryButton}
+                    onClick={() => resetGame(challenge)}
+                  >
+                    Play Again
+                  </button>
+                
+                  <button
+                    style={styles.primaryButton}
+                    onClick={() =>
+                      shareResult(
+                        "Ladder Golf",
+                        `${chain.length} chain, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                      )
+                    }
+                  >
+                    Share
+                  </button>
+                </div>
               </section>
             )}
           </>

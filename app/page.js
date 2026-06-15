@@ -73,6 +73,35 @@ export default function HomePage() {
               Name players lower than the previous career stat value.
             </div>
           </Link>
+
+          <Link
+            href="/name-a-dude"
+            style={{
+              color: "inherit",
+              textDecoration: "none",
+              border: "1px solid #333",
+              background: "#181818",
+              borderRadius: 10,
+              padding: 16,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: 28 }}
+              >
+                recent_patient
+              </span>
+          
+              <div style={{ fontSize: 22, fontWeight: 900 }}>
+                Name a Dude
+              </div>
+            </div>
+          
+            <div style={{ color: "#b5b5b5", marginTop: 4 }}>
+              Get a random team and season. Name one player from that roster.
+            </div>
+          </Link>                
         </div>
       </div>
     </main>

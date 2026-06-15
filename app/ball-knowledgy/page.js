@@ -454,6 +454,12 @@ export default function HomePage() {
       finalSeconds,
       finalScore,
     });    
+
+    setTimeout(() => {
+      setLeaderboardType("daily");
+      loadLeaderboard("daily");
+      setShowLeaderboard(true);
+    }, 700);
     
     if (correct) setMessage("Correct.");
     else if (gaveUpNow) setMessage("Answer revealed.");

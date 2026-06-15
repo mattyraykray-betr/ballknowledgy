@@ -158,7 +158,13 @@ export default function ProfileModal({
   
       setRecoveryKey(finalRecoveryKey);
       setAuthMessage("Profile saved. Save your recovery key somewhere safe.");
+      
+      setTimeout(() => {
+        window.location.reload();
+      }, 750);
+      
       return true;
+      
     } catch (err) {
       setAuthMessage(err.message || "Could not save profile.");
       return false;

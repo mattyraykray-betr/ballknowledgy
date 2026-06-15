@@ -388,17 +388,20 @@ export default function NameADudePage() {
   }
 
   async function shareResult(gameName, scoreText) {
-    const shareText = `${gameName}: ${scoreText} on That Guy Rocked.`;
+    const shareText =
+      `That Guy Rocked\n` +
+      `${gameName}\n` +
+      `${scoreText}\n\n` +
+      `Play here: ${window.location.origin}`;
   
     if (navigator.share) {
       await navigator.share({
         title: "That Guy Rocked",
         text: shareText,
-        url: window.location.href,
       });
     } else {
-      await navigator.clipboard.writeText(`${shareText} ${window.location.href}`);
-      alert("Result copied to clipboard.");
+      await navigator.clipboard.writeText(shareText);
+      alert("Score copied to clipboard.");
     }
   }
   

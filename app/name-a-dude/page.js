@@ -387,6 +387,21 @@ export default function NameADudePage() {
     finishGame(misses, correctPlayers);
   }
 
+  async function shareResult(gameName, scoreText) {
+    const shareText = `${gameName}: ${scoreText} on That Guy Rocked.`;
+  
+    if (navigator.share) {
+      await navigator.share({
+        title: "That Guy Rocked",
+        text: shareText,
+        url: window.location.href,
+      });
+    } else {
+      await navigator.clipboard.writeText(`${shareText} ${window.location.href}`);
+      alert("Result copied to clipboard.");
+    }
+  }
+  
   useEffect(() => {
     loadPool();
     loadDailyChallenge();
@@ -1158,6 +1173,17 @@ export default function NameADudePage() {
                 <button style={styles.primaryButton} onClick={startGame}>
                   Play Again
                 </button>
+                <button
+                  style={styles.primaryButton}
+                  onClick={() =>
+                    shareResult(
+                      "Name a Dude",
+                      `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                    )
+                  }
+                >
+                  Share
+                </button>                  
               </section>
             )}
           </>

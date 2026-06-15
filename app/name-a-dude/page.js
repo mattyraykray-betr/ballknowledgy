@@ -387,10 +387,16 @@ export default function NameADudePage() {
     finishGame(misses, correctPlayers);
   }
 
+  function formatShareDate(dateString) {
+    const d = new Date(dateString + "T00:00:00");
+  
+    return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+  }
+  
   function getShareText(gameName, scoreText) {
     return (
       `That Guy Rocked\n` +
-      `${gameName}\n` +
+      `${gameName} | ${formatShareDate(todayLocal())}\n` +
       `${scoreText}\n\n` +
       `Play here: ${window.location.origin}`
     );

@@ -29,12 +29,25 @@ function isFutureDate(dateValue) {
   return dateValue > todayLocal();
 }
 
+function formatShareDate(dateString) {
+  const d = new Date(dateString + "T00:00:00");
+
+  return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+}
+
 function getShareText(gameName, scoreText) {
+  let challengeLine = "";
+
+  if (gameName === "Ball Knowledgy" && activeChallenge) {
+    challengeLine =
+      `${formatShareDate(selectedDate)} ${difficultyLabel(activeChallenge.difficulty)} Challenge`;
+  }
+
   return (
     `That Guy Rocked\n` +
-    `${gameName}\n` +
+    `${gameName}${challengeLine ? ` | ${challengeLine}` : ""}\n` +
     `${scoreText}\n\n` +
-    `Play here: ${window.location.origin}`
+    `Try to beat my score: ${window.location.origin}`
   );
 }
 

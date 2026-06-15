@@ -25,6 +25,10 @@ function todayLocal() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function isFutureDate(dateValue) {
+  return dateValue > todayLocal();
+}
+
 async function loadProfile(userId) {
   if (!userId) {
     setProfile(null);
@@ -714,7 +718,12 @@ export default function StatLadderPage() {
             style={styles.dateInput}
             type="date"
             value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
+            max={todayLocal()}
+            onChange={(e) => {
+              const nextDate = e.target.value;
+              if (isFutureDate(nextDate)) return;
+              setSelectedDate(nextDate);
+            }}
           />
         
           {hasStarted && (
@@ -921,6 +930,12 @@ export default function StatLadderPage() {
                       : "Saving score..."
                     : "Create a guest profile on to save scores."}
                 </div>
+                <button
+                  style={styles.primaryButton}
+                  onClick={() => resetGame(challenge)}
+                >
+                  Play Again
+                </button>                  
               </section>
             )}
           </>

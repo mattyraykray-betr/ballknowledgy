@@ -29,6 +29,58 @@ function isFutureDate(dateValue) {
   return dateValue > todayLocal();
 }
 
+function getShareText(gameName, scoreText) {
+  return (
+    `That Guy Rocked\n` +
+    `${gameName}\n` +
+    `${scoreText}\n\n` +
+    `Play here: ${window.location.origin}`
+  );
+}
+
+async function shareResult(gameName, scoreText) {
+  const shareText = getShareText(gameName, scoreText);
+
+  if (navigator.share) {
+    await navigator.share({
+      title: "That Guy Rocked",
+      text: shareText,
+    });
+  } else {
+    await navigator.clipboard.writeText(shareText);
+    alert("Score copied to clipboard.");
+  }
+}
+
+function openTwitterShare(gameName, scoreText) {
+  const shareText = getShareText(gameName, scoreText);
+  window.open(
+    `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
+    "_blank",
+    "noopener,noreferrer"
+  );
+}
+
+function openFacebookShare(gameName, scoreText) {
+  const shareText = getShareText(gameName, scoreText);
+  window.open(
+    `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin)}&quote=${encodeURIComponent(shareText)}`,
+    "_blank",
+    "noopener,noreferrer"
+  );
+}
+
+async function copyShareText(gameName, scoreText) {
+  await navigator.clipboard.writeText(getShareText(gameName, scoreText));
+  alert("Score copied to clipboard.");
+}
+
+function openEmailShare(gameName, scoreText) {
+  window.location.href = `mailto:?subject=${encodeURIComponent(
+    "That Guy Rocked score"
+  )}&body=${encodeURIComponent(getShareText(gameName, scoreText))}`;
+}
+
 async function loadProfile(userId) {
   if (!userId) {
     setProfile(null);
@@ -121,6 +173,10 @@ export default function StatLadderPage() {
   const [showProfile, setShowProfile] = useState(false);
   const [username, setUsername] = useState("");  
   const [profile, setProfile] = useState(null);
+
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [leaderboardType, setLeaderboardType] = useState("daily");
+  const [leaderboard, setLeaderboard] = useState([]);
 
   useEffect(() => {
     const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
@@ -319,6 +375,29 @@ export default function StatLadderPage() {
     }
   }
 
+  async function loadLeaderboard(type = leaderboardType) {
+    if (type === "daily" && challenge) {
+      const { data, error } = await supabase
+        .from("vw_nba_trivia_daily_challenge_leaderboard")
+        .select("username, avatar_url, best_score, best_time, fewest_misses, correct")
+        .eq("challenge_id", challenge.id)
+        .order("best_score", { ascending: false })
+        .limit(10);
+  
+      if (!error) setLeaderboard(data || []);
+      return;
+    }
+  
+    const { data, error } = await supabase
+      .from("vw_nba_trivia_all_time_leaderboard")
+      .select("username, avatar_url, total_score, avg_score, correct_challenges")
+      .eq("challenge_type", "stat_ladder")
+      .order("total_score", { ascending: false })
+      .limit(10);
+  
+    if (!error) setLeaderboard(data || []);
+  }  
+  
   async function finishGame(finalMisses = misses, finalChain = chain) {
     const finalSeconds = startedAt ? Math.floor((Date.now() - startedAt) / 1000) : 0;
     const finalScore = calculateScore({
@@ -677,6 +756,116 @@ export default function StatLadderPage() {
       width: 18,
       height: 18,
       objectFit: "contain",
+    },  
+    modalBackdrop: {
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,0.72)",
+      zIndex: 50,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: 14,
+    },
+    modalCard: {
+      width: "100%",
+      maxWidth: 520,
+      maxHeight: "82vh",
+      overflowY: "auto",
+      background: theme.card,
+      color: theme.text,
+      border: `1px solid ${theme.border}`,
+      borderRadius: 10,
+      padding: 14,
+    },
+    modalHeader: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: 12,
+    },
+    closeButton: {
+      border: `1px solid ${theme.border}`,
+      background: theme.pane,
+      color: theme.text,
+      borderRadius: 6,
+      cursor: "pointer",
+      width: 34,
+      height: 34,
+      fontWeight: 950,
+    },
+    tabs: {
+      display: "grid",
+      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+      gap: 6,
+      marginBottom: 10,
+    },
+    tab: {
+      padding: "8px 5px",
+      border: `1px solid ${theme.border}`,
+      background: theme.card,
+      color: theme.text,
+      borderRadius: 6,
+      fontWeight: 900,
+      cursor: "pointer",
+      textAlign: "center",
+      textTransform: "uppercase",
+      fontSize: 10,
+    },
+    activeTab: {
+      background: "transparent",
+      color: theme.text,
+      border: `1px solid ${theme.border}`,
+      borderBottom: "3px solid #EF3B24",
+    },
+    leaderboardAvatar: {
+      width: 40,
+      height: 40,
+      borderRadius: "50%",
+      objectFit: "cover",
+      border: `1px solid ${theme.border}`,
+      flexShrink: 0,
+    },
+    leaderboardAvatarFallback: {
+      width: 40,
+      height: 40,
+      borderRadius: "50%",
+      background: darkMode ? "#003594" : "#E8F0FF",
+      color: darkMode ? "#ffffff" : "#003594",
+      border: `1px solid ${theme.border}`,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontWeight: 900,
+      fontSize: 16,
+      flexShrink: 0,
+    },
+    shareGrid: {
+      display: "flex",
+      gap: 10,
+      marginTop: 8,
+      marginBottom: 12,
+      alignItems: "center",
+    },
+    shareIconButton: {
+      border: `1px solid ${theme.border}`,
+      background: theme.input,
+      color: theme.text,
+      width: 44,
+      height: 44,
+      borderRadius: "50%",
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontWeight: 950,
+      fontSize: 18,
+    },
+    postGameButtonRow: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 8,
+      marginTop: 8,
     },    
   };
 
@@ -708,6 +897,12 @@ export default function StatLadderPage() {
           user={user}
           profile={profile}
           username={profile?.username || username}
+          showLeaderboardButton={true}
+          onLeaderboardClick={() => {
+            setLeaderboardType("daily");
+            loadLeaderboard("daily");
+            setShowLeaderboard(true);
+          }}
         />
         
         <ProfileModal
@@ -718,7 +913,124 @@ export default function StatLadderPage() {
           darkMode={darkMode}
           theme={theme}
         />
-                  
+
+        {showLeaderboard && (
+          <div style={styles.modalBackdrop}>
+            <section style={styles.modalCard}>
+              <div style={styles.modalHeader}>
+                <div>
+                  <div style={styles.label}>Leaderboard</div>
+                  <div style={styles.big}>
+                    {leaderboardType === "daily" ? "Daily Ladder Golf" : "All-Time Ladder Golf"}
+                  </div>
+                </div>
+        
+                <button style={styles.closeButton} onClick={() => setShowLeaderboard(false)}>
+                  ×
+                </button>
+              </div>
+        
+              <div style={styles.tabs}>
+                <button
+                  style={{
+                    ...styles.tab,
+                    ...(leaderboardType === "daily" ? styles.activeTab : {}),
+                  }}
+                  onClick={() => {
+                    setLeaderboardType("daily");
+                    loadLeaderboard("daily");
+                  }}
+                >
+                  Daily
+                </button>
+        
+                <button
+                  style={{
+                    ...styles.tab,
+                    ...(leaderboardType === "alltime" ? styles.activeTab : {}),
+                  }}
+                  onClick={() => {
+                    setLeaderboardType("alltime");
+                    loadLeaderboard("alltime");
+                  }}
+                >
+                  All Time
+                </button>
+              </div>
+        
+              {leaderboard.length === 0 ? (
+                <div style={styles.sub}>No leaderboard results yet.</div>
+              ) : (
+                leaderboard.map((row, idx) => (
+                  <div key={`${row.username}-${idx}`} style={styles.chainRow}>
+                    {row.avatar_url ? (
+                      <img src={row.avatar_url} alt="" style={styles.leaderboardAvatar} />
+                    ) : (
+                      <div style={styles.leaderboardAvatarFallback}>
+                        {(row.username || "?").charAt(0).toUpperCase()}
+                      </div>
+                    )}
+        
+                    <div style={{ flex: 1 }}>
+                      <strong>
+                        {idx + 1}. {row.username || "Guest"}
+                      </strong>
+        
+                      <div style={styles.sub}>
+                        {leaderboardType === "daily"
+                          ? `${row.best_score || 0} pts · ${formatTimer(row.best_time || 0)} · Misses ${row.fewest_misses || 0}`
+                          : `${row.total_score || 0} pts · Avg ${Math.round(row.avg_score || 0)} · Correct ${row.correct_challenges || 0}`}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+        
+              {ended && (
+                <div style={{ marginTop: 12 }}>
+                  <div style={{ ...styles.label, marginTop: 14 }}>Share</div>
+        
+                  <div style={styles.shareGrid}>
+                    <button style={styles.shareIconButton} onClick={() => openTwitterShare("Ladder Golf", `${chain.length} chain, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>𝕏</button>
+                    <button style={styles.shareIconButton} onClick={() => openFacebookShare("Ladder Golf", `${chain.length} chain, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>f</button>
+                    <button style={styles.shareIconButton} onClick={() => copyShareText("Ladder Golf", `${chain.length} chain, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>
+                      <span className="material-symbols-outlined">content_copy</span>
+                    </button>
+                    <button style={styles.shareIconButton} onClick={() => shareResult("Ladder Golf", `${chain.length} chain, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>
+                      <span className="material-symbols-outlined">chat_bubble</span>
+                    </button>
+                    <button style={styles.shareIconButton} onClick={() => openEmailShare("Ladder Golf", `${chain.length} chain, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>
+                      <span className="material-symbols-outlined">drafts</span>
+                    </button>
+                  </div>
+        
+                  <div style={styles.postGameButtonRow}>
+                    <button
+                      style={styles.primaryButton}
+                      onClick={() => {
+                        setShowLeaderboard(false);
+                        resetGame(challenge);
+                      }}
+                    >
+                      Play Again
+                    </button>
+        
+                    <button
+                      style={styles.primaryButton}
+                      onClick={() => {
+                        setShowLeaderboard(false);
+                        setShowProfile(true);
+                      }}
+                    >
+                      {user ? "Profile" : "Create Profile/Login"}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+            
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <input
             style={styles.dateInput}

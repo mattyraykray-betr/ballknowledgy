@@ -1262,7 +1262,7 @@ export default function HomePage() {
                       onClick={() =>
                         openTwitterShare(
                           "Ball Knowledgy",
-                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                          `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
                         )
                       }
                       aria-label="Share on X"
@@ -1275,8 +1275,8 @@ export default function HomePage() {
                       style={styles.shareIconButton}
                       onClick={() =>
                         openFacebookShare(
-                          "Name a Dude",
-                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                          "Ball Knowledgy",
+                          `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
                         )
                       }
                       aria-label="Share on Facebook"
@@ -1289,8 +1289,8 @@ export default function HomePage() {
                       style={styles.shareIconButton}
                       onClick={() =>
                         copyShareText(
-                          "Name a Dude",
-                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                          "Ball Knowledgy",
+                          `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
                         )
                       }
                       aria-label="Copy score"
@@ -1303,8 +1303,8 @@ export default function HomePage() {
                       style={styles.shareIconButton}
                       onClick={() =>
                         shareResult(
-                          "Name a Dude",
-                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                          "Ball Knowledgy",
+                          `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
                         )
                       }
                       aria-label="Share by message"
@@ -1317,8 +1317,8 @@ export default function HomePage() {
                       style={styles.shareIconButton}
                       onClick={() =>
                         openEmailShare(
-                          "Name a Dude",
-                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                          "Ball Knowledgy",
+                          `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
                         )
                       }
                       aria-label="Share by email"

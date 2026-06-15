@@ -313,6 +313,11 @@ export default function NameADudePage() {
         season_label: challenge.season_label,
         jersey: match.jersey,
         position: match.position,
+        games_played: match.games_played,
+        games_started: match.games_started,
+        points_per_game: match.points_per_game,
+        rebounds_per_game: match.rebounds_per_game,
+        assists_per_game: match.assists_per_game,
       };
 
       setCorrectPlayers((prev) => [...prev, correctRow]);
@@ -756,6 +761,13 @@ export default function NameADudePage() {
       alignItems: "center",
       gap: 7,
       minWidth: 0,
+    },
+
+    miniStatLine: {
+      color: theme.muted,
+      fontSize: 10,
+      fontWeight: 800,
+      marginTop: 2,
     },    
   };
 
@@ -1052,6 +1064,13 @@ export default function NameADudePage() {
                     <strong>✓ {row.full_name}</strong>
                     <div style={styles.sub}>
                       {row.season_label || row.season_year} · {row.team_name}
+                    </div>
+                    
+                    <div style={styles.miniStatLine}>
+                      GP {row.games_played ?? "-"} · GS {row.games_started ?? "-"} · PTS{" "}
+                      {row.points_per_game ? Number(row.points_per_game).toFixed(1) : "-"} · REB{" "}
+                      {row.rebounds_per_game ? Number(row.rebounds_per_game).toFixed(1) : "-"} · AST{" "}
+                      {row.assists_per_game ? Number(row.assists_per_game).toFixed(1) : "-"}
                     </div>
                   </div>
                 </div>

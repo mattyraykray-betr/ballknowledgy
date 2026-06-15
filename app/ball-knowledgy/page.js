@@ -1040,6 +1040,33 @@ export default function HomePage() {
       fontSize: 16,
       flexShrink: 0,
     }, 
+    postGameButtonRow: {
+      display: "grid",
+      gridTemplateColumns: "1fr 1fr",
+      gap: 8,
+      marginTop: 8,
+    },
+    shareGrid: {
+      display: "flex",
+      gap: 10,
+      marginTop: 8,
+      marginBottom: 12,
+      alignItems: "center",
+    },
+    shareIconButton: {
+      border: `1px solid ${theme.border}`,
+      background: theme.input,
+      color: theme.text,
+      width: 44,
+      height: 44,
+      borderRadius: "50%",
+      cursor: "pointer",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontWeight: 950,
+      fontSize: 18,
+    },    
   };
 
   const clue = activeChallenge?.starting_clue_json || {};
@@ -1175,29 +1202,103 @@ export default function HomePage() {
               )}
               {ended && (
                 <div style={{ marginTop: 12 }}>
-                  <button
-                    style={styles.primaryButton}
-                    onClick={() =>
-                      shareResult(
-                        "Ball Knowledgy",
-                        `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
-                      )
-                    }
-                  >
-                    Share Score
-                  </button>
+                  <div style={{ ...styles.label, marginTop: 14 }}>Share</div>
               
-                  <button
-                    style={styles.primaryButton}
-                    onClick={() => {
-                      setShowLeaderboard(false);
-                      resetGameState(activeChallenge, false);
-                    }}
-                  >
-                    Play Again
-                  </button>
+                  <div style={styles.shareGrid}>
+                    <button
+                      style={styles.shareIconButton}
+                      onClick={() =>
+                        openTwitterShare(
+                          "Ball Knowledgy",
+                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                        )
+                      }
+                      aria-label="Share on X"
+                      title="Share on X"
+                    >
+                      𝕏
+                    </button>
+              
+                    <button
+                      style={styles.shareIconButton}
+                      onClick={() =>
+                        openFacebookShare(
+                          "Name a Dude",
+                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                        )
+                      }
+                      aria-label="Share on Facebook"
+                      title="Share on Facebook"
+                    >
+                      f
+                    </button>
+              
+                    <button
+                      style={styles.shareIconButton}
+                      onClick={() =>
+                        copyShareText(
+                          "Name a Dude",
+                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                        )
+                      }
+                      aria-label="Copy score"
+                      title="Copy score"
+                    >
+                      <span className="material-symbols-outlined">content_copy</span>
+                    </button>
+              
+                    <button
+                      style={styles.shareIconButton}
+                      onClick={() =>
+                        shareResult(
+                          "Name a Dude",
+                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                        )
+                      }
+                      aria-label="Share by message"
+                      title="Share by message"
+                    >
+                      <span className="material-symbols-outlined">chat_bubble</span>
+                    </button>
+              
+                    <button
+                      style={styles.shareIconButton}
+                      onClick={() =>
+                        openEmailShare(
+                          "Name a Dude",
+                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                        )
+                      }
+                      aria-label="Share by email"
+                      title="Share by email"
+                    >
+                      <span className="material-symbols-outlined">drafts</span>
+                    </button>
+                  </div>
+              
+                  <div style={styles.postGameButtonRow}>
+                    <button
+                      style={styles.primaryButton}
+                      onClick={() => {
+                        setShowLeaderboard(false);
+                        startGame();
+                      }}
+                    >
+                      Play Again
+                    </button>
+                  
+                    <button
+                      style={styles.primaryButton}
+                      onClick={() => {
+                        setShowLeaderboard(false);
+                        setShowProfile(true);
+                      }}
+                    >
+                      {user ? "Profile" : "Create Profile/Login"}
+                    </button>
+                  </div>
                 </div>
-              )}                      
+              )}                     
             </section>
           </div>
         )}

@@ -1324,6 +1324,17 @@ export default function HomePage() {
                 >
                   Play Again
                 </button>
+                <button
+                  style={styles.primaryButton}
+                  onClick={() =>
+                    shareResult(
+                      "Ball Knowledgy",
+                      `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
+                    )
+                  }
+                >
+                  Share
+                </button>                    
               </section>
             )}
 

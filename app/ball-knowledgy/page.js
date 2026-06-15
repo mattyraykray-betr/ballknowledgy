@@ -37,9 +37,7 @@ async function loadProfile(userId) {
     .eq("id", userId)
     .maybeSingle();
 
-  if (!error) {
-    setProfile(data || null);
-  }
+  if (!error) setProfile(data || null);
 }
 
 function formatTimer(totalSeconds) {

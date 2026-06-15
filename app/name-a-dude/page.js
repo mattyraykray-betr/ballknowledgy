@@ -721,6 +721,42 @@ export default function NameADudePage() {
       fontSize: 16,
       flexShrink: 0,
     },    
+    answerTable: {
+      display: "grid",
+      gap: 4,
+      marginTop: 8,
+    },
+    
+    answerHeader: {
+      display: "grid",
+      gridTemplateColumns: "2.6fr repeat(5, 0.65fr)",
+      gap: 4,
+      color: theme.muted,
+      fontSize: 9,
+      fontWeight: 900,
+      textTransform: "uppercase",
+      padding: "4px 2px",
+    },
+    
+    answerRow: {
+      display: "grid",
+      gridTemplateColumns: "2.6fr repeat(5, 0.65fr)",
+      gap: 4,
+      alignItems: "center",
+      background: theme.input,
+      border: `1px solid ${theme.border}`,
+      borderRadius: 6,
+      padding: 6,
+      fontSize: 11,
+      fontWeight: 800,
+    },
+    
+    answerPlayer: {
+      display: "flex",
+      alignItems: "center",
+      gap: 7,
+      minWidth: 0,
+    },    
   };
 
   return (
@@ -775,7 +811,7 @@ export default function NameADudePage() {
                 <div>
                   <div style={styles.label}>Leaderboard</div>
                   <div style={styles.big}>
-                    {leaderboardType === "daily" ? "Daily Name a Dude" : "All-Time"}
+                    {leaderboardType === "daily" ? "Daily Name a Dude" : "All-Time Name a Dude"}
                   </div>
                 </div>
         
@@ -1052,26 +1088,42 @@ export default function NameADudePage() {
                   <div style={{ marginTop: 12 }}>
                     <div style={styles.label}>Possible Answers</div>
                 
-                    <div style={{ display: "grid", gap: 6 }}>
+                    <div style={styles.answerTable}>
+                      <div style={styles.answerHeader}>
+                        <div>Player</div>
+                        <div>GP</div>
+                        <div>GS</div>
+                        <div>PTS</div>
+                        <div>REB</div>
+                        <div>AST</div>
+                      </div>
+                
                       {challenge.valid_players
                         .slice()
                         .sort((a, b) => String(a.full_name).localeCompare(String(b.full_name)))
                         .map((p) => (
-                          <div key={p.player_id} style={styles.chainRow}>
-                            <img
-                              src={p.headshot_url || HEADSHOT_FALLBACK}
-                              alt=""
-                              style={styles.searchHeadshot}
-                            />
-                
-                            <div>
-                              <strong>{p.full_name}</strong>
-                              <div style={styles.sub}>
-                                {[p.position, p.jersey ? `#${p.jersey}` : null]
-                                  .filter(Boolean)
-                                  .join(" · ")}
+                          <div key={p.player_id} style={styles.answerRow}>
+                            <div style={styles.answerPlayer}>
+                              <img
+                                src={p.headshot_url || HEADSHOT_FALLBACK}
+                                alt=""
+                                style={styles.searchHeadshot}
+                              />
+                              <div>
+                                <strong>{p.full_name}</strong>
+                                <div style={styles.sub}>
+                                  {[p.position, p.jersey ? `#${p.jersey}` : null]
+                                    .filter(Boolean)
+                                    .join(" · ")}
+                                </div>
                               </div>
                             </div>
+                
+                            <div>{p.games_played ?? "-"}</div>
+                            <div>{p.games_started ?? "-"}</div>
+                            <div>{p.points_per_game ? Number(p.points_per_game).toFixed(1) : "-"}</div>
+                            <div>{p.rebounds_per_game ? Number(p.rebounds_per_game).toFixed(1) : "-"}</div>
+                            <div>{p.assists_per_game ? Number(p.assists_per_game).toFixed(1) : "-"}</div>
                           </div>
                         ))}
                     </div>

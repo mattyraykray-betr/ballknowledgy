@@ -36,18 +36,11 @@ function formatShareDate(dateString) {
 }
 
 function getShareText(gameName, scoreText) {
-  let challengeLine = "";
-
-  if (gameName === "Ball Knowledgy" && activeChallenge) {
-    challengeLine =
-      `${formatShareDate(selectedDate)} ${difficultyLabel(activeChallenge.difficulty)} Challenge`;
-  }
-
   return (
     `That Guy Rocked\n` +
-    `${gameName}${challengeLine ? ` | ${challengeLine}` : ""}\n` +
+    `${gameName} | ${formatShareDate(challenge.challenge_date)}\n` +
     `${scoreText}\n\n` +
-    `Try to beat my score: ${window.location.origin}`
+    `Play here: ${window.location.origin}`
   );
 }
 

@@ -515,7 +515,12 @@ export default function HomePage() {
   
       const currentUser = data?.user || null;
       setUser(currentUser);
-      loadProfile(currentUser?.id);
+  
+      if (currentUser?.id) {
+        await loadProfile(currentUser.id);
+      } else {
+        setProfile(null);
+      }
     }
   
     loadUser();
@@ -523,7 +528,12 @@ export default function HomePage() {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       const currentUser = session?.user || null;
       setUser(currentUser);
-      loadProfile(currentUser?.id);
+  
+      if (currentUser?.id) {
+        loadProfile(currentUser.id);
+      } else {
+        setProfile(null);
+      }
     });
   
     return () => {

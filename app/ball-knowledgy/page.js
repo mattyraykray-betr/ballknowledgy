@@ -500,6 +500,58 @@ export default function HomePage() {
     finishChallenge({ correct: false, gaveUpNow: true, outOfGuesses: false });
   }
 
+  function getShareText(gameName, scoreText) {
+    return (
+      `That Guy Rocked\n` +
+      `${gameName}\n` +
+      `${scoreText}\n\n` +
+      `Play here: ${window.location.origin}`
+    );
+  }
+  
+  async function shareResult(gameName, scoreText) {
+    const shareText = getShareText(gameName, scoreText);
+  
+    if (navigator.share) {
+      await navigator.share({
+        title: "That Guy Rocked",
+        text: shareText,
+      });
+    } else {
+      await navigator.clipboard.writeText(shareText);
+      alert("Score copied to clipboard.");
+    }
+  }
+  
+  function openTwitterShare(gameName, scoreText) {
+    const shareText = getShareText(gameName, scoreText);
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+  
+  function openFacebookShare(gameName, scoreText) {
+    const shareText = getShareText(gameName, scoreText);
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin)}&quote=${encodeURIComponent(shareText)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  }
+  
+  async function copyShareText(gameName, scoreText) {
+    await navigator.clipboard.writeText(getShareText(gameName, scoreText));
+    alert("Score copied to clipboard.");
+  }
+  
+  function openEmailShare(gameName, scoreText) {
+    window.location.href = `mailto:?subject=${encodeURIComponent(
+      "That Guy Rocked score"
+    )}&body=${encodeURIComponent(getShareText(gameName, scoreText))}`;
+  }
+  
   useEffect(() => {
     loadChallenges(selectedDate);
     // eslint-disable-next-line react-hooks/exhaustive-deps

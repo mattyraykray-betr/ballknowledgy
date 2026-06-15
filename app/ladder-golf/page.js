@@ -339,6 +339,12 @@ export default function StatLadderPage() {
       finalMisses,
       finalChain,
     });
+
+    setTimeout(() => {
+      setLeaderboardType("daily");
+      loadLeaderboard("daily");
+      setShowLeaderboard(true);
+    }, 700);    
   }
 
   async function saveAttempt({ finalScore, finalSeconds, finalMisses, finalChain }) {

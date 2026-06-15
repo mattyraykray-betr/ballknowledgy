@@ -768,6 +768,84 @@ export default function NameADudePage() {
           theme={theme}
         />
 
+        {showLeaderboard && (
+          <div style={styles.modalBackdrop}>
+            <section style={styles.modalCard}>
+              <div style={styles.modalHeader}>
+                <div>
+                  <div style={styles.label}>Leaderboard</div>
+                  <div style={styles.big}>
+                    {leaderboardType === "daily" ? "Daily Name a Dude" : "All-Time"}
+                  </div>
+                </div>
+        
+                <button
+                  style={styles.closeButton}
+                  onClick={() => setShowLeaderboard(false)}
+                >
+                  ×
+                </button>
+              </div>
+        
+              <div style={styles.tabs}>
+                <button
+                  style={{
+                    ...styles.tab,
+                    ...(leaderboardType === "daily" ? styles.activeTab : {}),
+                  }}
+                  onClick={() => {
+                    setLeaderboardType("daily");
+                    loadLeaderboard("daily");
+                  }}
+                >
+                  Daily
+                </button>
+        
+                <button
+                  style={{
+                    ...styles.tab,
+                    ...(leaderboardType === "alltime" ? styles.activeTab : {}),
+                  }}
+                  onClick={() => {
+                    setLeaderboardType("alltime");
+                    loadLeaderboard("alltime");
+                  }}
+                >
+                  All Time
+                </button>
+              </div>
+        
+              {leaderboard.length === 0 ? (
+                <div style={styles.sub}>No leaderboard results yet.</div>
+              ) : (
+                leaderboard.map((row, idx) => (
+                  <div key={`${row.username}-${idx}`} style={styles.chainRow}>
+                    {row.avatar_url ? (
+                      <img src={row.avatar_url} alt="" style={styles.leaderboardAvatar} />
+                    ) : (
+                      <div style={styles.leaderboardAvatarFallback}>
+                        {(row.username || "?").charAt(0).toUpperCase()}
+                      </div>
+                    )}
+        
+                    <div style={{ flex: 1 }}>
+                      <strong>
+                        {idx + 1}. {row.username || "Guest"}
+                      </strong>
+        
+                      <div style={styles.sub}>
+                        {leaderboardType === "daily"
+                          ? `${row.best_score || 0} pts · ${formatTimer(row.best_time || 0)} · Misses ${row.fewest_misses || 0}`
+                          : `${row.total_score || 0} pts · Avg ${Math.round(row.avg_score || 0)} · Correct ${row.correct_challenges || 0}`}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </section>
+          </div>
+        )}
+            
         {loading ? (
           <section style={styles.card}>Loading Name a Dude...</section>
         ) : !hasStarted ? (

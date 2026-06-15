@@ -1340,20 +1340,26 @@ export default function NameADudePage() {
                   </div>
                 )}
                   
-                <button style={styles.primaryButton} onClick={startGame}>
-                  Play Again
-                </button>
-                <button
-                  style={styles.primaryButton}
-                  onClick={() =>
-                    shareResult(
-                      "Name a Dude",
-                      `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
-                    )
-                  }
-                >
-                  Share
-                </button>                  
+                <div style={styles.postGameButtonRow}>
+                  <button
+                    style={styles.primaryButton}
+                    onClick={() => resetGame(challenge)}
+                  >
+                    Play Again
+                  </button>
+                
+                  <button
+                    style={styles.primaryButton}
+                    onClick={() =>
+                      shareResult(
+                        "Name a Dude",
+                        `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                      )
+                    }
+                  >
+                    Share
+                  </button>
+                </div>                
               </section>
             )}
           </>

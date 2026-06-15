@@ -163,6 +163,14 @@ export default function SiteNav({
           </span>
           Ladder Golf
         </Link>
+
+        <Link href="/name-a-dude" style={styles.menuItem}>
+          <span className="material-symbols-outlined" style={styles.menuIcon}>
+            recent_patient
+          </span>
+          Name a Dude
+        </Link>
+
         {showLeaderboardButton && (
           <button
             style={styles.menuItem}

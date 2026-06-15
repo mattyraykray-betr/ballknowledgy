@@ -398,7 +398,7 @@ export default function NameADudePage() {
       `That Guy Rocked\n` +
       `${gameName} | ${formatShareDate(todayLocal())}\n` +
       `${scoreText}\n\n` +
-      `Play here: ${window.location.origin}`
+      `Try to beat my score: ${window.location.origin}`
     );
   }
 

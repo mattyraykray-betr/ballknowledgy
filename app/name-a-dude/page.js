@@ -911,6 +911,31 @@ export default function NameADudePage() {
                   </div>
                 ))
               )}
+              {ended && (
+                <div style={{ marginTop: 12 }}>
+                  <button
+                    style={styles.primaryButton}
+                    onClick={() =>
+                      shareResult(
+                        "Name a Dude",
+                        `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                      )
+                    }
+                  >
+                    Share Score
+                  </button>
+              
+                  <button
+                    style={styles.primaryButton}
+                    onClick={() => {
+                      setShowLeaderboard(false);
+                      startGame();
+                    }}
+                  >
+                    Play Again
+                  </button>
+                </div>
+              )}
             </section>
           </div>
         )}

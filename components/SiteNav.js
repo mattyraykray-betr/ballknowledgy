@@ -12,6 +12,8 @@ export default function SiteNav({
   user,
   profile,
   username,
+  showLeaderboardButton,
+  onLeaderboardClick,  
 }) {
   if (!showMenu) return null;
 
@@ -161,7 +163,20 @@ export default function SiteNav({
           </span>
           Ladder Golf
         </Link>
-
+        {showLeaderboardButton && (
+          <button
+            style={styles.menuItem}
+            onClick={() => {
+              setShowMenu(false);
+              onLeaderboardClick?.();
+            }}
+          >
+            <span className="material-symbols-outlined" style={styles.menuIcon}>
+              leaderboard
+            </span>
+            Leaderboard
+          </button>
+        )}
         <button
           style={styles.menuItem}
           onClick={() => {

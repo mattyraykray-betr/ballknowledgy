@@ -1341,24 +1341,99 @@ export default function NameADudePage() {
                 )}
                   
                 <div style={styles.postGameButtonRow}>
-                  <button
-                    style={styles.primaryButton}
-                    onClick={() => resetGame(challenge)}
-                  >
-                    Play Again
-                  </button>
-                
-                  <button
-                    style={styles.primaryButton}
-                    onClick={() =>
-                      shareResult(
-                        "Name a Dude",
-                        `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
-                      )
-                    }
-                  >
-                    Share
-                  </button>
+                  <div style={styles.postGameButtonRow}>
+                    <button
+                      style={styles.primaryButton}
+                      onClick={startGame}
+                    >
+                      Play Again
+                    </button>
+                  
+                    <button
+                      style={styles.primaryButton}
+                      onClick={() => {
+                        setLeaderboardType("daily");
+                        loadLeaderboard("daily");
+                        setShowLeaderboard(true);
+                      }}
+                    >
+                      Leaderboard
+                    </button>
+                  </div>
+                  
+                  <div style={{ ...styles.label, marginTop: 14 }}>Share</div>
+                  
+                  <div style={styles.shareGrid}>
+                    <button
+                      style={styles.shareIconButton}
+                      onClick={() =>
+                        openTwitterShare(
+                          "Name a Dude",
+                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                        )
+                      }
+                      aria-label="Share on X"
+                      title="Share on X"
+                    >
+                      𝕏
+                    </button>
+                  
+                    <button
+                      style={styles.shareIconButton}
+                      onClick={() =>
+                        openFacebookShare(
+                          "Name a Dude",
+                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                        )
+                      }
+                      aria-label="Share on Facebook"
+                      title="Share on Facebook"
+                    >
+                      f
+                    </button>
+                  
+                    <button
+                      style={styles.shareIconButton}
+                      onClick={() =>
+                        copyShareText(
+                          "Name a Dude",
+                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                        )
+                      }
+                      aria-label="Copy score"
+                      title="Copy score"
+                    >
+                      <span className="material-symbols-outlined">content_copy</span>
+                    </button>
+                  
+                    <button
+                      style={styles.shareIconButton}
+                      onClick={() =>
+                        shareResult(
+                          "Name a Dude",
+                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                        )
+                      }
+                      aria-label="Share by message"
+                      title="Share by message"
+                    >
+                      <span className="material-symbols-outlined">chat_bubble</span>
+                    </button>
+                  
+                    <button
+                      style={styles.shareIconButton}
+                      onClick={() =>
+                        openEmailShare(
+                          "Name a Dude",
+                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                        )
+                      }
+                      aria-label="Share by email"
+                      title="Share by email"
+                    >
+                      <span className="material-symbols-outlined">drafts</span>
+                    </button>
+                  </div>
                 </div>                
               </section>
             )}

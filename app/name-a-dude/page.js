@@ -387,12 +387,45 @@ export default function NameADudePage() {
     finishGame(misses, correctPlayers);
   }
 
-  async function shareResult(gameName, scoreText) {
-    const shareText =
+  function getShareText(gameName, scoreText) {
+    return (
       `That Guy Rocked\n` +
       `${gameName}\n` +
       `${scoreText}\n\n` +
-      `Try to beat me here: ${window.location.origin}`;
+      `Play here: ${window.location.origin}`
+    );
+  }
+
+  function openTwitterShare(gameName, scoreText) {
+    const shareText = getShareText(gameName, scoreText);
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+  
+  function openFacebookShare(gameName, scoreText) {
+    const shareText = getShareText(gameName, scoreText);
+    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+      window.location.origin
+    )}&quote=${encodeURIComponent(shareText)}`;
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+  
+  async function copyShareText(gameName, scoreText) {
+    const shareText = getShareText(gameName, scoreText);
+    await navigator.clipboard.writeText(shareText);
+    alert("Score copied to clipboard.");
+  }
+  
+  function openEmailShare(gameName, scoreText) {
+    const shareText = getShareText(gameName, scoreText);
+    const url = `mailto:?subject=${encodeURIComponent(
+      "That Guy Rocked score"
+    )}&body=${encodeURIComponent(shareText)}`;
+    window.location.href = url;
+  }
+  
+  async function shareResult(gameName, scoreText) {
+    const shareText = getShareText(gameName, scoreText);
   
     if (navigator.share) {
       await navigator.share({
@@ -792,6 +825,25 @@ export default function NameADudePage() {
       fontSize: 10,
       fontWeight: 800,
       marginTop: 2,
+    },
+
+    shareGrid: {
+      display: "grid",
+      gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+      gap: 8,
+      marginTop: 12,
+    },
+    
+    shareButton: {
+      border: `1px solid ${theme.border}`,
+      background: theme.input,
+      color: theme.text,
+      padding: "10px 8px",
+      fontWeight: 900,
+      borderRadius: 6,
+      cursor: "pointer",
+      textTransform: "uppercase",
+      fontSize: 12,
     },    
   };
 
@@ -916,17 +968,42 @@ export default function NameADudePage() {
               )}
               {ended && (
                 <div style={{ marginTop: 12 }}>
-                  <button
-                    style={styles.primaryButton}
-                    onClick={() =>
-                      shareResult(
-                        "Name a Dude",
-                        `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
-                      )
-                    }
-                  >
-                    Share Score
-                  </button>
+                  <div style={styles.shareGrid}>
+                    <button
+                      style={styles.shareButton}
+                      onClick={() => openTwitterShare("Name a Dude", `Score: ${score ?? 0}\nCorrect: ${correctPlayers.length}\nMisses: ${misses.length}\nTime: ${formatTimer(secondsElapsed)}`)}
+                    >
+                      Twitter
+                    </button>
+                  
+                    <button
+                      style={styles.shareButton}
+                      onClick={() => openFacebookShare("Name a Dude", `Score: ${score ?? 0}\nCorrect: ${correctPlayers.length}\nMisses: ${misses.length}\nTime: ${formatTimer(secondsElapsed)}`)}
+                    >
+                      Facebook
+                    </button>
+                  
+                    <button
+                      style={styles.shareButton}
+                      onClick={() => copyShareText("Name a Dude", `Score: ${score ?? 0}\nCorrect: ${correctPlayers.length}\nMisses: ${misses.length}\nTime: ${formatTimer(secondsElapsed)}`)}
+                    >
+                      Copy
+                    </button>
+                  
+                    <button
+                      style={styles.shareButton}
+                      onClick={() => shareResult("Name a Dude", `Score: ${score ?? 0}\nCorrect: ${correctPlayers.length}\nMisses: ${misses.length}\nTime: ${formatTimer(secondsElapsed)}`)}
+                    >
+                      Messages
+                    </button>
+                  
+                    <button
+                      style={styles.shareButton}
+                      onClick={() => openEmailShare("Name a Dude", `Score: ${score ?? 0}\nCorrect: ${correctPlayers.length}\nMisses: ${misses.length}\nTime: ${formatTimer(secondsElapsed)}`)}
+                    >
+                      Email
+                    </button>
+                  </div>
               
                   <button
                     style={styles.primaryButton}

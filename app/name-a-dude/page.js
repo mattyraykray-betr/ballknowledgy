@@ -374,7 +374,13 @@ export default function NameADudePage() {
       finalSeconds,
       finalMisses,
       finalCorrect,
-    });    
+    });
+
+    setTimeout(() => {
+      setLeaderboardType("daily");
+      loadLeaderboard("daily");
+      setShowLeaderboard(true);
+    }, 700);    
   }
 
   function giveUp() {

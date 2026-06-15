@@ -25,6 +25,10 @@ function todayLocal() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function isFutureDate(dateValue) {
+  return dateValue > todayLocal();
+}
+
 async function loadProfile(userId) {
   if (!userId) {
     setProfile(null);
@@ -1168,7 +1172,12 @@ export default function HomePage() {
               style={styles.dateInput}
               type="date"
               value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
+              max={todayLocal()}
+              onChange={(e) => {
+                const nextDate = e.target.value;
+                if (isFutureDate(nextDate)) return;
+                setSelectedDate(nextDate);
+              }}
             />
             <div style={styles.card}>No challenges found for this date.</div>
           </>
@@ -1186,7 +1195,12 @@ export default function HomePage() {
               style={styles.dateInput}
               type="date"
               value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
+              max={todayLocal()}
+              onChange={(e) => {
+                const nextDate = e.target.value;
+                if (isFutureDate(nextDate)) return;
+                setSelectedDate(nextDate);
+              }}
             />
 
             <div style={styles.tabs}>
@@ -1291,6 +1305,12 @@ export default function HomePage() {
                     </div>
                   </div>
                 )}
+                <button
+                  style={styles.primaryButton}
+                  onClick={() => resetGameState(activeChallenge, false)}
+                >
+                  Play Again
+                </button>
               </section>
             )}
 

@@ -36,6 +36,7 @@ export default function ProfileModal({
   const [recoveryKey, setRecoveryKey] = useState("");
   const [recoverUsername, setRecoverUsername] = useState("");
   const [recoverKey, setRecoverKey] = useState("");  
+  const [profileMode, setProfileMode] = useState("menu");
   
   async function loadProfile() {
     if (!user) return;
@@ -298,89 +299,135 @@ export default function ProfileModal({
         <div style={styles.modalHeader}>
           <div>
             <div style={styles.label}>Profile</div>
-            <div style={styles.big}>{user ? "Your Account" : "Save Scores"}</div>
+            <div style={styles.big}>
+              {profileMode === "menu"
+                ? "Profile"
+                : profileMode === "create"
+                ? user
+                  ? "Edit Profile"
+                  : "Create Profile"
+                : "Log In"}
+            </div>
           </div>
-
+  
           <button style={styles.closeButton} onClick={onClose}>
             ×
           </button>
         </div>
-
+  
         <div style={styles.sub}>
-          {user
-            ? user.is_anonymous
-              ? "Guest account"
-              : user.email
-            : "No email required. Create a guest profile to save scores on this device."}
+          {profileMode === "menu"
+            ? "Create a profile to save scores, or log in with a username and recovery key."
+            : profileMode === "create"
+            ? "Choose a username and optional avatar."
+            : "Enter your username and recovery key."}
         </div>
-
-        <input
-          style={styles.input}
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          placeholder="Username"
-        />
-
-        <input
-          style={styles.input}
-          type="file"
-          accept="image/*"
-          onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
-        />
-
-        {user ? (
+  
+        {profileMode === "menu" && (
           <>
             <button
               style={styles.primaryButton}
-              onClick={async () => {
-                await saveProfileForUser(user);
-              }}
+              onClick={() => setProfileMode("create")}
             >
-              Save Profile
+              {user ? "Edit Profile" : "Create Profile"}
             </button>
-
-            <button style={styles.dangerButton} onClick={signOut}>
-              Sign Out
+  
+            <button
+              style={styles.primaryButton}
+              onClick={() => setProfileMode("login")}
+            >
+              Log In to Profile
             </button>
           </>
-        ) : (
-          <button style={styles.primaryButton} onClick={continueAsGuest}>
-            Save Profile
-          </button>
         )}
-        <div style={{ marginTop: 14 }}>
-          <div style={styles.label}>Recover Profile</div>
-        
-          <input
-            style={styles.input}
-            value={recoverUsername}
-            onChange={(e) => setRecoverUsername(e.target.value)}
-            placeholder="Username"
-          />
-        
-          <input
-            style={styles.input}
-            value={recoverKey}
-            onChange={(e) => setRecoverKey(e.target.value)}
-            placeholder="Recovery Key"
-          />
-        
-          <button style={styles.primaryButton} onClick={recoverProfile}>
-            Recover Profile
-          </button>
-        </div>          
-
+  
+        {profileMode === "create" && (
+          <>
+            {recoveryKey && (
+              <div style={styles.recoveryBox}>
+                <div style={styles.label}>Recovery Key</div>
+                <div style={styles.recoveryKey}>{recoveryKey}</div>
+                <div style={styles.sub}>
+                  Save this key. You will need it to use this profile on another device.
+                </div>
+              </div>
+            )}
+  
+            <input
+              style={styles.input}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Username"
+            />
+  
+            <input
+              style={styles.input}
+              type="file"
+              accept="image/*"
+              onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+            />
+  
+            {user ? (
+              <>
+                <button
+                  style={styles.primaryButton}
+                  onClick={async () => {
+                    await saveProfileForUser(user);
+                  }}
+                >
+                  Save Profile
+                </button>
+  
+                <button style={styles.dangerButton} onClick={signOut}>
+                  Sign Out
+                </button>
+              </>
+            ) : (
+              <button style={styles.primaryButton} onClick={continueAsGuest}>
+                Save Profile
+              </button>
+            )}
+  
+            <button
+              style={styles.dangerButton}
+              onClick={() => setProfileMode("menu")}
+            >
+              Back
+            </button>
+          </>
+        )}
+  
+        {profileMode === "login" && (
+          <>
+            <input
+              style={styles.input}
+              value={recoverUsername}
+              onChange={(e) => setRecoverUsername(e.target.value)}
+              placeholder="Username"
+            />
+  
+            <input
+              style={styles.input}
+              value={recoverKey}
+              onChange={(e) => setRecoverKey(e.target.value)}
+              placeholder="Recovery Key"
+            />
+  
+            <button style={styles.primaryButton} onClick={recoverProfile}>
+              Log In to Profile
+            </button>
+  
+            <button
+              style={styles.dangerButton}
+              onClick={() => setProfileMode("menu")}
+            >
+              Back
+            </button>
+          </>
+        )}
+  
         {authMessage && <div style={styles.message}>{authMessage}</div>}
-        {recoveryKey && (
-          <div style={styles.recoveryBox}>
-            <div style={styles.label}>Recovery Key</div>
-            <div style={styles.recoveryKey}>{recoveryKey}</div>
-            <div style={styles.sub}>
-              Save this key. You will need it to use this profile on another device.
-            </div>
-          </div>
-        )}         
       </section>
     </div>
-  );
+  );  
 }

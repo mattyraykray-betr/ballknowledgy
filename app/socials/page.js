@@ -14,37 +14,78 @@ export default function SocialsPage() {
         <p>Follow That Guy Rocked and related projects.</p>
 
         <h2>X / Twitter</h2>
-        <ul>
-          <li>
-            <a href="https://x.com/ThatGuyRocked" target="_blank" rel="noopener noreferrer">
+        <ul
+          style={{
+            listStyle: "none",
+            paddingLeft: 0,
+            marginTop: 8,
+          }}
+        >
+          <li style={{ marginBottom: 10 }}>
+            »
+            {" "}
+            <a
+              href="https://x.com/ThatGuyRocked"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#fff" }}
+            >
               @ThatGuyRocked
             </a>
           </li>
         
-          <li>
-            <a href="https://x.com/NBAGuyRocked" target="_blank" rel="noopener noreferrer">
+          <li style={{ marginBottom: 10 }}>
+            »
+            {" "}
+            <a
+              href="https://x.com/NBAGuyRocked"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#fff" }}
+            >
               @NBAGuyRocked
             </a>
           </li>
         
-          <li>
-            <a href="https://x.com/NFLRocked" target="_blank" rel="noopener noreferrer">
-              @NFLRocked
+          <li style={{ marginBottom: 10 }}>
+            »
+            {" "}
+            <a
+              href="https://x.com/NFLGuyRocked"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#fff" }}
+            >
+              @NFLGuyRocked
             </a>
           </li>
           
-          <li>
-            <a href="https://x.com/MLBRocked" target="_blank" rel="noopener noreferrer">
-              @MLBRocked
+          <li style={{ marginBottom: 10 }}>
+            »
+            {" "}
+            <a
+              href="https://x.com/MLBGuyRocked"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#fff" }}
+            >
+              @MLBGuyRocked
             </a>
           </li>
             
-          <li>
-            <a href="https://x.com/ThatGuyRockedU" target="_blank" rel="noopener noreferrer">
+          <li style={{ marginBottom: 10 }}>
+            »
+            {" "}
+            <a
+              href="https://x.com/ThatGuyRockedU"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#fff" }}
+            >
               @ThatGuyRockedU
             </a>
           </li>
-        </ul>             
+        </ul>
 
         <h2>Facebook</h2>
         <p>Add your Facebook pages here.</p>

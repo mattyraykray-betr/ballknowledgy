@@ -1,3 +1,5 @@
+import GoogleAnalytics from "../components/GoogleAnalytics";
+
 export const metadata = {
   title: "That Guy Rocked",
   description:
@@ -26,6 +28,7 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body style={{ margin: 0, padding: 0, background: "#050505" }}>
+        <GoogleAnalytics />
         {children}
       </body>
     </html>

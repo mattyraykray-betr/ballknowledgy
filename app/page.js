@@ -119,7 +119,7 @@ export default function HomePage() {
       <div style={{ maxWidth: 520, margin: "0 auto" }}>
         <h1 style={{ fontFamily: "'Roboto Slab', Rockwell, serif", fontSize: 36, marginBottom: 4 }}>That Guy Rocked</h1>
         <p style={{ color: theme.muted, marginBottom: 20 }}>
-          Daily basketball games for sickos.
+          Daily sports trivia games for sickos.
         </p>
 
         <section style={{ marginTop: 18 }}>

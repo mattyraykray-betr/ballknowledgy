@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SiteFooter from "../components/SiteFooter";
 
 export default function HomePage() {
   return (
@@ -105,5 +106,6 @@ export default function HomePage() {
         </div>
       </div>
     </main>
+    <SiteFooter theme={theme} />
   );
 }

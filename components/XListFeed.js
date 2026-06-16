@@ -30,7 +30,7 @@ export default function XListFeed({ darkMode }) {
         className="twitter-timeline"
         data-height="520"
         data-theme={darkMode ? "dark" : "light"}
-        href="https://x.com/i/lists/2066890467086598373"
+        href="https://x.com/i/lists/2066898933926789487"
       >
         Posts from That Guy Rocked
       </a>

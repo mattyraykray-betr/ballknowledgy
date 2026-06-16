@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import SiteFooter from "../components/SiteFooter";
 import { useEffect, useMemo, useState } from "react";
@@ -11,12 +13,6 @@ const supabase = createClient(
 );
 
 export default function HomePage() {
-  const theme = {
-    text: "#ffffff",
-    muted: "#b5b5b5",
-    border: "#333333",
-  };
-
   const [darkMode, setDarkMode] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showProfile, setShowProfile] = useState(false);

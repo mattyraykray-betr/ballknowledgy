@@ -384,7 +384,7 @@ export default function HomePage() {
     if (type === "daily" && activeChallenge) {
       const { data, error } = await supabase
         .from("vw_nba_trivia_daily_challenge_leaderboard")
-        .select("username, avatar_url, best_score, best_time, fewest_misses, correct")
+        .select("username, avatar_url, best_score, best_time, fewest_misses, correct, hints_used, chain_length")
         .eq("challenge_id", activeChallenge.id)
         .order("best_score", { ascending: false })
         .limit(10);
@@ -1260,7 +1260,7 @@ export default function HomePage() {
         
                       <div style={styles.teammateStats}>
                         {leaderboardType === "daily"
-                          ? `${row.best_score || 0} pts · ${formatStat(row.best_time)}s · Misses ${row.fewest_misses || 0}`
+                          ? `${row.best_score || 0} pts · ${formatTimer(row.best_time || 0)} · ${row.correct ? "Correct" : "Missed"} · Hints ${row.hints_used || 0} · Misses ${row.fewest_misses || 0}`
                           : `${row.total_score || 0} pts · Avg ${formatStat(row.avg_score)} · Correct ${row.correct_challenges || 0}`}
                       </div>
                     </div>

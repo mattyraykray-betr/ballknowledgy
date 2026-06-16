@@ -104,8 +104,8 @@ export default function HomePage() {
             </div>
           </Link>                
         </div>
+      <SiteFooter theme={theme} />                
       </div>
     </main>
-    <SiteFooter theme={theme} />
   );
 }

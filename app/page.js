@@ -1,5 +1,14 @@
 import Link from "next/link";
 import SiteFooter from "../components/SiteFooter";
+import { useEffect, useMemo, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+import SiteNav from "../components/SiteNav";
+import ProfileModal from "../components/ProfileModal";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 export default function HomePage() {
   const theme = {
@@ -8,6 +17,56 @@ export default function HomePage() {
     border: "#333333",
   };
 
+  const [darkMode, setDarkMode] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [username, setUsername] = useState("");
+  
+  const theme = useMemo(() => {
+    return darkMode
+      ? { bg: "#050505", card: "#181818", pane: "#242424", text: "#ffffff", muted: "#b5b5b5", border: "#333333", input: "#0f0f0f" }
+      : { bg: "#ffffff", card: "#f6f6f6", pane: "#eeeeee", text: "#111111", muted: "#555555", border: "#d8d8d8", input: "#ffffff" };
+  }, [darkMode]);
+  
+  async function loadProfile(userId) {
+    if (!userId) {
+      setProfile(null);
+      return;
+    }
+  
+    const { data } = await supabase
+      .from("profiles")
+      .select("username, display_name, avatar_url")
+      .eq("id", userId)
+      .maybeSingle();
+  
+    setProfile(data || null);
+  }
+  
+  useEffect(() => {
+    const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
+    setDarkMode(Boolean(prefersDark));
+  
+    async function loadUser() {
+      const { data } = await supabase.auth.getUser();
+      const currentUser = data?.user || null;
+      setUser(currentUser);
+      loadProfile(currentUser?.id);
+    }
+  
+    loadUser();
+  
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      const currentUser = session?.user || null;
+      setUser(currentUser);
+      loadProfile(currentUser?.id);
+    });
+  
+    return () => listener?.subscription?.unsubscribe();
+  }, []);
+  
   return (
     <main
       style={{
@@ -18,6 +77,48 @@ export default function HomePage() {
         padding: 16,
       }}
     >
+
+    <div style={{ maxWidth: 520, margin: "0 auto 10px", display: "flex", justifyContent: "flex-end" }}>
+      <button
+        style={{
+          width: 36,
+          height: 36,
+          border: `1px solid ${theme.border}`,
+          background: theme.card,
+          color: theme.text,
+          borderRadius: 6,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+        onClick={() => setShowMenu(true)}
+      >
+        <span className="material-symbols-outlined">menu</span>
+      </button>
+    </div>
+    
+    <SiteNav
+      showMenu={showMenu}
+      setShowMenu={setShowMenu}
+      setShowProfile={setShowProfile}
+      darkMode={darkMode}
+      setDarkMode={setDarkMode}
+      theme={theme}
+      user={user}
+      profile={profile}
+      username={profile?.username || username}
+    />
+    
+    <ProfileModal
+      show={showProfile}
+      onClose={() => setShowProfile(false)}
+      user={user}
+      setUser={setUser}
+      darkMode={darkMode}
+      theme={theme}
+    />
+      
       <div style={{ maxWidth: 520, margin: "0 auto" }}>
         <h1 style={{ fontFamily: "'Roboto Slab', Rockwell, serif", fontSize: 36, marginBottom: 4 }}>That Guy Rocked</h1>
         <p style={{ color: "#b5b5b5", marginBottom: 20 }}>

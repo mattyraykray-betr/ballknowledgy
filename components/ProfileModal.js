@@ -325,6 +325,13 @@ export default function ProfileModal({
       border: `1px solid ${theme.border}`,
       background: theme.pane,
     },    
+
+    avatarRow: {
+      display: "flex",
+      alignItems: "center",
+      gap: 10,
+      marginBottom: 10,
+    },    
   };
 
   return (
@@ -376,7 +383,44 @@ export default function ProfileModal({
         )}
   
         {profileMode === "create" && (
-          <>
+          <> 
+            <input
+              style={styles.input}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Username"
+            />
+        
+            <div style={styles.avatarRow}>
+              <div style={styles.avatarPreview}>
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="Avatar"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                    }}
+                  />
+                ) : (
+                  username?.charAt(0)?.toUpperCase() || "?"
+                )}
+              </div>
+            
+              <input
+                style={{
+                  ...styles.input,
+                  marginBottom: 0,
+                  flex: 1,
+                }}
+                type="file"
+                accept="image/*"
+                onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+              />
+            </div>
+
             {recoveryKey && (
               <div style={styles.recoveryBox}>
                 <div style={styles.label}>Passkey</div>
@@ -386,32 +430,7 @@ export default function ProfileModal({
                 </div>
               </div>
             )}
-        
-            {avatarUrl && (
-              <div style={{ marginBottom: 10 }}>
-                <div style={styles.label}>Current Avatar</div>
-                <img
-                  src={avatarUrl}
-                  alt="Current avatar"
-                  style={styles.avatarPreview}
-                />
-              </div>
-            )}
-        
-            <input
-              style={styles.input}
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Username"
-            />
-        
-            <input
-              style={styles.input}
-              type="file"
-              accept="image/*"
-              onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
-            />
-        
+               
             {user ? (
               <>
                 <button

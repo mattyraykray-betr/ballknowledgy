@@ -393,11 +393,14 @@ export default function HomePage() {
       return;
     }
   
-    const { data, error } = await supabase
-      .from("vw_nba_trivia_all_time_leaderboard")
-      .select("username, avatar_url, total_score, avg_score, correct_challenges")
-      .order("total_score", { ascending: false })
-      .limit(10);
+      const { data, error } = await supabase
+        .from("vw_nba_trivia_all_time_leaderboard")
+        .select(
+          "username, avatar_url, total_score, avg_score, correct_challenges"
+        )
+        .eq("challenge_type", "season")
+        .order("total_score", { ascending: false })
+        .limit(10);
   
     if (!error) setLeaderboard(data || []);
   }

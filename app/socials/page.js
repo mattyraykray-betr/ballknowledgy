@@ -88,10 +88,48 @@ export default function SocialsPage() {
         </ul>
 
         <h2>Facebook</h2>
-        <p>Add your Facebook pages here.</p>
+        <ul
+          style={{
+            listStyle: "none",
+            paddingLeft: 0,
+            marginTop: 8,
+          }}
+        >
+          <li style={{ marginBottom: 10 }}>
+            »
+            {" "}
+            <a
+              href="https://www.facebook.com/profile.php?id=61590278446737"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#fff" }}
+            >
+              That Guy Rocked
+            </a>
+          </li>
+        </ul>                
 
         <h2>Instagram</h2>
-        <p>Add your Instagram accounts here.</p>
+        <ul
+          style={{
+            listStyle: "none",
+            paddingLeft: 0,
+            marginTop: 8,
+          }}
+        >
+          <li style={{ marginBottom: 10 }}>
+            »
+            {" "}
+            <a
+              href="https://www.instagram.com/thatguyrockedig/"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#fff" }}
+            >
+              That Guy Rocked
+            </a>
+          </li>
+        </ul>  
 
         <SiteFooter theme={theme} />
       </div>

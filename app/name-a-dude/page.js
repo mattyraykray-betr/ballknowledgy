@@ -395,7 +395,6 @@ export default function NameADudePage() {
   
   function getShareText(gameName, scoreText) {
     return (
-      `That Guy Rocked\n` +
       `${gameName} | ${formatShareDate(todayLocal())}\n` +
       `${scoreText}\n\n` +
       `Try to beat my score: ${window.location.origin}`

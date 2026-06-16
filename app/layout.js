@@ -1,6 +1,15 @@
 export const metadata = {
   title: "That Guy Rocked",
-  description: "NBA player challenge",
+  description:
+    "Daily basketball trivia games including Name a Dude, Ladder Golf, and Ball Knowledgy.",
+  openGraph: {
+    title: "That Guy Rocked",
+    description:
+      "Daily basketball trivia games including Name a Dude, Ladder Golf, and Ball Knowledgy.",
+    url: "https://www.thatguyrocked.com",
+    siteName: "That Guy Rocked",
+    type: "website",
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -12,7 +21,7 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@700;800;900&amp;display=swap"
+          href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@700;800;900&display=swap"
           rel="stylesheet"
         />
       </head>

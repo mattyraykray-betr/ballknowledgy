@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import SiteNav from "../components/SiteNav";
 import ProfileModal from "../components/ProfileModal";
+import XListFeed from "../components/XListFeed";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -228,16 +229,7 @@ export default function HomePage() {
             Latest From Us
           </h2>
         
-          <a
-            className="twitter-timeline"
-            data-height="520"
-            data-theme={darkMode ? "dark" : "light"}
-            href="https://x.com/i/lists/2066890467086598373"
-          >
-            Latest posts
-          </a>
-        
-          <script async src="https://platform.twitter.com/widgets.js" charSet="utf-8" />
+        <XListFeed darkMode={darkMode} />
         </section>
                 
         <SiteFooter theme={theme} />                

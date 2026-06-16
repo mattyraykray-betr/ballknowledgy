@@ -210,7 +210,15 @@ export default function HomePage() {
             </Link>
           </div>
         </section>
-        
+
+        <div
+          style={{
+            height: 1,
+            background: theme.border,
+            margin: "20px 0",
+          }}
+        />
+                  
         <section
           style={{
             border: `1px solid ${theme.border}`,

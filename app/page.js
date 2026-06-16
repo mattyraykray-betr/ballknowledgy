@@ -122,92 +122,141 @@ export default function HomePage() {
           Daily basketball games for sickos.
         </p>
 
-        <div style={{ display: "grid", gap: 12 }}>
-          <Link
-            href="/ball-knowledgy"
+        <section style={{ marginTop: 18 }}>
+          <div
             style={{
-              color: "inherit",
-              textDecoration: "none",
-              border: "1px solid #333",
-              background: "#181818",
-              borderRadius: 10,
-              padding: 16,
+              color: theme.muted,
+              fontSize: 11,
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              marginBottom: 8,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 28 }}
-              >
-                quiz
-              </span>
-            
-              <div style={{ fontSize: 22, fontWeight: 900 }}>
-                Ball Knowledgy
+            Trivia Games
+          </div>
+        
+          <div style={{ display: "grid", gap: 12 }}>
+            <Link
+              href="/name-a-dude"
+              style={{
+                color: "inherit",
+                textDecoration: "none",
+                border: `1px solid ${theme.border}`,
+                background: theme.card,
+                borderRadius: 10,
+                padding: 16,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 28 }}>
+                  recent_patient
+                </span>
+        
+                <div style={{ fontSize: 22, fontWeight: 900 }}>Name a Dude</div>
               </div>
-            </div>
-            <div style={{ color: "#b5b5b5", marginTop: 4 }}>
-              Guess the player from team, era, stats, and hints.
-            </div>
-          </Link>
-
-          <Link
-            href="/ladder-golf"
+        
+              <div style={{ color: theme.muted, marginTop: 4 }}>
+                Get a random team and season. Name one player from that roster.
+              </div>
+            </Link>
+        
+            <Link
+              href="/ladder-golf"
+              style={{
+                color: "inherit",
+                textDecoration: "none",
+                border: `1px solid ${theme.border}`,
+                background: theme.card,
+                borderRadius: 10,
+                padding: 16,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 28 }}>
+                  tools_ladder
+                </span>
+        
+                <div style={{ fontSize: 22, fontWeight: 900 }}>Ladder Golf</div>
+              </div>
+        
+              <div style={{ color: theme.muted, marginTop: 4 }}>
+                Name players lower than the previous career stat value.
+              </div>
+            </Link>
+        
+            <Link
+              href="/ball-knowledgy"
+              style={{
+                color: "inherit",
+                textDecoration: "none",
+                border: `1px solid ${theme.border}`,
+                background: theme.card,
+                borderRadius: 10,
+                padding: 16,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span className="material-symbols-outlined" style={{ fontSize: 28 }}>
+                  quiz
+                </span>
+        
+                <div style={{ fontSize: 22, fontWeight: 900 }}>Ball Knowledgy</div>
+              </div>
+        
+              <div style={{ color: theme.muted, marginTop: 4 }}>
+                Guess the player from team, era, stats, and hints.
+              </div>
+            </Link>
+          </div>
+        </section>
+        
+        <section
+          style={{
+            border: `1px solid ${theme.border}`,
+            background: theme.card,
+            borderRadius: 10,
+            padding: 16,
+            marginTop: 18,
+          }}
+        >
+          <div
             style={{
-              color: "inherit",
-              textDecoration: "none",
-              border: "1px solid #333",
-              background: "#181818",
-              borderRadius: 10,
-              padding: 16,
+              color: theme.muted,
+              fontSize: 11,
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: "0.06em",
+              marginBottom: 8,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 28 }}
-              >
-                tools_ladder
-              </span>
-            
-              <div style={{ fontSize: 22, fontWeight: 900 }}>
-                Ladder Golf
-              </div>
-            </div>
-            <div style={{ color: "#b5b5b5", marginTop: 4 }}>
-              Name players lower than the previous career stat value.
-            </div>
-          </Link>
-
-          <Link
-            href="/name-a-dude"
+            Latest From Us
+          </div>
+        
+          <a
+            href="https://x.com/i/lists/2066890467086598373"
+            target="_blank"
+            rel="noopener noreferrer"
             style={{
-              color: "inherit",
+              color: theme.text,
+              fontSize: 18,
+              fontWeight: 900,
               textDecoration: "none",
-              border: "1px solid #333",
-              background: "#181818",
-              borderRadius: 10,
-              padding: 16,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 8,
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: 28 }}
-              >
-                recent_patient
-              </span>
-          
-              <div style={{ fontSize: 22, fontWeight: 900 }}>
-                Name a Dude
-              </div>
-            </div>
-          
-            <div style={{ color: "#b5b5b5", marginTop: 4 }}>
-              Get a random team and season. Name one player from that roster.
-            </div>
-          </Link>                
-        </div>
+            𝕏 View our latest posts
+            <span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+              open_in_new
+            </span>
+          </a>
+        
+          <div style={{ color: theme.muted, marginTop: 6, fontSize: 13 }}>
+            Updates from our basketball accounts in one public X list.
+          </div>
+        </section>
 
         <section
           style={{

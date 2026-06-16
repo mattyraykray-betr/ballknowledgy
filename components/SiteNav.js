@@ -127,6 +127,15 @@ export default function SiteNav({
       fontSize: 16,
       flexShrink: 0,
     },
+    navSectionLabel: {
+      color: theme.muted,
+      fontSize: 10,
+      fontWeight: 900,
+      textTransform: "uppercase",
+      letterSpacing: "0.06em",
+      marginTop: 16,
+      marginBottom: 6,
+    },    
   };
 
   return (
@@ -150,26 +159,41 @@ export default function SiteNav({
           Home
         </Link>
 
-        <Link href="/ball-knowledgy" style={styles.menuItem}>
-          <span className="material-symbols-outlined" style={styles.menuIcon}>
-            quiz
-          </span>
-          Ball Knowledgy
-        </Link>
-
-        <Link href="/ladder-golf" style={styles.menuItem}>
-          <span className="material-symbols-outlined" style={styles.menuIcon}>
-            tools_ladder
-          </span>
-          Ladder Golf
-        </Link>
-
-        <Link href="/name-a-dude" style={styles.menuItem}>
+        <div style={styles.navSectionLabel}>Trivia Games</div>
+        
+        <Link href="/name-a-dude" style={styles.menuItem} onClick={() => setShowMenu(false)}>
           <span className="material-symbols-outlined" style={styles.menuIcon}>
             recent_patient
           </span>
           Name a Dude
         </Link>
+        
+        <Link href="/ladder-golf" style={styles.menuItem} onClick={() => setShowMenu(false)}>
+          <span className="material-symbols-outlined" style={styles.menuIcon}>
+            tools_ladder
+          </span>
+          Ladder Golf
+        </Link>
+        
+        <Link href="/ball-knowledgy" style={styles.menuItem} onClick={() => setShowMenu(false)}>
+          <span className="material-symbols-outlined" style={styles.menuIcon}>
+            quiz
+          </span>
+          Ball Knowledgy
+        </Link>
+        
+        <div style={styles.navSectionLabel}>Latest From Us</div>
+        
+        <a
+          href="https://x.com/i/lists/2066890467086598373"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={styles.menuItem}
+          onClick={() => setShowMenu(false)}
+        >
+          <span style={styles.menuIcon}>𝕏</span>
+          X / Twitter List
+        </a>
 
         {showLeaderboardButton && (
           <button

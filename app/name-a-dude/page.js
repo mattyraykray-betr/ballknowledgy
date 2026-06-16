@@ -394,12 +394,37 @@ export default function NameADudePage() {
   
     return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
   }
+
+  function keycapNumber(value) {
+    const map = {
+      0: "0️⃣",
+      1: "1️⃣",
+      2: "2️⃣",
+      3: "3️⃣",
+      4: "4️⃣",
+      5: "5️⃣",
+      6: "6️⃣",
+      7: "7️⃣",
+      8: "8️⃣",
+      9: "9️⃣",
+    };
+  
+    return map[value] || String(value);
+  }
+  
+  function nameADudeShareText() {
+    return `✅ ${keycapNumber(
+      correctPlayers.length
+    )} correct, ${keycapNumber(
+      misses.length
+    )} misses, ⏱️ ${formatTimer(secondsElapsed)}`;
+  }
   
   function getShareText(gameName, scoreText) {
     return (
       `${gameName} | ${formatShareDate(todayLocal())}\n` +
       `${scoreText}\n\n` +
-      `Try to beat my score: ${window.location.origin}`
+      `Try to beat my score: ${window.location.origin}/name-a-dude`
     );
   }
 
@@ -993,7 +1018,7 @@ export default function NameADudePage() {
                       onClick={() =>
                         openTwitterShare(
                           "Name a Dude",
-                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                          nameADudeShareText()
                         )
                       }
                       aria-label="Share on X"
@@ -1007,7 +1032,7 @@ export default function NameADudePage() {
                       onClick={() =>
                         openFacebookShare(
                           "Name a Dude",
-                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                          nameADudeShareText()
                         )
                       }
                       aria-label="Share on Facebook"
@@ -1021,7 +1046,7 @@ export default function NameADudePage() {
                       onClick={() =>
                         copyShareText(
                           "Name a Dude",
-                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                          nameADudeShareText()
                         )
                       }
                       aria-label="Copy score"
@@ -1035,7 +1060,7 @@ export default function NameADudePage() {
                       onClick={() =>
                         shareResult(
                           "Name a Dude",
-                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                          nameADudeShareText()
                         )
                       }
                       aria-label="Share by message"
@@ -1049,7 +1074,7 @@ export default function NameADudePage() {
                       onClick={() =>
                         openEmailShare(
                           "Name a Dude",
-                          `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`
+                          nameADudeShareText()
                         )
                       }
                       aria-label="Share by email"
@@ -1360,15 +1385,15 @@ export default function NameADudePage() {
                 <div style={{ ...styles.label, marginTop: 14 }}>Share</div>
                 
                 <div style={styles.shareGrid}>
-                  <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>𝕏</button>
-                  <button style={styles.shareIconButton} onClick={() => openFacebookShare("Name a Dude", `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>f</button>
-                  <button style={styles.shareIconButton} onClick={() => copyShareText("Name a Dude", `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>
+                  <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>𝕏</button>
+                  <button style={styles.shareIconButton} onClick={() => openFacebookShare("Name a Dude", nameADudeShareText())}>f</button>
+                  <button style={styles.shareIconButton} onClick={() => copyShareText("Name a Dude", nameADudeShareText())}>
                     <span className="material-symbols-outlined">content_copy</span>
                   </button>
-                  <button style={styles.shareIconButton} onClick={() => shareResult("Name a Dude", `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>
+                  <button style={styles.shareIconButton} onClick={() => shareResult("Name a Dude", nameADudeShareText())}>
                     <span className="material-symbols-outlined">chat_bubble</span>
                   </button>
-                  <button style={styles.shareIconButton} onClick={() => openEmailShare("Name a Dude", `${correctPlayers.length} correct, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>
+                  <button style={styles.shareIconButton} onClick={() => openEmailShare("Name a Dude", nameADudeShareText())}>
                     <span className="material-symbols-outlined">drafts</span>
                   </button>
                 </div>                             

@@ -28,7 +28,7 @@ export default function SiteFooter({ theme }) {
         league, conference, or governing body.
       </div>
 
-      <div style={{ marginTop: 10 }}>© 2026 That Guy Rocked</div>
+      <div style={{ marginTop: 10 }}>© 2026 That Guy Rocks | TGR Partners LLC. All Rights Reserved.</div>
     </footer>
   );
 }

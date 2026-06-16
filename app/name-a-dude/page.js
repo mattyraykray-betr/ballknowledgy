@@ -179,7 +179,7 @@ export default function NameADudePage() {
     if (type === "daily" && dailyChallengeId) {
       const { data, error } = await supabase
         .from("vw_nba_trivia_daily_challenge_leaderboard")
-        .select("username, avatar_url, best_score, best_time, fewest_misses, correct")
+        .select("username, avatar_url, best_score, best_time, fewest_misses, correct, hints_used, chain_length")
         .eq("challenge_id", dailyChallengeId)
         .order("best_score", { ascending: false })
         .limit(10);
@@ -976,7 +976,7 @@ export default function NameADudePage() {
         
                       <div style={styles.sub}>
                         {leaderboardType === "daily"
-                          ? `${row.best_score || 0} pts · ${formatTimer(row.best_time || 0)} · Misses ${row.fewest_misses || 0}`
+                          ? `${row.best_score || 0} pts · ${formatTimer(row.best_time || 0)} · ${row.chain_length || 0} correct`
                           : `${row.total_score || 0} pts · Avg ${Math.round(row.avg_score || 0)} · Correct ${row.correct_challenges || 0}`}
                       </div>
                     </div>

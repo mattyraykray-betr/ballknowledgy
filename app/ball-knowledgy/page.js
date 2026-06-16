@@ -515,7 +515,6 @@ export default function HomePage() {
     }
   
     return (
-      `That Guy Rocked\n` +
       `${gameName}${challengeLine ? ` | ${challengeLine}` : ""}\n` +
       `${scoreText}\n\n` +
       `Try to beat my score: ${window.location.origin}`

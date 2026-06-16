@@ -527,9 +527,11 @@ export default function HomePage() {
   }
 
   function ballKnowledgyShareText() {
-    return `${isSolved ? "✅ Correct" : "🟥 Missed"}, ${keycapNumber(
+    return `${isSolved ? "✅ Correct" : "Missed"}, ${keycapNumber(
       hintsShown
-    )} hints, 🟥 ${wrongGuesses.length} misses, ${score ?? 0} points, ${formatTimer(
+    )} hints, ${keycapNumber(
+      wrongGuesses.length
+    )} misses, ${score ?? 0} points, ${formatTimer(
       secondsElapsed
     )}`;
   }  
@@ -545,7 +547,7 @@ export default function HomePage() {
     return (
       `${gameName}${challengeLine ? ` | ${challengeLine}` : ""}\n` +
       `${scoreText}\n\n` +
-      `Try to beat my score: ${window.location.origin}`
+      `Try to beat my score: ${window.location.origin}/ball-knowledgy`
     );
   }
   

@@ -1090,7 +1090,7 @@ export default function NameADudePage() {
         ) : !hasStarted ? (
           <>
             <section style={styles.card}>
-              <div style={styles.label}>On Demand</div>
+              <div style={styles.label}>Play as many times as you want!</div>
               <div style={styles.big}>Name a Dude</div>
               <div style={styles.sub}>
                 We give you a season and team. Name one player from that roster.

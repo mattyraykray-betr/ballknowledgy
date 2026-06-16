@@ -1319,6 +1319,39 @@ export default function NameADudePage() {
                   {formatTimer(secondsElapsed)}
                 </div>
 
+                <div style={styles.postGameButtonRow}>
+                  <button style={styles.primaryButton} onClick={startGame}>
+                    Play Again
+                  </button>
+                
+                  <button
+                    style={styles.primaryButton}
+                    onClick={() => {
+                      setLeaderboardType("daily");
+                      loadLeaderboard("daily");
+                      setShowLeaderboard(true);
+                    }}
+                  >
+                    Leaderboard
+                  </button>
+                </div>
+                
+                <div style={{ ...styles.label, marginTop: 14 }}>Share</div>
+                
+                <div style={styles.shareGrid}>
+                  <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>𝕏</button>
+                  <button style={styles.shareIconButton} onClick={() => openFacebookShare("Name a Dude", nameADudeShareText())}>f</button>
+                  <button style={styles.shareIconButton} onClick={() => copyShareText("Name a Dude", nameADudeShareText())}>
+                    <span className="material-symbols-outlined">content_copy</span>
+                  </button>
+                  <button style={styles.shareIconButton} onClick={() => shareResult("Name a Dude", nameADudeShareText())}>
+                    <span className="material-symbols-outlined">chat_bubble</span>
+                  </button>
+                  <button style={styles.shareIconButton} onClick={() => openEmailShare("Name a Dude", nameADudeShareText())}>
+                    <span className="material-symbols-outlined">drafts</span>
+                  </button>
+                </div> 
+             
                 {challenge?.valid_players?.length > 0 && (
                   <div style={{ marginTop: 12 }}>
                     <div style={styles.label}>Possible Answers</div>
@@ -1363,39 +1396,7 @@ export default function NameADudePage() {
                         ))}
                     </div>
                   </div>
-                )}
-                <div style={styles.postGameButtonRow}>
-                  <button style={styles.primaryButton} onClick={startGame}>
-                    Play Again
-                  </button>
-                
-                  <button
-                    style={styles.primaryButton}
-                    onClick={() => {
-                      setLeaderboardType("daily");
-                      loadLeaderboard("daily");
-                      setShowLeaderboard(true);
-                    }}
-                  >
-                    Leaderboard
-                  </button>
-                </div>
-                
-                <div style={{ ...styles.label, marginTop: 14 }}>Share</div>
-                
-                <div style={styles.shareGrid}>
-                  <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>𝕏</button>
-                  <button style={styles.shareIconButton} onClick={() => openFacebookShare("Name a Dude", nameADudeShareText())}>f</button>
-                  <button style={styles.shareIconButton} onClick={() => copyShareText("Name a Dude", nameADudeShareText())}>
-                    <span className="material-symbols-outlined">content_copy</span>
-                  </button>
-                  <button style={styles.shareIconButton} onClick={() => shareResult("Name a Dude", nameADudeShareText())}>
-                    <span className="material-symbols-outlined">chat_bubble</span>
-                  </button>
-                  <button style={styles.shareIconButton} onClick={() => openEmailShare("Name a Dude", nameADudeShareText())}>
-                    <span className="material-symbols-outlined">drafts</span>
-                  </button>
-                </div>                             
+                )}                          
               </section>
             )}
           </>

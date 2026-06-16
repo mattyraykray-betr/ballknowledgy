@@ -1368,7 +1368,11 @@ export default function NameADudePage() {
                 
                       {challenge.valid_players
                         .slice()
-                        .sort((a, b) => String(a.full_name).localeCompare(String(b.full_name)))
+                        .sort(
+                          (a, b) =>
+                            Number(b.points_per_game || 0) -
+                            Number(a.points_per_game || 0)
+                        )
                         .map((p) => (
                           <div key={p.player_id} style={styles.answerRow}>
                             <div style={styles.answerPlayer}>

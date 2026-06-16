@@ -508,6 +508,31 @@ export default function HomePage() {
   
     return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
   }
+
+  function keycapNumber(value) {
+    const map = {
+      0: "0️⃣",
+      1: "1️⃣",
+      2: "2️⃣",
+      3: "3️⃣",
+      4: "4️⃣",
+      5: "5️⃣",
+      6: "6️⃣",
+      7: "7️⃣",
+      8: "8️⃣",
+      9: "9️⃣",
+    };
+  
+    return map[value] || String(value);
+  }
+
+  function ballKnowledgyShareText() {
+    return `${isSolved ? "✅ Correct" : "🟥 Missed"}, ${keycapNumber(
+      hintsShown
+    )} hints, 🟥 ${wrongGuesses.length} misses, ${score ?? 0} points, ${formatTimer(
+      secondsElapsed
+    )}`;
+  }  
   
   function getShareText(gameName, scoreText) {
     let challengeLine = "";
@@ -1277,7 +1302,7 @@ export default function HomePage() {
                       onClick={() =>
                         openTwitterShare(
                           "Ball Knowledgy",
-                          `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
+                          ballKnowledgyShareText()
                         )
                       }
                       aria-label="Share on X"
@@ -1291,7 +1316,7 @@ export default function HomePage() {
                       onClick={() =>
                         openFacebookShare(
                           "Ball Knowledgy",
-                          `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
+                          ballKnowledgyShareText()
                         )
                       }
                       aria-label="Share on Facebook"
@@ -1305,7 +1330,7 @@ export default function HomePage() {
                       onClick={() =>
                         copyShareText(
                           "Ball Knowledgy",
-                          `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
+                          ballKnowledgyShareText()
                         )
                       }
                       aria-label="Copy score"
@@ -1319,7 +1344,7 @@ export default function HomePage() {
                       onClick={() =>
                         shareResult(
                           "Ball Knowledgy",
-                          `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
+                          ballKnowledgyShareText()
                         )
                       }
                       aria-label="Share by message"
@@ -1333,7 +1358,7 @@ export default function HomePage() {
                       onClick={() =>
                         openEmailShare(
                           "Ball Knowledgy",
-                          `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
+                          ballKnowledgyShareText()
                         )
                       }
                       aria-label="Share by email"
@@ -1539,7 +1564,7 @@ export default function HomePage() {
                     onClick={() =>
                       openTwitterShare(
                         "Ball Knowledgy",
-                        `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
+                        ballKnowledgyShareText()
                       )
                     }
                     aria-label="Share on X"
@@ -1553,7 +1578,7 @@ export default function HomePage() {
                     onClick={() =>
                       openFacebookShare(
                         "Ball Knowledgy",
-                        `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
+                        ballKnowledgyShareText()
                       )
                     }
                     aria-label="Share on Facebook"
@@ -1567,7 +1592,7 @@ export default function HomePage() {
                     onClick={() =>
                       copyShareText(
                         "Ball Knowledgy",
-                        `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
+                        ballKnowledgyShareText()
                       )
                     }
                     aria-label="Copy score"
@@ -1581,7 +1606,7 @@ export default function HomePage() {
                     onClick={() =>
                       shareResult(
                         "Ball Knowledgy",
-                        `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
+                        ballKnowledgyShareText()
                       )
                     }
                     aria-label="Share by message"
@@ -1595,7 +1620,7 @@ export default function HomePage() {
                     onClick={() =>
                       openEmailShare(
                         "Ball Knowledgy",
-                        `${score ?? 0} points, ${wrongGuesses.length} misses, ${formatTimer(secondsElapsed)}`
+                        ballKnowledgyShareText()
                       )
                     }
                     aria-label="Share by email"

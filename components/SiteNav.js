@@ -135,6 +135,11 @@ export default function SiteNav({
       letterSpacing: "0.06em",
       marginTop: 16,
       marginBottom: 6,
+    },
+    divider: {
+      height: 1,
+      background: theme.border,
+      margin: "14px 0",
     },    
   };
 
@@ -181,7 +186,9 @@ export default function SiteNav({
           </span>
           Ball Knowledgy
         </Link>
-        
+
+        <div style={styles.divider} />
+            
         <div style={styles.navSectionLabel}>Latest From Us</div>
         
         <a
@@ -194,6 +201,8 @@ export default function SiteNav({
           <span style={styles.menuIcon}>𝕏</span>
           Posts from That Guy Rocked
         </a>
+
+        <div style={styles.divider} />
 
         {showLeaderboardButton && (
           <button

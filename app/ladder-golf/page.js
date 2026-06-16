@@ -354,7 +354,6 @@ export default function StatLadderPage() {
   
   function getShareText(gameName, scoreText) {
     return (
-      `That Guy Rocked\n` +
       `${gameName} | ${formatShareDate(challenge?.challenge_date || selectedDate)}\n` +
       `${scoreText}\n\n` +
       `Try to beat my score: ${window.location.origin}`

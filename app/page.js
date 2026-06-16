@@ -2,6 +2,12 @@ import Link from "next/link";
 import SiteFooter from "../components/SiteFooter";
 
 export default function HomePage() {
+  const theme = {
+    text: "#ffffff",
+    muted: "#b5b5b5",
+    border: "#333333",
+  };
+
   return (
     <main
       style={{
@@ -104,7 +110,7 @@ export default function HomePage() {
             </div>
           </Link>                
         </div>
-      <SiteFooter theme={theme} />                
+        <SiteFooter theme={theme} />                
       </div>
     </main>
   );

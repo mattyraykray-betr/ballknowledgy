@@ -207,6 +207,39 @@ export default function HomePage() {
             </div>
           </Link>                
         </div>
+
+        <section
+          style={{
+            border: `1px solid ${theme.border}`,
+            background: theme.card,
+            borderRadius: 10,
+            padding: 12,
+            marginTop: 18,
+          }}
+        >
+          <h2
+            style={{
+              fontFamily: "'Roboto Slab', Rockwell, serif",
+              fontSize: 22,
+              marginTop: 0,
+              marginBottom: 8,
+            }}
+          >
+            Latest From Us
+          </h2>
+        
+          <a
+            className="twitter-timeline"
+            data-height="520"
+            data-theme={darkMode ? "dark" : "light"}
+            href="https://x.com/i/lists/2066890467086598373"
+          >
+            Latest posts
+          </a>
+        
+          <script async src="https://platform.twitter.com/widgets.js" charSet="utf-8" />
+        </section>
+                
         <SiteFooter theme={theme} />                
       </div>
     </main>

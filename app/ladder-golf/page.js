@@ -336,12 +336,14 @@ export default function StatLadderPage() {
       return;
     }
   
-    const { data, error } = await supabase
-      .from("vw_nba_trivia_all_time_leaderboard")
-      .select("username, avatar_url, total_score, avg_score, correct_challenges")
-      .eq("challenge_type", "stat_ladder")
-      .order("total_score", { ascending: false })
-      .limit(10);
+      const { data, error } = await supabase
+        .from("vw_nba_trivia_all_time_leaderboard")
+        .select(
+          "username, avatar_url, total_score, avg_score, correct_challenges"
+        )
+        .eq("challenge_type", "stat_ladder")
+        .order("total_score", { ascending: false })
+        .limit(10);
   
     if (!error) setLeaderboard(data || []);
   }  

@@ -192,7 +192,7 @@ export default function SiteNav({
           onClick={() => setShowMenu(false)}
         >
           <span style={styles.menuIcon}>𝕏</span>
-          X / Twitter List
+          Posts from That Guy Rocked
         </a>
 
         {showLeaderboardButton && (

@@ -386,51 +386,32 @@ export default function ProfileModal({
                 </div>
               </div>
             )}
-
-            {profileMode === "create" && (
-              <>
-                {recoveryKey && (
-                  <div style={styles.recoveryBox}>
-                    <div style={styles.label}>Recovery Key</div>
-                    <div style={styles.recoveryKey}>{recoveryKey}</div>
-                    <div style={styles.sub}>
-                      Save this key. You will need it to use this profile on another device.
-                    </div>
-                  </div>
-                )}
-            
-                {avatarUrl && (
-                  <div style={{ marginBottom: 10 }}>
-                    <div style={styles.label}>Current Avatar</div>
-                    <img
-                      src={avatarUrl}
-                      alt="Current avatar"
-                      style={styles.avatarPreview}
-                    />
-                  </div>
-                )}
-            
-                <input
-                  style={styles.input}
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Username"
+        
+            {avatarUrl && (
+              <div style={{ marginBottom: 10 }}>
+                <div style={styles.label}>Current Avatar</div>
+                <img
+                  src={avatarUrl}
+                  alt="Current avatar"
+                  style={styles.avatarPreview}
                 />
-
+              </div>
+            )}
+        
             <input
               style={styles.input}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Username"
             />
-  
+        
             <input
               style={styles.input}
               type="file"
               accept="image/*"
               onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
             />
-  
+        
             {user ? (
               <>
                 <button
@@ -441,7 +422,7 @@ export default function ProfileModal({
                 >
                   Save Profile
                 </button>
-  
+        
                 <button style={styles.dangerButton} onClick={signOut}>
                   Sign Out
                 </button>
@@ -451,7 +432,7 @@ export default function ProfileModal({
                 Save Profile
               </button>
             )}
-  
+        
             <button
               style={styles.dangerButton}
               onClick={() => setProfileMode("menu")}

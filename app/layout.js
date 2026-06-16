@@ -3,12 +3,6 @@ export const metadata = {
   description: "NBA player challenge",
 };
 
-export const metadata = {
-  verification: {
-    google: "google-site-verification=a83O1jh1jE-3mrmmIzlVa8VIqNSt00nZQf3gHUYEJoI",
-  },
-};
-
 export default function RootLayout({ children }) {
   return (
     <html lang="en" style={{ margin: 0, padding: 0 }}>

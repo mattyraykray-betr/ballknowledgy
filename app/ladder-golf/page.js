@@ -353,12 +353,19 @@ export default function StatLadderPage() {
   
     return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
   }
+
+  function ladderGolfShareText() {
+    return (
+      `${chain.length} chain, ${misses.length} misses, ⏱️ ${formatTimer(secondsElapsed)}\n` +
+      `${"✅".repeat(chain.length)}${"🟥".repeat(misses.length)}`
+    );
+  }
   
   function getShareText(gameName, scoreText) {
     return (
       `${gameName} | ${formatShareDate(challenge?.challenge_date || selectedDate)}\n` +
       `${scoreText}\n\n` +
-      `Try to beat my score: ${window.location.origin}`
+      `Try to beat my score: ${window.location.origin}/ladder-golf`
     );
   }
   
@@ -998,15 +1005,15 @@ export default function StatLadderPage() {
                   <div style={{ ...styles.label, marginTop: 14 }}>Share</div>
         
                   <div style={styles.shareGrid}>
-                    <button style={styles.shareIconButton} onClick={() => openTwitterShare("Ladder Golf", `${chain.length} chain, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>𝕏</button>
-                    <button style={styles.shareIconButton} onClick={() => openFacebookShare("Ladder Golf", `${chain.length} chain, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>f</button>
-                    <button style={styles.shareIconButton} onClick={() => copyShareText("Ladder Golf", `${chain.length} chain, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>
+                    <button style={styles.shareIconButton} onClick={() => openTwitterShare("Ladder Golf", ladderGolfShareText())}>𝕏</button>
+                    <button style={styles.shareIconButton} onClick={() => openFacebookShare("Ladder Golf", ladderGolfShareText())}>f</button>
+                    <button style={styles.shareIconButton} onClick={() => copyShareText("Ladder Golf", ladderGolfShareText())}>
                       <span className="material-symbols-outlined">content_copy</span>
                     </button>
-                    <button style={styles.shareIconButton} onClick={() => shareResult("Ladder Golf", `${chain.length} chain, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>
+                    <button style={styles.shareIconButton} onClick={() => shareResult("Ladder Golf", ladderGolfShareText())}>
                       <span className="material-symbols-outlined">chat_bubble</span>
                     </button>
-                    <button style={styles.shareIconButton} onClick={() => openEmailShare("Ladder Golf", `${chain.length} chain, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>
+                    <button style={styles.shareIconButton} onClick={() => openEmailShare("Ladder Golf", ladderGolfShareText())}>
                       <span className="material-symbols-outlined">drafts</span>
                     </button>
                   </div>
@@ -1275,15 +1282,15 @@ export default function StatLadderPage() {
                 <div style={{ ...styles.label, marginTop: 14 }}>Share</div>
                 
                 <div style={styles.shareGrid}>
-                  <button style={styles.shareIconButton} onClick={() => openTwitterShare("Ladder Golf", `${chain.length} chain, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>𝕏</button>
-                  <button style={styles.shareIconButton} onClick={() => openFacebookShare("Ladder Golf", `${chain.length} chain, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>f</button>
-                  <button style={styles.shareIconButton} onClick={() => copyShareText("Ladder Golf", `${chain.length} chain, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>
+                  <button style={styles.shareIconButton} onClick={() => openTwitterShare("Ladder Golf", ladderGolfShareText())}>𝕏</button>
+                  <button style={styles.shareIconButton} onClick={() => openFacebookShare("Ladder Golf", ladderGolfShareText())}>f</button>
+                  <button style={styles.shareIconButton} onClick={() => copyShareText("Ladder Golf", ladderGolfShareText())}>
                     <span className="material-symbols-outlined">content_copy</span>
                   </button>
-                  <button style={styles.shareIconButton} onClick={() => shareResult("Ladder Golf", `${chain.length} chain, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>
+                  <button style={styles.shareIconButton} onClick={() => shareResult("Ladder Golf", ladderGolfShareText())}>
                     <span className="material-symbols-outlined">chat_bubble</span>
                   </button>
-                  <button style={styles.shareIconButton} onClick={() => openEmailShare("Ladder Golf", `${chain.length} chain, ${misses.length} misses, ${formatTimer(secondsElapsed)}`)}>
+                  <button style={styles.shareIconButton} onClick={() => openEmailShare("Ladder Golf", ladderGolfShareText())}>
                     <span className="material-symbols-outlined">drafts</span>
                   </button>
                 </div>

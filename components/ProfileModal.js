@@ -84,21 +84,40 @@ export default function ProfileModal({
       return;
     }
   
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select("id, username, recovery_key")
-      .eq("username", recoverUsername.trim())
-      .eq("recovery_key", recoverKey.trim().toUpperCase())
-      .maybeSingle();
+    let activeUser = user;
   
-    if (error || !profile) {
-      setAuthMessage("Profile not found. Check your username and recovery key.");
+    if (!activeUser) {
+      const { data, error } = await supabase.auth.signInAnonymously();
+  
+      if (error) {
+        setAuthMessage(error.message);
+        return;
+      }
+  
+      activeUser = data.user;
+      setUser(activeUser);
+    }
+  
+    const { data, error } = await supabase.rpc("recover_profile_to_current_user", {
+      p_username: recoverUsername.trim(),
+      p_recovery_key: recoverKey.trim().toUpperCase(),
+    });
+  
+    if (error) {
+      setAuthMessage(error.message || "Could not recover profile.");
       return;
     }
   
-    setAuthMessage(
-      "Profile found. Next step is linking this device to the recovered profile."
-    );
+    if (!data?.success) {
+      setAuthMessage(data?.message || "Could not recover profile.");
+      return;
+    }
+  
+    setAuthMessage("Profile recovered. Reloading...");
+  
+    setTimeout(() => {
+      window.location.reload();
+    }, 750);
   }
   
   async function continueAsGuest() {

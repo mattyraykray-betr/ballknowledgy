@@ -413,11 +413,10 @@ export default function NameADudePage() {
   }
   
   function nameADudeShareText() {
-    return `✅ ${keycapNumber(
-      correctPlayers.length
-    )} correct, ${keycapNumber(
-      misses.length
-    )} misses, ⏱️ ${formatTimer(secondsElapsed)}`;
+    return (
+      `${correctPlayers.length} correct, ${misses.length} misses, ⏱️ ${formatTimer(secondsElapsed)}\n` +
+      `${"✅".repeat(correctPlayers.length)}${"🟥".repeat(misses.length)}`
+    );
   }
   
   function getShareText(gameName, scoreText) {

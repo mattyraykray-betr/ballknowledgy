@@ -37,6 +37,7 @@ export default function ProfileModal({
   const [recoverUsername, setRecoverUsername] = useState("");
   const [recoverKey, setRecoverKey] = useState("");  
   const [profileMode, setProfileMode] = useState("menu");
+  const [avatarUrl, setAvatarUrl] = useState("");
   
   async function loadProfile() {
     if (!user) return;
@@ -51,6 +52,7 @@ export default function ProfileModal({
   
     setUsername(data.username || "");
     setRecoveryKey(data.recovery_key || "");
+    setAvatarUrl(data.avatar_url || "");
   }
   useEffect(() => {
     if (show && user) {
@@ -80,7 +82,7 @@ export default function ProfileModal({
     setAuthMessage("");
   
     if (!recoverUsername.trim() || !recoverKey.trim()) {
-      setAuthMessage("Enter your username and recovery key.");
+      setAuthMessage("Enter your username and passkey.");
       return;
     }
   
@@ -104,16 +106,16 @@ export default function ProfileModal({
     });
   
     if (error) {
-      setAuthMessage(error.message || "Could not recover profile.");
+      setAuthMessage(error.message || "Username and passkey do not match.");
       return;
     }
   
     if (!data?.success) {
-      setAuthMessage(data?.message || "Could not recover profile.");
+      setAuthMessage(data?.message || "Username and passkey do not match.");
       return;
     }
   
-    setAuthMessage("Profile recovered. Reloading...");
+    setAuthMessage("Logged in! Reloading...");
   
     setTimeout(() => {
       window.location.reload();
@@ -136,7 +138,7 @@ export default function ProfileModal({
     const saved = await saveProfileForUser(newUser);
   
     if (saved) {
-      setAuthMessage("Profile saved. Save your recovery key somewhere safe.");
+      setAuthMessage("Profile saved. Save your passkey somewhere safe.");
     }
   }
 
@@ -163,7 +165,11 @@ export default function ProfileModal({
       if (uploadedAvatarUrl) {
         payload.avatar_url = uploadedAvatarUrl;
       }
-  
+
+      if (uploadedAvatarUrl) {
+        setAvatarUrl(uploadedAvatarUrl);
+      }
+      
       const { error } = await supabase.from("profiles").upsert(payload);
   
       if (error) {
@@ -177,7 +183,7 @@ export default function ProfileModal({
       }
   
       setRecoveryKey(finalRecoveryKey);
-      setAuthMessage("Profile saved. Save your recovery key somewhere safe.");
+      setAuthMessage("Profile saved. Save your passkey somewhere safe.");
       
       setTimeout(() => {
         window.location.reload();
@@ -310,6 +316,15 @@ export default function ProfileModal({
       letterSpacing: "0.04em",
       marginBottom: 6,
     },    
+
+    avatarPreview: {
+      width: 72,
+      height: 72,
+      borderRadius: "50%",
+      objectFit: "cover",
+      border: `1px solid ${theme.border}`,
+      background: theme.pane,
+    },    
   };
 
   return (
@@ -336,10 +351,10 @@ export default function ProfileModal({
   
         <div style={styles.sub}>
           {profileMode === "menu"
-            ? "Create a profile to save scores, or log in with a username and recovery key."
+            ? "Create a profile to save scores, or log in with a username and passkey."
             : profileMode === "create"
             ? "Choose a username and optional avatar."
-            : "Enter your username and recovery key."}
+            : "Enter your username and passkey."}
         </div>
   
         {profileMode === "menu" && (
@@ -364,14 +379,44 @@ export default function ProfileModal({
           <>
             {recoveryKey && (
               <div style={styles.recoveryBox}>
-                <div style={styles.label}>Recovery Key</div>
+                <div style={styles.label}>Passkey</div>
                 <div style={styles.recoveryKey}>{recoveryKey}</div>
                 <div style={styles.sub}>
                   Save this key. You will need it to use this profile on another device.
                 </div>
               </div>
             )}
-  
+
+            {profileMode === "create" && (
+              <>
+                {recoveryKey && (
+                  <div style={styles.recoveryBox}>
+                    <div style={styles.label}>Recovery Key</div>
+                    <div style={styles.recoveryKey}>{recoveryKey}</div>
+                    <div style={styles.sub}>
+                      Save this key. You will need it to use this profile on another device.
+                    </div>
+                  </div>
+                )}
+            
+                {avatarUrl && (
+                  <div style={{ marginBottom: 10 }}>
+                    <div style={styles.label}>Current Avatar</div>
+                    <img
+                      src={avatarUrl}
+                      alt="Current avatar"
+                      style={styles.avatarPreview}
+                    />
+                  </div>
+                )}
+            
+                <input
+                  style={styles.input}
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Username"
+                />
+
             <input
               style={styles.input}
               value={username}
@@ -429,7 +474,7 @@ export default function ProfileModal({
               style={styles.input}
               value={recoverKey}
               onChange={(e) => setRecoverKey(e.target.value)}
-              placeholder="Recovery Key"
+              placeholder="Passkey"
             />
   
             <button style={styles.primaryButton} onClick={recoverProfile}>

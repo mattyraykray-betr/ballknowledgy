@@ -254,31 +254,8 @@ export default function HomePage() {
           </a>
         
           <div style={{ color: theme.muted, marginTop: 6, fontSize: 13 }}>
-            Updates from our basketball accounts in one public X list.
+            Updates from all our accounts in one public X list.
           </div>
-        </section>
-
-        <section
-          style={{
-            border: `1px solid ${theme.border}`,
-            background: theme.card,
-            borderRadius: 10,
-            padding: 12,
-            marginTop: 18,
-          }}
-        >
-          <h2
-            style={{
-              fontFamily: "'Roboto Slab', Rockwell, serif",
-              fontSize: 22,
-              marginTop: 0,
-              marginBottom: 8,
-            }}
-          >
-            Latest From Us
-          </h2>
-        
-        <XListFeed darkMode={darkMode} />
         </section>
                 
         <SiteFooter theme={theme} />                

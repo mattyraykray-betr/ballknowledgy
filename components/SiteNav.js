@@ -185,7 +185,7 @@ export default function SiteNav({
         <div style={styles.navSectionLabel}>Latest From Us</div>
         
         <a
-          href="https://x.com/i/lists/2066890467086598373"
+          href="https://x.com/i/lists/2066898933926789487"
           target="_blank"
           rel="noopener noreferrer"
           style={styles.menuItem}

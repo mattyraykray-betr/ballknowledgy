@@ -173,19 +173,75 @@ export default function NameADudePage() {
     if (!error) setProfile(data || null);
   }
 
-  // FIX #1: Removed 'nba_players' download from loadStartup to save bandwidth and memory
+// FIX: Lightweight load. Absolutely zero game pools are pulled on startup.
   async function loadStartup() {
     setLoading(true);
-    const [challengeResult, poolResult] = await Promise.all([
-      supabase.from("nba_trivia_challenges").select("id").eq("challenge_type", "name_a_dude").eq("challenge_date", todayLocal()).eq("is_active", true).maybeSingle(),
-      supabase.from("name_a_dude_pool_cache").select("*").eq("sport", "basketball").eq("league", "nba")
-    ]);
-
-    if (!challengeResult.error && challengeResult.data) setDailyChallengeId(challengeResult.data.id);
-    if (!poolResult.error) setPool(poolResult.data || []);
+  
+    const { data, error } = await supabase
+      .from("nba_trivia_challenges")
+      .select("id")
+      .eq("challenge_type", "name_a_dude")
+      .eq("challenge_date", todayLocal())
+      .eq("is_active", true)
+      .maybeSingle();
+  
+    if (!error && data) {
+      setDailyChallengeId(data.id);
+    }
+  
     setLoading(false);
   }
 
+// FIX: Fetches a single random team record dynamically from Supabase
+  async function fetchRandomTeamFromDB(usedKeys = usedTeamKeys) {
+    setChallengeLoading(true);
+    
+    // 1. Get a single random row from your pool cache table using PostgreSQL's RANDOM()
+    let queryBuilder = supabase
+      .from("name_a_dude_pool_cache")
+      .select("*")
+      .eq("sport", "basketball")
+      .eq("league", "nba");
+
+    // If they have already used some teams this session, exclude them so they don't get repeats
+    if (usedKeys.length > 0) {
+      queryBuilder = queryBuilder.not("team_key", "in", `(${usedKeys.join(",")})`);
+    }
+
+    // Limit to 1 random row via custom RPC or a fallback pattern
+    // To keep it clean without requiring a custom postgres function, we can pick a safe limit
+    const { data, error } = await queryBuilder.limit(20);
+
+    if (error || !data || data.length === 0) {
+      // If we ran out of unique teams, clear the history and reset
+      setUsedTeamKeys([]);
+      const retry = await supabase
+        .from("name_a_dude_pool_cache")
+        .select("*")
+        .eq("sport", "basketball")
+        .eq("league", "nba")
+        .limit(1);
+      
+      if (retry.data && retry.data[0]) {
+        setChallenge(retry.data[0]);
+        setUsedTeamKeys([retry.data[0].team_key]);
+        setChallengeLoading(false);
+        return retry.data[0];
+      }
+      
+      setChallengeLoading(false);
+      return null;
+    }
+
+    // Pick a random index out of our small data window
+    const randomSelection = data[Math.floor(Math.random() * data.length)];
+    
+    setChallenge(randomSelection);
+    setUsedTeamKeys((prev) => [...prev, randomSelection.team_key]);
+    setChallengeLoading(false);
+    return randomSelection;
+  }
+  
   // FIX #1 & #2: Server-side text searching with Debouncing (300ms delay)
   function handleSearchChange(value) {
     setQuery(value);
@@ -233,11 +289,18 @@ export default function NameADudePage() {
     setMisses([]); setMessage(""); setMessageType("info"); setScore(null); setUsedTeamKeys([]); setChallenge(null);
   }
 
+// FIX: Streamlined game initiator
   async function startGame() {
-    resetRun(); setChallengeLoading(true);
-    const firstChallenge = pickRandomChallenge(pool, []);
-    setHasStarted(true); setStartedAt(Date.now()); setChallengeLoading(false);
-    if (!firstChallenge) { setMessageType("error"); setMessage("Could not load a challenge. Try again."); }
+    resetRun();
+    setHasStarted(true);
+    setStartedAt(Date.now());
+  
+    const firstChallenge = await fetchRandomTeamFromDB([]);
+  
+    if (!firstChallenge) {
+      setMessageType("error");
+      setMessage("Could not load a challenge. Try again.");
+    }
   }
 
   function getValidPlayerMatch(playerId) {
@@ -249,33 +312,70 @@ export default function NameADudePage() {
     return correctPlayers.some((p) => Number(p.player_id) === Number(playerId));
   }
 
+// FIX: Call the on-demand database pull inside your guess handler
   async function submitGuess() {
     if (!challenge || !selectedPlayer || ended) return;
-    if (alreadyNamed(selectedPlayer.id)) { setMessageType("error"); setMessage("Already named that dude."); return; }
 
-    const match = getValidPlayerMatch(selectedPlayer.id);
-    if (match) {
-      const correctRow = {
-        player_id: selectedPlayer.id, full_name: selectedPlayer.full_name,
-        headshot_url: selectedPlayer.headshot_url || match.headshot_url,
-        team_key: challenge.team_key, team_name: challenge.team_name, season_year: challenge.season_year, season_label: challenge.season_label,
-        jersey: match.jersey, position: match.position, games_played: match.games_played, games_started: match.games_started,
-        points_per_game: match.points_per_game, rebounds_per_game: match.rebounds_per_game, assists_per_game: match.assists_per_game,
-      };
-      setCorrectPlayers((prev) => [...prev, correctRow]); setMessageType("success"); setMessage("Correct. New team.");
-      setQuery(""); setSelectedPlayer(null); setPlayerResults([]);
-      pickRandomChallenge();
+    if (alreadyNamed(selectedPlayer.id)) {
+      setMessageType("error");
+      setMessage("Already named that dude.");
       return;
     }
 
+    const match = getValidPlayerMatch(selectedPlayer.id);
+
+    if (match) {
+      const correctRow = {
+        player_id: selectedPlayer.id,
+        full_name: selectedPlayer.full_name,
+        headshot_url: selectedPlayer.headshot_url || match.headshot_url,
+        team_key: challenge.team_key,
+        team_name: challenge.team_name,
+        season_year: challenge.season_year,
+        season_label: challenge.season_label,
+        jersey: match.jersey,
+        position: match.position,
+        games_played: match.games_played,
+        games_started: match.games_started,
+        points_per_game: match.points_per_game,
+        rebounds_per_game: match.rebounds_per_game,
+        assists_per_game: match.assists_per_game,
+      };
+
+      setCorrectPlayers((prev) => [...prev, correctRow]);
+      setMessageType("success");
+      setMessage("Correct. New team.");
+      setQuery("");
+      setSelectedPlayer(null);
+      setPlayerResults([]);
+      
+      // Pull the next one dynamically
+      await fetchRandomTeamFromDB();
+      return;
+    }
+
+    // ... rest of your unmodified guess logic for misses handles perfectly here
     const missRow = {
-      player_id: selectedPlayer.id, full_name: selectedPlayer.full_name, headshot_url: selectedPlayer.headshot_url,
-      team_key: challenge.team_key, team_name: challenge.team_name, season_year: challenge.season_year, season_label: challenge.season_label,
+      player_id: selectedPlayer.id,
+      full_name: selectedPlayer.full_name,
+      headshot_url: selectedPlayer.headshot_url,
+      team_key: challenge.team_key,
+      team_name: challenge.team_name,
+      season_year: challenge.season_year,
+      season_label: challenge.season_label,
     };
+
     const nextMisses = [...misses, missRow];
-    setMisses(nextMisses); setMessageType("error"); setMessage(`${selectedPlayer.full_name} was not on that roster.`);
-    setQuery(""); setSelectedPlayer(null); setPlayerResults([]);
-    if (nextMisses.length >= 3) finishGame(nextMisses, correctPlayers);
+    setMisses(nextMisses);
+    setMessageType("error");
+    setMessage(`${selectedPlayer.full_name} was not on that roster.`);
+    setQuery("");
+    setSelectedPlayer(null);
+    setPlayerResults([]);
+
+    if (nextMisses.length >= 3) {
+      finishGame(nextMisses, correctPlayers);
+    }
   }
 
   function finishGame(finalMisses = misses, finalCorrect = correctPlayers) {

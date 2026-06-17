@@ -39,7 +39,6 @@ function calculateScore({ correctCount, secondsElapsed, misses }) {
   return Math.max(0, correctScore + speedBonus - missPenalty);
 }
 
-// FIX #3: Moved static styles outside the component so they don't recreate on every timer tick
 const STATIC_STYLES = {
   page: { minHeight: "100vh", width: "100%", overflowX: "hidden", fontFamily: 'Arial, Helvetica, sans-serif', margin: 0 },
   wrap: { maxWidth: 520, margin: "0 auto", padding: 12 },
@@ -55,6 +54,8 @@ const STATIC_STYLES = {
   dangerButton: { border: "1px solid #EF3B24", background: "transparent", color: "#EF3B24", padding: "10px", fontWeight: 900, borderRadius: 6, cursor: "pointer", textTransform: "uppercase", width: "100%", fontSize: 13, marginTop: 8 },
   input: { width: "100%", boxSizing: "border-box", padding: "11px", borderRadius: 6, fontSize: 15, marginBottom: 7 },
   searchSubmitRow: { display: "grid", gridTemplateColumns: "4fr 1fr", gap: 8, alignItems: "start" },
+  // FIX #1: Added missing style definition to guarantee heights and corners map cleanly
+  smallSubmitButton: { padding: "11px", borderRadius: 6, fontWeight: 900, textTransform: "uppercase", fontSize: 12, width: "100%", boxSizing: "border-box", textAlign: "center" },
   resultList: { marginBottom: 8, borderRadius: 6, overflow: "hidden" },
   resultItem: { padding: 10, cursor: "pointer", fontWeight: 800, fontSize: 14 },
   searchResultRow: { display: "flex", alignItems: "center", gap: 8 },
@@ -101,7 +102,7 @@ export default function NameADudePage() {
 
   const [query, setQuery] = useState("");
   const [playerResults, setPlayerResults] = useState([]);
-  const [searching, setSearching] = useState(false); // New searching feedback state
+  const [searching, setSearching] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   const [correctPlayers, setCorrectPlayers] = useState([]);
@@ -125,7 +126,6 @@ export default function NameADudePage() {
   const [leaderboardType, setLeaderboardType] = useState("daily");
   const [leaderboard, setLeaderboard] = useState([]);
 
-  // Ref to hold the debounce timeout descriptor
   const searchTimeoutRef = useRef(null);
 
   useEffect(() => {
@@ -139,7 +139,6 @@ export default function NameADudePage() {
       : { bg: "#ffffff", card: "#f6f6f6", pane: "#eeeeee", text: "#111111", muted: "#555555", border: "#d8d8d8", input: "#ffffff" };
   }, [darkMode]);
 
-  // Dynamically attach color themes to static positions
   const styles = useMemo(() => {
     const merged = JSON.parse(JSON.stringify(STATIC_STYLES));
     merged.page.background = theme.bg; merged.page.color = theme.text;
@@ -149,6 +148,7 @@ export default function NameADudePage() {
     merged.label.color = theme.muted;
     merged.iconButton.border = `1px solid ${theme.border}`; merged.iconButton.background = theme.card; merged.iconButton.color = theme.text;
     merged.input.border = `1px solid ${theme.border}`; merged.input.background = theme.input; merged.input.color = theme.text;
+    merged.smallSubmitButton.border = `1px solid ${theme.border}`;
     merged.resultList.border = `1px solid ${theme.border}`; merged.resultList.background = theme.input;
     merged.resultItem.borderBottom = `1px solid ${theme.border}`;
     merged.searchHeadshot.background = theme.pane; merged.searchHeadshot.border = `1px solid ${theme.border}`;
@@ -173,10 +173,8 @@ export default function NameADudePage() {
     if (!error) setProfile(data || null);
   }
 
-// FIX: Lightweight load. Absolutely zero game pools are pulled on startup.
   async function loadStartup() {
     setLoading(true);
-  
     const { data, error } = await supabase
       .from("nba_trivia_challenges")
       .select("id")
@@ -188,32 +186,26 @@ export default function NameADudePage() {
     if (!error && data) {
       setDailyChallengeId(data.id);
     }
-  
     setLoading(false);
   }
 
-// FIX: Fetches a single random team record dynamically from Supabase
   async function fetchRandomTeamFromDB(usedKeys = usedTeamKeys) {
     setChallengeLoading(true);
     
-    // 1. Get a single random row from your pool cache table using PostgreSQL's RANDOM()
     let queryBuilder = supabase
       .from("name_a_dude_pool_cache")
       .select("*")
       .eq("sport", "basketball")
       .eq("league", "nba");
 
-    // If they have already used some teams this session, exclude them so they don't get repeats
     if (usedKeys.length > 0) {
       queryBuilder = queryBuilder.not("team_key", "in", `(${usedKeys.join(",")})`);
     }
 
-    // Limit to 1 random row via custom RPC or a fallback pattern
-    // To keep it clean without requiring a custom postgres function, we can pick a safe limit
-    const { data, error } = await queryBuilder.limit(20);
+    // FIX #2: Increased limit size to 50 items to break out of single season clustering
+    const { data, error } = await queryBuilder.limit(50);
 
     if (error || !data || data.length === 0) {
-      // If we ran out of unique teams, clear the history and reset
       setUsedTeamKeys([]);
       const retry = await supabase
         .from("name_a_dude_pool_cache")
@@ -233,16 +225,13 @@ export default function NameADudePage() {
       return null;
     }
 
-    // Pick a random index out of our small data window
     const randomSelection = data[Math.floor(Math.random() * data.length)];
-    
     setChallenge(randomSelection);
     setUsedTeamKeys((prev) => [...prev, randomSelection.team_key]);
     setChallengeLoading(false);
     return randomSelection;
   }
   
-  // FIX #1 & #2: Server-side text searching with Debouncing (300ms delay)
   function handleSearchChange(value) {
     setQuery(value);
     setSelectedPlayer(null);
@@ -270,26 +259,12 @@ export default function NameADudePage() {
     }, 300); 
   }
 
-  function pickRandomChallenge(currentPool = pool, usedKeys = usedTeamKeys) {
-    if (!currentPool.length) return null;
-    let available = currentPool.filter((row) => !usedKeys.includes(row.team_key));
-    if (!available.length) {
-      available = currentPool;
-      setUsedTeamKeys([]);
-    }
-    const randomRow = available[Math.floor(Math.random() * available.length)];
-    setChallenge(randomRow);
-    setUsedTeamKeys((prev) => [...prev, randomRow.team_key]);
-    return randomRow;
-  }
-
   function resetRun() {
     setHasStarted(false); setStartedAt(null); setSecondsElapsed(0); setEnded(false);
     setQuery(""); setPlayerResults([]); setSelectedPlayer(null); setCorrectPlayers([]);
     setMisses([]); setMessage(""); setMessageType("info"); setScore(null); setUsedTeamKeys([]); setChallenge(null);
   }
 
-// FIX: Streamlined game initiator
   async function startGame() {
     resetRun();
     setHasStarted(true);
@@ -312,7 +287,6 @@ export default function NameADudePage() {
     return correctPlayers.some((p) => Number(p.player_id) === Number(playerId));
   }
 
-// FIX: Call the on-demand database pull inside your guess handler
   async function submitGuess() {
     if (!challenge || !selectedPlayer || ended) return;
 
@@ -349,12 +323,10 @@ export default function NameADudePage() {
       setSelectedPlayer(null);
       setPlayerResults([]);
       
-      // Pull the next one dynamically
       await fetchRandomTeamFromDB();
       return;
     }
 
-    // ... rest of your unmodified guess logic for misses handles perfectly here
     const missRow = {
       player_id: selectedPlayer.id,
       full_name: selectedPlayer.full_name,
@@ -629,8 +601,37 @@ export default function NameADudePage() {
               </section>
             )}
 
+            {/* FIX #3: Relocated game result summary cards and call-to-actions straight above the lists */}
+            {ended && (
+              <section style={styles.card}>
+                <div style={styles.label}>Result</div>
+                <div style={styles.big}>Score: {score ?? 0}</div>
+                <div style={styles.sub}>Correct {correctPlayers.length} · Misses {misses.length} · Time {formatTimer(secondsElapsed)}</div>
+
+                <div style={styles.postGameButtonRow}>
+                  <button style={styles.primaryButton} onClick={startGame}>Play Again</button>
+                  <button style={styles.primaryButton} onClick={() => { setLeaderboardType("daily"); loadLeaderboard("daily"); setShowLeaderboard(true); }}>Leaderboard</button>
+                </div>
+                
+                <div style={{ ...styles.label, marginTop: 14 }}>Share</div>
+                <div style={styles.shareGrid}>
+                  <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>𝕏</button>
+                  <button style={styles.shareIconButton} onClick={() => openFacebookShare("Name a Dude", nameADudeShareText())}>f</button>
+                  <button style={styles.shareIconButton} onClick={() => copyShareText("Name a Dude", nameADudeShareText())}>
+                    <span className="material-symbols-outlined">content_copy</span>
+                  </button>
+                  <button style={styles.shareIconButton} onClick={() => shareResult("Name a Dude", nameADudeShareText())}>
+                    <span className="material-symbols-outlined">chat_bubble</span>
+                  </button>
+                  <button style={styles.shareIconButton} onClick={() => openEmailShare("Name a Dude", nameADudeShareText())}>
+                    <span className="material-symbols-outlined">drafts</span>
+                  </button>
+                </div>
+              </section>
+            )}
+
             <section style={styles.card}>
-              <div style={styles.label}>Run</div>
+              <div style={styles.label}>Run Overview</div>
               <div style={styles.statHero}>
                 <div style={styles.statBox}>
                   <div style={styles.statLabel}>Correct</div>
@@ -673,62 +674,34 @@ export default function NameADudePage() {
               ))}
             </section>
 
-            {ended && (
+            {ended && challenge?.valid_players?.length > 0 && (
               <section style={styles.card}>
-                <div style={styles.label}>Result</div>
-                <div style={styles.big}>Score: {score ?? 0}</div>
-                <div style={styles.sub}>Correct {correctPlayers.length} · Misses {misses.length} · Time {formatTimer(secondsElapsed)}</div>
-
-                <div style={styles.postGameButtonRow}>
-                  <button style={styles.primaryButton} onClick={startGame}>Play Again</button>
-                  <button style={styles.primaryButton} onClick={() => { setLeaderboardType("daily"); loadLeaderboard("daily"); setShowLeaderboard(true); }}>Leaderboard</button>
-                </div>
-                
-                <div style={{ ...styles.label, marginTop: 14 }}>Share</div>
-                <div style={styles.shareGrid}>
-                  <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>𝕏</button>
-                  <button style={styles.shareIconButton} onClick={() => openFacebookShare("Name a Dude", nameADudeShareText())}>f</button>
-                  <button style={styles.shareIconButton} onClick={() => copyShareText("Name a Dude", nameADudeShareText())}>
-                    <span className="material-symbols-outlined">content_copy</span>
-                  </button>
-                  <button style={styles.shareIconButton} onClick={() => shareResult("Name a Dude", nameADudeShareText())}>
-                    <span className="material-symbols-outlined">chat_bubble</span>
-                  </button>
-                  <button style={styles.shareIconButton} onClick={() => openEmailShare("Name a Dude", nameADudeShareText())}>
-                    <span className="material-symbols-outlined">drafts</span>
-                  </button>
-                </div> 
-             
-                {challenge?.valid_players?.length > 0 && (
-                  <div style={{ marginTop: 12 }}>
-                    <div style={styles.label}>Possible Answers</div>
-                    <div style={styles.answerTable}>
-                      <div style={styles.answerHeader}>
-                        <div>Player</div><div>GP</div><div>GS</div><div>PTS</div><div>REB</div><div>AST</div>
-                      </div>
-                
-                      {challenge.valid_players
-                        .slice()
-                        .sort((a, b) => Number(b.points_per_game || 0) - Number(a.points_per_game || 0))
-                        .map((p) => (
-                          <div key={p.player_id} style={styles.answerRow}>
-                            <div style={styles.answerPlayer}>
-                              <img src={p.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
-                              <div>
-                                <strong>{p.full_name}</strong>
-                                <div style={styles.sub}>{[p.position, p.jersey ? `#${p.jersey}` : null].filter(Boolean).join(" · ")}</div>
-                              </div>
-                            </div>
-                            <div>{p.games_played ?? "-"}</div>
-                            <div>{p.games_started ?? "-"}</div>
-                            <div>{p.points_per_game ? Number(p.points_per_game).toFixed(1) : "-"}</div>
-                            <div>{p.rebounds_per_game ? Number(p.rebounds_per_game).toFixed(1) : "-"}</div>
-                            <div>{p.assists_per_game ? Number(p.assists_per_game).toFixed(1) : "-"}</div>
-                          </div>
-                        ))}
-                    </div>
+                <div style={styles.label}>Possible Answers</div>
+                <div style={styles.answerTable}>
+                  <div style={styles.answerHeader}>
+                    <div>Player</div><div>GP</div><div>GS</div><div>PTS</div><div>REB</div><div>AST</div>
                   </div>
-                )}                          
+            
+                  {challenge.valid_players
+                    .slice()
+                    .sort((a, b) => Number(b.points_per_game || 0) - Number(a.points_per_game || 0))
+                    .map((p) => (
+                      <div key={p.player_id} style={styles.answerRow}>
+                        <div style={styles.answerPlayer}>
+                          <img src={p.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
+                          <div>
+                            <strong>{p.full_name}</strong>
+                            <div style={styles.sub}>{[p.position, p.jersey ? `#${p.jersey}` : null].filter(Boolean).join(" · ")}</div>
+                          </div>
+                        </div>
+                        <div>{p.games_played ?? "-"}</div>
+                        <div>{p.games_started ?? "-"}</div>
+                        <div>{p.points_per_game ? Number(p.points_per_game).toFixed(1) : "-"}</div>
+                        <div>{p.rebounds_per_game ? Number(p.rebounds_per_game).toFixed(1) : "-"}</div>
+                        <div>{p.assists_per_game ? Number(p.assists_per_game).toFixed(1) : "-"}</div>
+                      </div>
+                    ))}
+                </div>
               </section>
             )}
           </>

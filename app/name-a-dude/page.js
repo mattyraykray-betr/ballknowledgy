@@ -44,6 +44,7 @@ function calculateScore({ correctCount, secondsElapsed, misses }) {
 export default function NameADudePage() {
   const [challenge, setChallenge] = useState(null);
   const [usedTeamKeys, setUsedTeamKeys] = useState([]);
+  const [challengeLoading, setChallengeLoading] = useState(false);
 
   const [hasStarted, setHasStarted] = useState(false);
   const [startedAt, setStartedAt] = useState(null);
@@ -264,9 +265,18 @@ export default function NameADudePage() {
 
   async function startGame() {
     resetRun();
+    setChallengeLoading(true);
+  
+    const firstChallenge = await pickRandomChallenge([]);
+  
     setHasStarted(true);
     setStartedAt(Date.now());
-    await pickRandomChallenge([]);
+    setChallengeLoading(false);
+  
+    if (!firstChallenge) {
+      setMessageType("error");
+      setMessage("Could not load a challenge. Try again.");
+    }
   }
 
   async function searchPlayers(value) {
@@ -337,7 +347,9 @@ export default function NameADudePage() {
       setQuery("");
       setSelectedPlayer(null);
       setPlayerResults([]);
+      setChallengeLoading(true);
       await pickRandomChallenge();
+      setChallengeLoading(false);
       return;
     }
 
@@ -1201,7 +1213,13 @@ export default function NameADudePage() {
               </section>
             )}
 
-            {!ended && (
+            {!ended && challengeLoading && (
+              <section style={styles.card}>
+                Loading next team...
+              </section>
+            )}
+            
+            {!ended && !challengeLoading && challenge && (
               <section style={styles.card}>
                 <div style={styles.label}>Your Answer</div>
 

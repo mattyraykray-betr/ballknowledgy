@@ -433,12 +433,20 @@ export default function NameADudePage() {
     window.open(url, "_blank", "noopener,noreferrer");
   }
   
-  function openFacebookShare(gameName, scoreText) {
+  async function openFacebookShare(gameName, scoreText) {
     const shareText = getShareText(gameName, scoreText);
-    const url = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-      window.location.origin
-    )}&quote=${encodeURIComponent(shareText)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
+  
+    await navigator.clipboard.writeText(shareText);
+  
+    window.open(
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+        `${window.location.origin}/name-a-dude`
+      )}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  
+    alert("Score copied. Paste it into your Facebook post.");
   }
   
   async function copyShareText(gameName, scoreText) {

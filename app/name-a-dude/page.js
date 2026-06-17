@@ -51,7 +51,8 @@ const STATIC_STYLES = {
   iconButton: { width: 36, height: 36, borderRadius: 6, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" },
   startButton: { border: "1px solid #EF3B24", background: "#EF3B24", color: "#ffffff", padding: "15px", fontWeight: 950, borderRadius: 6, cursor: "pointer", textTransform: "uppercase", width: "100%", fontSize: 18 },
   primaryButton: { border: "1px solid #003594", background: "#003594", color: "#ffffff", padding: "11px", fontWeight: 900, borderRadius: 6, cursor: "pointer", textTransform: "uppercase", width: "100%", fontSize: 13, marginTop: 8 },
-  dangerButton: { border: "1px solid #EF3B24", background: "transparent", color: "#EF3B24", padding: "10px", fontWeight: 900, borderRadius: 6, cursor: "pointer", textTransform: "uppercase", width: "100%", fontSize: 13, marginTop: 8 },
+  dangerButton: { border: "1px solid #EF3B24", background: "transparent", color: "#EF3B24", padding: "6px 12px", fontWeight: 900, borderRadius: 6, cursor: "pointer", textTransform: "uppercase", fontSize: 11, width: "auto" },
+  hudRightRow: { display: "flex", alignItems: "center", gap: 12, textAlign: "right" },
   input: { width: "100%", boxSizing: "border-box", padding: "11px", borderRadius: 6, fontSize: 15, marginBottom: 7 },
   searchSubmitRow: { display: "grid", gridTemplateColumns: "4fr 1fr", gap: 8, alignItems: "start" },
   // FIX #1: Added missing style definition to guarantee heights and corners map cleanly
@@ -544,16 +545,22 @@ export default function NameADudePage() {
             </section>
             <button style={styles.startButton} onClick={startGame}>Start</button>
           </>
-        ) : (
+) : (
           <>
+            {/* UPDATED HUD TOP BAR */}
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
               <div>
                 <div style={styles.label}>Timer</div>
                 <div style={styles.big}>{formatTimer(secondsElapsed)}</div>
               </div>
-              <div style={{ textAlign: "right" }}>
-                <div style={styles.label}>Score</div>
-                <div style={styles.big}>{correctPlayers.length}</div>
+              <div style={styles.hudRightRow}>
+                <div>
+                  <div style={styles.label}>Score</div>
+                  <div style={styles.big}>{correctPlayers.length}</div>
+                </div>
+                {!ended && (
+                  <button style={styles.dangerButton} onClick={giveUp}>Give Up</button>
+                )}
               </div>
             </div>
 
@@ -607,7 +614,7 @@ export default function NameADudePage() {
                   </div>
                 )}
 
-                <button style={styles.dangerButton} onClick={giveUp}>Give Up</button>
+                {/* REMOVED DANGER BUTTON FROM HERE */}
                 {message && <div style={{ ...styles.message, color: messageType === "success" ? "#00C853" : "#EF3B24" }}>{message}</div>}
               </section>
             )}

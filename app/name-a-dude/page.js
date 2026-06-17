@@ -94,6 +94,7 @@ export default function NameADudePage() {
   const [challengeLoading, setChallengeLoading] = useState(false);
   const [pool, setPool] = useState([]);
   const [totalPoolCount, setTotalPoolCount] = useState(null);
+  const [allTeamIds, setAllTeamIds] = useState([]);
 
   const [hasStarted, setHasStarted] = useState(false);
   const [startedAt, setStartedAt] = useState(null);
@@ -190,60 +191,62 @@ export default function NameADudePage() {
     setLoading(false);
   }
 
-async function fetchRandomTeamFromDB(usedKeys = usedTeamKeys) {
-  setChallengeLoading(true);
+  async function fetchRandomTeamFromDB(usedKeys = usedTeamKeys) {
+    setChallengeLoading(true);
+    
+    let currentIds = allTeamIds;
   
-  let currentCount = totalPoolCount;
-
-  // If we haven't fetched the total row count yet, do it once
-  if (!currentCount) {
-    const { count, error: countError } = await supabase
-      .from("name_a_dude_pool_cache")
-      .select("*", { count: "exact", head: true })
-      .eq("sport", "basketball")
-      .eq("league", "nba");
-      
-    if (!countError && count) {
-      currentCount = count;
-      setTotalPoolCount(count);
-    } else {
-      currentCount = 300; // Safe fallback estimate if count fails
+    // Step 1: If we don't have the list of IDs yet, fetch JUST the ID column once.
+    // This is lightning-fast and doesn't load heavy player arrays into memory.
+    if (currentIds.length === 0) {
+      const { data: idBatch, error: idError } = await supabase
+        .from("name_a_dude_pool_cache")
+        .select("id")
+        .eq("sport", "basketball")
+        .eq("league", "nba");
+  
+      if (!idError && idBatch) {
+        currentIds = idBatch.map(item => item.id);
+        setAllTeamIds(currentIds);
+      }
     }
-  }
-
-  // Generate a random starting index anywhere in the database table
-  const maxOffset = Math.max(0, currentCount - 10);
-  const randomOffset = Math.floor(Math.random() * maxOffset);
-
-  // Fetch a small slice from that completely random location in the database
-  let queryBuilder = supabase
-    .from("name_a_dude_pool_cache")
-    .select("*")
-    .eq("sport", "basketball")
-    .eq("league", "nba")
-    .range(randomOffset, randomOffset + 9); // Pulls a 10-row window
-
-  const { data, error } = await queryBuilder;
-
-  if (error || !data || data.length === 0) {
-    // Standard error fallback
+  
+    if (currentIds.length === 0) {
+      setChallengeLoading(false);
+      return null;
+    }
+  
+    // Step 2: Pick a completely random ID from across the entire history of the table
+    // This completely eliminates the 2025-26 disk ordering bias!
+    const randomIndex = Math.floor(Math.random() * currentIds.length);
+    const targetId = currentIds[randomIndex];
+  
+    // Step 3: Fetch the single, exact row matching that ID using a Primary Key lookup.
+    // Postgres handles PK lookups instantly (O(1) speed), keeping your game fast under heavy traffic.
+    const { data: teamData, error } = await supabase
+      .from("name_a_dude_pool_cache")
+      .select("*")
+      .eq("id", targetId)
+      .maybeSingle();
+  
+    if (error || !teamData) {
+      // If the random choice fails or was a duplicate from a previous run, fallback
+      setChallengeLoading(false);
+      return null;
+    }
+  
+    // Step 4: Handle session duplication checks
+    if (usedKeys.includes(teamData.team_key) && usedKeys.length < currentIds.length) {
+      // If we already saw this team this game, recursively tap a different one
+      setChallengeLoading(false);
+      return fetchRandomTeamFromDB(usedKeys);
+    }
+  
+    setChallenge(teamData);
+    setUsedTeamKeys((prev) => [...prev, teamData.team_key]);
     setChallengeLoading(false);
-    return null;
+    return teamData;
   }
-
-  // Filter out teams we've already used in this specific game run
-  const freshTeams = data.filter(team => !usedKeys.includes(team.team_key));
-
-  // If everything in this random slice was already seen, loosen restrictions or grab the first available
-  const finalSelection = freshTeams.length > 0 
-    ? freshTeams[Math.floor(Math.random() * freshTeams.length)]
-    : data[Math.floor(Math.random() * data.length)];
-
-  setChallenge(finalSelection);
-  setUsedTeamKeys((prev) => [...prev, finalSelection.team_key]);
-  setChallengeLoading(false);
-  return finalSelection;
-}
   
   function handleSearchChange(value) {
     setQuery(value);

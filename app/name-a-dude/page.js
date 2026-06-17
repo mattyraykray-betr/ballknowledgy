@@ -193,59 +193,54 @@ export default function NameADudePage() {
 
   async function fetchRandomTeamFromDB(usedKeys = usedTeamKeys) {
     setChallengeLoading(true);
+  
+    // Since you know exactly how many rows are in the table, we use it!
+    // We subtract 10 so our random starting window (which grabs 10 rows) never overshoots the end of the table.
+    const totalRows = 748; 
+    const maxOffset = Math.max(0, totalRows - 10);
+    const randomOffset = Math.floor(Math.random() * maxOffset);
+  
+    // Fetch a tiny 10-row slice starting from our exact random location
+    let queryBuilder = supabase
+      .from("name_a_dude_pool_cache")
+      .select("*") 
+      .eq("sport", "basketball")
+      .eq("league", "nba")
+      .range(randomOffset, randomOffset + 9); 
+  
+    const { data, error } = await queryBuilder;
+  
+    let activeData = data;
     
-    let currentIds = allTeamIds;
-  
-    // Step 1: If we don't have the list of IDs yet, fetch JUST the ID column once.
-    // This is lightning-fast and doesn't load heavy player arrays into memory.
-    if (currentIds.length === 0) {
-      const { data: idBatch, error: idError } = await supabase
+    // Fallback just in case a network hiccup happens or data returns empty
+    if (error || !activeData || activeData.length === 0) {
+      const fallback = await supabase
         .from("name_a_dude_pool_cache")
-        .select("id")
+        .select("*")
         .eq("sport", "basketball")
-        .eq("league", "nba");
-  
-      if (!idError && idBatch) {
-        currentIds = idBatch.map(item => item.id);
-        setAllTeamIds(currentIds);
+        .eq("league", "nba")
+        .limit(10);
+      
+      if (fallback.data && fallback.data.length > 0) {
+        activeData = fallback.data;
+      } else {
+        setChallengeLoading(false);
+        return null;
       }
     }
   
-    if (currentIds.length === 0) {
-      setChallengeLoading(false);
-      return null;
-    }
+    // Filter out teams already encountered in this active game session
+    const freshTeams = activeData.filter(team => !usedKeys.includes(team.team_key));
   
-    // Step 2: Pick a completely random ID from across the entire history of the table
-    // This completely eliminates the 2025-26 disk ordering bias!
-    const randomIndex = Math.floor(Math.random() * currentIds.length);
-    const targetId = currentIds[randomIndex];
+    // Grab a random choice out of our small shuffled batch
+    const finalSelection = freshTeams.length > 0 
+      ? freshTeams[Math.floor(Math.random() * freshTeams.length)]
+      : activeData[Math.floor(Math.random() * activeData.length)];
   
-    // Step 3: Fetch the single, exact row matching that ID using a Primary Key lookup.
-    // Postgres handles PK lookups instantly (O(1) speed), keeping your game fast under heavy traffic.
-    const { data: teamData, error } = await supabase
-      .from("name_a_dude_pool_cache")
-      .select("*")
-      .eq("id", targetId)
-      .maybeSingle();
-  
-    if (error || !teamData) {
-      // If the random choice fails or was a duplicate from a previous run, fallback
-      setChallengeLoading(false);
-      return null;
-    }
-  
-    // Step 4: Handle session duplication checks
-    if (usedKeys.includes(teamData.team_key) && usedKeys.length < currentIds.length) {
-      // If we already saw this team this game, recursively tap a different one
-      setChallengeLoading(false);
-      return fetchRandomTeamFromDB(usedKeys);
-    }
-  
-    setChallenge(teamData);
-    setUsedTeamKeys((prev) => [...prev, teamData.team_key]);
+    setChallenge(finalSelection);
+    setUsedTeamKeys((prev) => [...prev, finalSelection.team_key]);
     setChallengeLoading(false);
-    return teamData;
+    return finalSelection;
   }
   
   function handleSearchChange(value) {

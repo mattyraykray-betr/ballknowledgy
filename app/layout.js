@@ -3,14 +3,29 @@ import GoogleAnalytics from "../components/GoogleAnalytics";
 export const metadata = {
   title: "That Guy Rocked",
   description:
-    "Daily basketball trivia games including Name a Dude, Ladder Golf, and Ball Knowledgy.",
+    "Daily sports trivia games including Name a Dude, Ladder Golf, and Ball Knowledgy.",
   openGraph: {
     title: "That Guy Rocked",
     description:
-      "Daily basketball trivia games including Name a Dude, Ladder Golf, and Ball Knowledgy.",
+      "Daily sports trivia games including Name a Dude, Ladder Golf, and Ball Knowledgy.",
     url: "https://www.thatguyrocked.com",
     siteName: "That Guy Rocked",
+    images: [
+      {
+        url: "https://www.thatguyrocked.com/That-Guy-Rocked.png",
+        width: 1200,
+        height: 630,
+        alt: "That Guy Rocked sports trivia games",
+      },
+    ],
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "That Guy Rocked",
+    description:
+      "Daily sports trivia games including Name a Dude, Ladder Golf, and Ball Knowledgy.",
+    images: ["https://www.thatguyrocked.com/That-Guy-Rocked.png"],
   },
 };
 

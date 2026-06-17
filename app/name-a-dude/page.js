@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import SiteNav from "../../components/SiteNav";
@@ -45,6 +45,7 @@ export default function NameADudePage() {
   const [challenge, setChallenge] = useState(null);
   const [usedTeamKeys, setUsedTeamKeys] = useState([]);
   const [challengeLoading, setChallengeLoading] = useState(false);
+  const searchTimeoutRef = useRef(null);
 
   const [hasStarted, setHasStarted] = useState(false);
   const [startedAt, setStartedAt] = useState(null);
@@ -279,28 +280,34 @@ export default function NameADudePage() {
     }
   }
 
-  async function searchPlayers(value) {
+  function searchPlayers(value) {
     setQuery(value);
     setSelectedPlayer(null);
-
-    if (value.trim().length < 2) {
+  
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+  
+    if (value.trim().length < 3) {
       setPlayerResults([]);
       return;
     }
-
-    const { data, error } = await supabase
-      .from("nba_players")
-      .select("id, full_name, headshot_url")
-      .ilike("full_name", `%${value.trim()}%`)
-      .order("full_name", { ascending: true })
-      .limit(8);
-
-    if (error) {
-      console.error(error);
-      setPlayerResults([]);
-    } else {
-      setPlayerResults(data || []);
-    }
+  
+    searchTimeoutRef.current = setTimeout(async () => {
+      const { data, error } = await supabase
+        .from("nba_players")
+        .select("id, full_name")
+        .ilike("full_name", `%${value.trim()}%`)
+        .order("full_name", { ascending: true })
+        .limit(8);
+  
+      if (error) {
+        console.error(error);
+        setPlayerResults([]);
+      } else {
+        setPlayerResults(data || []);
+      }
+    }, 300);
   }
 
   function getValidPlayerMatch(playerId) {
@@ -397,13 +404,7 @@ export default function NameADudePage() {
       finalSeconds,
       finalMisses,
       finalCorrect,
-    });
-
-    setTimeout(() => {
-      setLeaderboardType("daily");
-      loadLeaderboard("daily");
-      setShowLeaderboard(true);
-    }, 700);    
+    });  
   }
 
   function giveUp() {
@@ -1253,11 +1254,6 @@ export default function NameADudePage() {
                         }}
                       >
                         <div style={styles.searchResultRow}>
-                          <img
-                            src={p.headshot_url || HEADSHOT_FALLBACK}
-                            alt=""
-                            style={styles.searchHeadshot}
-                          />
                           <span>{p.full_name}</span>
                         </div>
                       </div>

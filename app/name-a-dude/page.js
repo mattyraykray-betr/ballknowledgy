@@ -42,7 +42,6 @@ function calculateScore({ correctCount, secondsElapsed, misses }) {
 }
 
 export default function NameADudePage() {
-  const [pool, setPool] = useState([]);
   const [challenge, setChallenge] = useState(null);
   const [usedTeamKeys, setUsedTeamKeys] = useState([]);
 
@@ -200,39 +199,49 @@ export default function NameADudePage() {
     if (!error) setLeaderboard(data || []);
   }
   
-  async function loadPool() {
+  async function loadStartup() {
     setLoading(true);
-
-    const { data, error } = await supabase
-      .from("vw_name_a_dude_pool")
-      .select("*")
-      .eq("sport", "basketball")
-      .eq("league", "nba");
-
-    if (error) {
-      console.error(error);
-      setPool([]);
-    } else {
-      setPool(data || []);
-    }
-
+    await loadDailyChallenge();
     setLoading(false);
   }
 
-  function pickRandomChallenge(currentPool = pool, usedKeys = usedTeamKeys) {
-    if (!currentPool.length) return null;
-
-    let available = currentPool.filter((row) => !usedKeys.includes(row.team_key));
-
-    if (!available.length) {
-      available = currentPool;
-      setUsedTeamKeys([]);
+  async function pickRandomChallenge(usedKeys = usedTeamKeys) {
+    const { data, error } = await supabase.rpc(
+      "get_random_name_a_dude_challenge",
+      {
+        p_used_team_keys: usedKeys,
+      }
+    );
+  
+    if (error) {
+      console.error(error);
+      setChallenge(null);
+      return null;
     }
-
-    const randomRow = available[Math.floor(Math.random() * available.length)];
+  
+    let randomRow = data?.[0] || null;
+  
+    if (!randomRow && usedKeys.length > 0) {
+      setUsedTeamKeys([]);
+  
+      const retry = await supabase.rpc("get_random_name_a_dude_challenge", {
+        p_used_team_keys: [],
+      });
+  
+      if (retry.error) {
+        console.error(retry.error);
+        setChallenge(null);
+        return null;
+      }
+  
+      randomRow = retry.data?.[0] || null;
+    }
+  
+    if (!randomRow) return null;
+  
     setChallenge(randomRow);
     setUsedTeamKeys((prev) => [...prev, randomRow.team_key]);
-
+  
     return randomRow;
   }
 
@@ -253,11 +262,11 @@ export default function NameADudePage() {
     setChallenge(null);
   }
 
-  function startGame() {
+  async function startGame() {
     resetRun();
     setHasStarted(true);
     setStartedAt(Date.now());
-    pickRandomChallenge(pool, []);
+    await pickRandomChallenge([]);
   }
 
   async function searchPlayers(value) {
@@ -293,7 +302,7 @@ export default function NameADudePage() {
     return correctPlayers.some((p) => Number(p.player_id) === Number(playerId));
   }
 
-  function submitGuess() {
+  async function submitGuess() {
     if (!challenge || !selectedPlayer || ended) return;
 
     if (alreadyNamed(selectedPlayer.id)) {
@@ -328,7 +337,7 @@ export default function NameADudePage() {
       setQuery("");
       setSelectedPlayer(null);
       setPlayerResults([]);
-      pickRandomChallenge();
+      await pickRandomChallenge();
       return;
     }
 
@@ -478,8 +487,7 @@ export default function NameADudePage() {
   }
   
   useEffect(() => {
-    loadPool();
-    loadDailyChallenge();
+    loadStartup();
   }, []);
 
   useEffect(() => {

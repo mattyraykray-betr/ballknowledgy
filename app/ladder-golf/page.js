@@ -392,13 +392,20 @@ export default function StatLadderPage() {
     );
   }
   
-  function openFacebookShare(gameName, scoreText) {
+  async function openFacebookShare(gameName, scoreText) {
     const shareText = getShareText(gameName, scoreText);
+  
+    await navigator.clipboard.writeText(shareText);
+  
     window.open(
-      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.origin)}&quote=${encodeURIComponent(shareText)}`,
+      `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+        `${window.location.origin}/ladder-golf`
+      )}`,
       "_blank",
       "noopener,noreferrer"
     );
+  
+    alert("Score copied. Paste it into your Facebook post.");
   }
   
   async function copyShareText(gameName, scoreText) {

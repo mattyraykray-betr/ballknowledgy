@@ -46,6 +46,7 @@ export default function NameADudePage() {
   const [usedTeamKeys, setUsedTeamKeys] = useState([]);
   const [challengeLoading, setChallengeLoading] = useState(false);
   const searchTimeoutRef = useRef(null);
+  const [pool, setPool] = useState([]);
 
   const [hasStarted, setHasStarted] = useState(false);
   const [startedAt, setStartedAt] = useState(null);
@@ -55,6 +56,7 @@ export default function NameADudePage() {
 
   const [query, setQuery] = useState("");
   const [playerResults, setPlayerResults] = useState([]);
+  const [allPlayers, setAllPlayers] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
 
   const [correctPlayers, setCorrectPlayers] = useState([]);
@@ -203,43 +205,60 @@ export default function NameADudePage() {
   
   async function loadStartup() {
     setLoading(true);
-    await loadDailyChallenge();
+  
+    const [challengeResult, poolResult, playersResult] = await Promise.all([
+      supabase
+        .from("nba_trivia_challenges")
+        .select("id")
+        .eq("challenge_type", "name_a_dude")
+        .eq("challenge_date", todayLocal())
+        .eq("is_active", true)
+        .maybeSingle(),
+  
+      supabase
+        .from("name_a_dude_pool_cache")
+        .select("*")
+        .eq("sport", "basketball")
+        .eq("league", "nba"),
+  
+      supabase
+        .from("nba_players")
+        .select("id, full_name")
+        .order("full_name", { ascending: true }),
+    ]);
+  
+    if (!challengeResult.error && challengeResult.data) {
+      setDailyChallengeId(challengeResult.data.id);
+    }
+  
+    if (!poolResult.error) {
+      setPool(poolResult.data || []);
+    } else {
+      console.error(poolResult.error);
+      setPool([]);
+    }
+  
+    if (!playersResult.error) {
+      setAllPlayers(playersResult.data || []);
+    } else {
+      console.error(playersResult.error);
+      setAllPlayers([]);
+    }
+  
     setLoading(false);
   }
 
-  async function pickRandomChallenge(usedKeys = usedTeamKeys) {
-    const { data, error } = await supabase.rpc(
-      "get_random_name_a_dude_challenge",
-      {
-        p_used_team_keys: usedKeys,
-      }
-    );
+  function pickRandomChallenge(currentPool = pool, usedKeys = usedTeamKeys) {
+    if (!currentPool.length) return null;
   
-    if (error) {
-      console.error(error);
-      setChallenge(null);
-      return null;
-    }
+    let available = currentPool.filter((row) => !usedKeys.includes(row.team_key));
   
-    let randomRow = data?.[0] || null;
-  
-    if (!randomRow && usedKeys.length > 0) {
+    if (!available.length) {
+      available = currentPool;
       setUsedTeamKeys([]);
-  
-      const retry = await supabase.rpc("get_random_name_a_dude_challenge", {
-        p_used_team_keys: [],
-      });
-  
-      if (retry.error) {
-        console.error(retry.error);
-        setChallenge(null);
-        return null;
-      }
-  
-      randomRow = retry.data?.[0] || null;
     }
   
-    if (!randomRow) return null;
+    const randomRow = available[Math.floor(Math.random() * available.length)];
   
     setChallenge(randomRow);
     setUsedTeamKeys((prev) => [...prev, randomRow.team_key]);
@@ -268,7 +287,7 @@ export default function NameADudePage() {
     resetRun();
     setChallengeLoading(true);
   
-    const firstChallenge = await pickRandomChallenge([]);
+    const firstChallenge = pickRandomChallenge(pool, []);
   
     setHasStarted(true);
     setStartedAt(Date.now());
@@ -284,30 +303,18 @@ export default function NameADudePage() {
     setQuery(value);
     setSelectedPlayer(null);
   
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
+    const q = value.trim().toLowerCase();
   
-    if (value.trim().length < 3) {
+    if (q.length < 3) {
       setPlayerResults([]);
       return;
     }
   
-    searchTimeoutRef.current = setTimeout(async () => {
-      const { data, error } = await supabase
-        .from("nba_players")
-        .select("id, full_name")
-        .ilike("full_name", `%${value.trim()}%`)
-        .order("full_name", { ascending: true })
-        .limit(8);
+    const results = allPlayers
+      .filter((p) => p.full_name?.toLowerCase().includes(q))
+      .slice(0, 8);
   
-      if (error) {
-        console.error(error);
-        setPlayerResults([]);
-      } else {
-        setPlayerResults(data || []);
-      }
-    }, 300);
+    setPlayerResults(results);
   }
 
   function getValidPlayerMatch(playerId) {
@@ -354,9 +361,7 @@ export default function NameADudePage() {
       setQuery("");
       setSelectedPlayer(null);
       setPlayerResults([]);
-      setChallengeLoading(true);
-      await pickRandomChallenge();
-      setChallengeLoading(false);
+      pickRandomChallenge();
       return;
     }
 

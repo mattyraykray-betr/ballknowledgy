@@ -93,6 +93,7 @@ export default function NameADudePage() {
   const [usedTeamKeys, setUsedTeamKeys] = useState([]);
   const [challengeLoading, setChallengeLoading] = useState(false);
   const [pool, setPool] = useState([]);
+  const [totalPoolCount, setTotalPoolCount] = useState(null);
 
   const [hasStarted, setHasStarted] = useState(false);
   const [startedAt, setStartedAt] = useState(null);
@@ -189,48 +190,60 @@ export default function NameADudePage() {
     setLoading(false);
   }
 
-  async function fetchRandomTeamFromDB(usedKeys = usedTeamKeys) {
-    setChallengeLoading(true);
-    
-    let queryBuilder = supabase
+async function fetchRandomTeamFromDB(usedKeys = usedTeamKeys) {
+  setChallengeLoading(true);
+  
+  let currentCount = totalPoolCount;
+
+  // If we haven't fetched the total row count yet, do it once
+  if (!currentCount) {
+    const { count, error: countError } = await supabase
       .from("name_a_dude_pool_cache")
-      .select("*")
+      .select("*", { count: "exact", head: true })
       .eq("sport", "basketball")
       .eq("league", "nba");
-
-    if (usedKeys.length > 0) {
-      queryBuilder = queryBuilder.not("team_key", "in", `(${usedKeys.join(",")})`);
-    }
-
-    // FIX #2: Increased limit size to 50 items to break out of single season clustering
-    const { data, error } = await queryBuilder.limit(50);
-
-    if (error || !data || data.length === 0) {
-      setUsedTeamKeys([]);
-      const retry = await supabase
-        .from("name_a_dude_pool_cache")
-        .select("*")
-        .eq("sport", "basketball")
-        .eq("league", "nba")
-        .limit(1);
       
-      if (retry.data && retry.data[0]) {
-        setChallenge(retry.data[0]);
-        setUsedTeamKeys([retry.data[0].team_key]);
-        setChallengeLoading(false);
-        return retry.data[0];
-      }
-      
-      setChallengeLoading(false);
-      return null;
+    if (!countError && count) {
+      currentCount = count;
+      setTotalPoolCount(count);
+    } else {
+      currentCount = 300; // Safe fallback estimate if count fails
     }
-
-    const randomSelection = data[Math.floor(Math.random() * data.length)];
-    setChallenge(randomSelection);
-    setUsedTeamKeys((prev) => [...prev, randomSelection.team_key]);
-    setChallengeLoading(false);
-    return randomSelection;
   }
+
+  // Generate a random starting index anywhere in the database table
+  const maxOffset = Math.max(0, currentCount - 10);
+  const randomOffset = Math.floor(Math.random() * maxOffset);
+
+  // Fetch a small slice from that completely random location in the database
+  let queryBuilder = supabase
+    .from("name_a_dude_pool_cache")
+    .select("*")
+    .eq("sport", "basketball")
+    .eq("league", "nba")
+    .range(randomOffset, randomOffset + 9); // Pulls a 10-row window
+
+  const { data, error } = await queryBuilder;
+
+  if (error || !data || data.length === 0) {
+    // Standard error fallback
+    setChallengeLoading(false);
+    return null;
+  }
+
+  // Filter out teams we've already used in this specific game run
+  const freshTeams = data.filter(team => !usedKeys.includes(team.team_key));
+
+  // If everything in this random slice was already seen, loosen restrictions or grab the first available
+  const finalSelection = freshTeams.length > 0 
+    ? freshTeams[Math.floor(Math.random() * freshTeams.length)]
+    : data[Math.floor(Math.random() * data.length)];
+
+  setChallenge(finalSelection);
+  setUsedTeamKeys((prev) => [...prev, finalSelection.team_key]);
+  setChallengeLoading(false);
+  return finalSelection;
+}
   
   function handleSearchChange(value) {
     setQuery(value);

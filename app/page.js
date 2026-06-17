@@ -6,7 +6,6 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import SiteNav from "../components/SiteNav";
 import ProfileModal from "../components/ProfileModal";
-import XListFeed from "../components/XListFeed";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,

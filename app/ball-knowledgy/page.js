@@ -162,28 +162,6 @@ export default function HomePage() {
   const [showMenu, setShowMenu] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
 
-  async function loadProfile(userId) {
-    if (!userId) {
-      setProfile(null);
-      return;
-    }
-  
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("username, display_name, avatar_url")
-      .eq("id", userId)
-      .maybeSingle();
-  
-    if (!error) {
-      setProfile(data || null);
-    }
-  }
-  
-  useEffect(() => {
-    const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
-    setDarkMode(Boolean(prefersDark));
-  }, []);
-
   const [query, setQuery] = useState("");
   const [playerResults, setPlayerResults] = useState([]);
   const [selectedPlayer, setSelectedPlayer] = useState(null);
@@ -203,6 +181,29 @@ export default function HomePage() {
   const [completionStatus, setCompletionStatus] = useState([]);
   const [userStreaks, setUserStreaks] = useState(null);
   const [profile, setProfile] = useState(null);
+
+  // SAFELY MOVED INSIDE COMPONENT
+  async function loadProfile(userId) {
+    if (!userId) {
+      setProfile(null);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("username, display_name, avatar_url")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (!error) {
+      setProfile(data || null);
+    }
+  }
+  
+  useEffect(() => {
+    const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
+    setDarkMode(Boolean(prefersDark));
+  }, []);
   
   const theme = useMemo(() => {
     return darkMode
@@ -603,7 +604,6 @@ export default function HomePage() {
   
   useEffect(() => {
     loadChallenges(selectedDate);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
   useEffect(() => {
@@ -867,7 +867,6 @@ export default function HomePage() {
       textTransform: "uppercase",
       width: "100%",
       fontSize: 13,
-      marginTop: 8,
     },
     disabledButton: {
       opacity: 0.45,
@@ -884,7 +883,6 @@ export default function HomePage() {
       textTransform: "uppercase",
       width: "100%",
       fontSize: 13,
-      marginTop: 8,
     },
     pillRow: {
       display: "flex",
@@ -1446,11 +1444,7 @@ export default function HomePage() {
             <div style={styles.tabs}>
               {["easy", "medium", "hard"].map((difficulty) => (
                 <button
-                  key=
-                    {(() => {
-                      const status = getCompletionForDifficulty(completionStatus, difficulty);
-                      return `${status?.completed ? (status.is_correct ? "✓ " : "✕ ") : ""}${difficultyLabel(difficulty)}`;
-                    })()}                
+                  key={difficulty}                
                   style={{
                     ...styles.tab,
                     ...(selectedDifficulty === difficulty ? styles.activeTab : {}),
@@ -1786,23 +1780,26 @@ export default function HomePage() {
                       <div style={styles.statValue}>{hintsShown}/3</div>
                     </div>
                   </div>
-                          
-                  <button
-                    style={{
-                      ...styles.hintButton,
-                      ...(ended || hintsShown >= 3 ? styles.disabledButton : {}),
-                    }}
-                    onClick={revealHint}
-                    disabled={ended || hintsShown >= 3}
-                  >
-                    {hintsShown >= 3 ? "All Hints Revealed" : `Reveal Hint #${hintsShown + 1}`}
-                  </button>
-
-                  {!ended && (
-                    <button style={styles.dangerButton} onClick={giveUp}>
-                      Give Up
+                     
+                  <div style={{ display: "grid", gridTemplateColumns: !ended ? "1fr 1fr" : "1fr", gap: 8, marginTop: 8 }}>
+                    <button
+                      style={{
+                        ...styles.hintButton,
+                        ...(ended || hintsShown >= 3 ? styles.disabledButton : {}),
+                        marginTop: 0
+                      }}
+                      onClick={revealHint}
+                      disabled={ended || hintsShown >= 3}
+                    >
+                      {hintsShown >= 3 ? "All Hints Revealed" : `Reveal Hint #${hintsShown + 1}`}
                     </button>
-                  )}
+
+                    {!ended && (
+                      <button style={{ ...styles.dangerButton, marginTop: 0 }} onClick={giveUp}>
+                        Give Up
+                      </button>
+                    )}
+                  </div>
 
                   {hintsShown >= 1 && (
                     <div style={styles.hintText}>

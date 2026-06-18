@@ -111,7 +111,6 @@ export default function StatLadderPage() {
   const [leaderboardType, setLeaderboardType] = useState("daily");
   const [leaderboard, setLeaderboard] = useState([]);
 
-  // SAFELY MOVED INSIDE COMPONENT
   async function loadProfile(userId) {
     if (!userId) {
       setProfile(null);
@@ -212,7 +211,6 @@ export default function StatLadderPage() {
     setLoading(false);
   }
 
-  // ADDED A DEBOUNCE/OPTIMIZATION HOOK LATER IF NEEDED, BUT KEEPING PROP STYLING ALIGNED
   async function searchPlayers(value) {
     setQuery(value);
     setSelectedPlayer(null);
@@ -338,7 +336,7 @@ export default function StatLadderPage() {
       return;
     }
   
-      const { data, error } = await supabase
+    const { data, error } = await supabase
         .from("vw_nba_trivia_all_time_leaderboard")
         .select(
           "username, avatar_url, total_score, avg_score, correct_challenges"
@@ -352,7 +350,6 @@ export default function StatLadderPage() {
 
   function formatShareDate(dateString) {
     const d = new Date(dateString + "T00:00:00");
-  
     return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
   }
 
@@ -373,7 +370,6 @@ export default function StatLadderPage() {
   
   async function shareResult(gameName, scoreText) {
     const shareText = getShareText(gameName, scoreText);
-  
     if (navigator.share) {
       await navigator.share({
         title: "That Guy Rocked",
@@ -396,9 +392,7 @@ export default function StatLadderPage() {
   
   async function openFacebookShare(gameName, scoreText) {
     const shareText = getShareText(gameName, scoreText);
-  
     await navigator.clipboard.writeText(shareText);
-  
     window.open(
       `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
         `${window.location.origin}/ladder-golf`
@@ -406,7 +400,6 @@ export default function StatLadderPage() {
       "_blank",
       "noopener,noreferrer"
     );
-  
     alert("Score copied. Paste it into your Facebook post.");
   }
   
@@ -641,7 +634,7 @@ export default function StatLadderPage() {
       border: "1px solid #EF3B24",
       background: "transparent",
       color: "#EF3B24",
-      padding: "6px 12px",
+      padding: "5px 10px",
       fontWeight: 900,
       borderRadius: 6,
       cursor: "pointer",
@@ -772,7 +765,6 @@ export default function StatLadderPage() {
       fontSize: 12,
       marginTop: 2,
     },
-    
     miniLogo: {
       width: 18,
       height: 18,
@@ -887,7 +879,13 @@ export default function StatLadderPage() {
       gridTemplateColumns: "1fr 1fr",
       gap: 8,
       marginTop: 8,
-    },    
+    },
+    timerContainer: {
+      display: "flex",
+      alignItems: "center",
+      gap: 12,
+      textAlign: "right",
+    },
   };
 
   return (
@@ -1052,9 +1050,9 @@ export default function StatLadderPage() {
           </div>
         )}
             
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <input
-            style={styles.dateInput}
+            style={{ ...styles.dateInput, marginBottom: 0 }}
             type="date"
             value={selectedDate}
             max={todayLocal()}
@@ -1066,9 +1064,16 @@ export default function StatLadderPage() {
           />
         
           {hasStarted && (
-            <div style={{ textAlign: "right" }}>
-              <div style={styles.label}>Timer</div>
-              <div style={styles.big}>{formatTimer(secondsElapsed)}</div>
+            <div style={styles.timerContainer}>
+              {!ended && (
+                <button style={styles.dangerButton} onClick={() => finishGame()}>
+                  Give Up
+                </button>
+              )}
+              <div>
+                <div style={styles.label}>Timer</div>
+                <div style={{ ...styles.big, marginBottom: 0 }}>{formatTimer(secondsElapsed)}</div>
+              </div>
             </div>
           )}
         </div>
@@ -1106,17 +1111,10 @@ export default function StatLadderPage() {
         ) : (
           <>
             <section style={styles.card}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                <div style={styles.label}>Starting Player</div>
-                {!ended && (
-                  <button style={styles.dangerButton} onClick={() => finishGame()}>
-                    Give Up
-                  </button>
-                )}
-              </div>
+              <div style={styles.label}>Starting Player</div>
             
               <div style={styles.playerRow}>
-                  <img src={challenge.player.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.headshot} />
+                <img src={challenge.player.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.headshot} />
             
                 <div>
                   <div style={styles.big}>{challenge.player?.full_name}</div>
@@ -1134,6 +1132,7 @@ export default function StatLadderPage() {
                 </div>
               </div>
             </section>
+
             <section style={styles.card}>
               <div style={styles.label}>Current Target</div>
             
@@ -1160,6 +1159,7 @@ export default function StatLadderPage() {
                 {formatValue(currentThreshold, statKey)} {statLabel}.
               </div>
             </section>
+
             {!ended && (
               <section style={styles.card}>
                 <div style={styles.label}>Name a lower player</div>
@@ -1194,7 +1194,7 @@ export default function StatLadderPage() {
                         }}
                       >
                         <div style={styles.searchResultRow}>
-                            <img src={p.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
+                          <img src={p.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
                           <span>{p.full_name}</span>
                         </div>
                       </div>
@@ -1232,11 +1232,9 @@ export default function StatLadderPage() {
 
               {chain.map((row, idx) => (
                 <div key={`${row.player_id}-${idx}`} style={styles.chainRow}>
-                    <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
+                  <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
                   <div style={{ flex: 1 }}>
-                    <strong>
-                      ✓ {row.player_name}
-                    </strong>
+                    <strong>✓ {row.player_name}</strong>
                     <div style={styles.sub}>
                       {formatValue(row.value, statKey)} {statLabel}
                     </div>
@@ -1246,7 +1244,7 @@ export default function StatLadderPage() {
 
               {misses.map((row, idx) => (
                 <div key={`${row.player_id}-${idx}`} style={styles.chainRow}>
-                    <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
+                  <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
                   <div style={{ flex: 1 }}>
                     <strong style={styles.orange}>✕ {row.player_name}</strong>
                     <div style={styles.sub}>

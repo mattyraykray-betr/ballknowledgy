@@ -1065,15 +1065,15 @@ export default function StatLadderPage() {
         
           {hasStarted && (
             <div style={styles.timerContainer}>
+              <div>
+                <div style={styles.label}>Timer</div>
+                <div style={{ ...styles.big, marginBottom: 0 }}>{formatTimer(secondsElapsed)}</div>
+              </div>
               {!ended && (
                 <button style={styles.dangerButton} onClick={() => finishGame()}>
                   Give Up
                 </button>
               )}
-              <div>
-                <div style={styles.label}>Timer</div>
-                <div style={{ ...styles.big, marginBottom: 0 }}>{formatTimer(secondsElapsed)}</div>
-              </div>
             </div>
           )}
         </div>

@@ -29,23 +29,6 @@ function isFutureDate(dateValue) {
   return dateValue > todayLocal();
 }
 
-async function loadProfile(userId) {
-  if (!userId) {
-    setProfile(null);
-    return;
-  }
-
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("username, display_name, avatar_url")
-    .eq("id", userId)
-    .maybeSingle();
-
-  if (!error) {
-    setProfile(data || null);
-  }
-}
-
 function formatTimer(totalSeconds) {
   const seconds = Math.max(0, Number(totalSeconds) || 0);
 
@@ -178,6 +161,23 @@ export default function HomePage() {
   const [showProfile, setShowProfile] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+
+  async function loadProfile(userId) {
+    if (!userId) {
+      setProfile(null);
+      return;
+    }
+  
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("username, display_name, avatar_url")
+      .eq("id", userId)
+      .maybeSingle();
+  
+    if (!error) {
+      setProfile(data || null);
+    }
+  }
   
   useEffect(() => {
     const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;

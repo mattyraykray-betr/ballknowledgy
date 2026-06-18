@@ -111,21 +111,22 @@ export default function StatLadderPage() {
   const [leaderboardType, setLeaderboardType] = useState("daily");
   const [leaderboard, setLeaderboard] = useState([]);
 
+  // SAFELY MOVED INSIDE COMPONENT
   async function loadProfile(userId) {
     if (!userId) {
       setProfile(null);
       return;
     }
-  
+
     const { data, error } = await supabase
       .from("profiles")
       .select("username, display_name, avatar_url")
       .eq("id", userId)
       .maybeSingle();
-  
+
     if (!error) setProfile(data || null);
   }
-  
+
   useEffect(() => {
     const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
     setDarkMode(Boolean(prefersDark));
@@ -211,6 +212,7 @@ export default function StatLadderPage() {
     setLoading(false);
   }
 
+  // ADDED A DEBOUNCE/OPTIMIZATION HOOK LATER IF NEEDED, BUT KEEPING PROP STYLING ALIGNED
   async function searchPlayers(value) {
     setQuery(value);
     setSelectedPlayer(null);
@@ -639,14 +641,12 @@ export default function StatLadderPage() {
       border: "1px solid #EF3B24",
       background: "transparent",
       color: "#EF3B24",
-      padding: "10px",
+      padding: "6px 12px",
       fontWeight: 900,
       borderRadius: 6,
       cursor: "pointer",
       textTransform: "uppercase",
-      width: "100%",
-      fontSize: 13,
-      marginTop: 8,
+      fontSize: 11,
     },
     input: {
       width: "100%",
@@ -1106,7 +1106,14 @@ export default function StatLadderPage() {
         ) : (
           <>
             <section style={styles.card}>
-              <div style={styles.label}>Starting Player</div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                <div style={styles.label}>Starting Player</div>
+                {!ended && (
+                  <button style={styles.dangerButton} onClick={() => finishGame()}>
+                    Give Up
+                  </button>
+                )}
+              </div>
             
               <div style={styles.playerRow}>
                   <img src={challenge.player.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.headshot} />
@@ -1194,10 +1201,6 @@ export default function StatLadderPage() {
                     ))}
                   </div>
                 )}
-
-                <button style={styles.dangerButton} onClick={() => finishGame()}>
-                  Give Up
-                </button>
 
                 {message && (
                   <div

@@ -316,7 +316,7 @@ export default function NameADudePage() {
         full_name: selectedPlayer.full_name,
         headshot_url: selectedPlayer.headshot_url || match.headshot_url,
         team_key: challenge.team_key,
-        team_name: challenge.team_name,
+        team_name: challenge.display_team_name,
         season_year: challenge.season_year,
         season_label: challenge.season_label,
         jersey: match.jersey,
@@ -344,7 +344,7 @@ export default function NameADudePage() {
       full_name: selectedPlayer.full_name,
       headshot_url: selectedPlayer.headshot_url,
       team_key: challenge.team_key,
-      team_name: challenge.team_name,
+      team_name: challenge.display_team_name,
       season_year: challenge.season_year,
       season_label: challenge.season_label,
     };
@@ -568,9 +568,9 @@ export default function NameADudePage() {
               <section style={styles.card}>
                 <div style={styles.label}>Name a Dude From</div>
                 <div style={styles.teamRow}>
-                  {challenge.logo_url && <img src={challenge.logo_url} alt="" style={styles.logo} />}
+                  {(challenge.display_logo_url || challenge.logo_url) && (<img src={challenge.display_logo_url} alt="" style={styles.logo} /> )}
                   <div>
-                    <div style={styles.big}>{challenge.team_name}</div>
+                    <div style={styles.big}>{challenge.display_team_name}</div>
                     <div style={styles.sub}>{challenge.season_label || challenge.season_year} · Roster Size: {challenge.roster_count}</div>
                   </div>
                 </div>

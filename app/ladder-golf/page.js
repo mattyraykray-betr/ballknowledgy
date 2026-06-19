@@ -192,6 +192,10 @@ export default function StatLadderPage() {
         challenge_type,
         difficulty,
         player_id,
+        season_year,
+        display_team_name,
+        display_team_abbrev,
+        display_logo_url,  
         team:nba_teams(display_name, abbreviation, logo_url),
         player:nba_players(full_name, headshot_url),
         starting_clue_json,
@@ -1209,10 +1213,16 @@ export default function StatLadderPage() {
                   <div style={styles.big}>{challenge.player?.full_name}</div>
             
                   <div style={styles.miniTeamRow}>
-                    {challenge.team?.logo_url && (
-                      <img src={challenge.team.logo_url} alt="" style={styles.miniLogo} />
+                    {(challenge.display_logo_url || challenge.team?.logo_url) && (
+                      <img
+                        src={challenge.display_logo_url || challenge.team?.logo_url}
+                        alt=""
+                        style={styles.miniLogo}
+                      />
                     )}
-                    <span>{challenge.team?.display_name || "Primary team unavailable"}</span>
+                    <span>
+                      {challenge.display_team_name || challenge.team?.display_name || "Primary team unavailable"}
+                    </span>
                   </div>
             
                   <div style={styles.sub}>

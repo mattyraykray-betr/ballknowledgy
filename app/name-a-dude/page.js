@@ -371,16 +371,35 @@ export default function NameADudePage() {
 
   async function saveAttempt({ finalScore, finalSeconds, finalMisses, finalCorrect }) {
     if (!user || !dailyChallengeId) return;
-    const { error } = await supabase.from("nba_trivia_attempts").upsert({
-      challenge_id: dailyChallengeId, user_id: user.id,
+  
+    const { error } = await supabase.from("nba_trivia_attempts").insert({
+      challenge_id: dailyChallengeId,
+      user_id: user.id,
       guessed_player_id: finalCorrect.length > 0 ? finalCorrect[finalCorrect.length - 1].player_id : null,
-      is_correct: finalCorrect.length > 0, seconds_elapsed: finalSeconds, wrong_guess_count: finalMisses.length,
-      hints_used: 0, score: finalScore, gave_up: finalMisses.length < 3, completed: true,
-      final_guess_count: finalCorrect.length + finalMisses.length, difficulty: "open", challenge_date: todayLocal(),
-      completed_at: new Date().toISOString(), chain_length: finalCorrect.length,
-      result_json: { game: "name_a_dude", sport: "basketball", league: "nba", correct_players: finalCorrect, misses: finalMisses }
-    }, { onConflict: "challenge_id,user_id" });
-    if (!error) setAttemptSaved(true); else console.error(error);
+      is_correct: finalCorrect.length > 0,
+      seconds_elapsed: finalSeconds,
+      wrong_guess_count: finalMisses.length,
+      hints_used: 0,
+      score: finalScore,
+      gave_up: finalMisses.length < 3,
+      completed: true,
+      final_guess_count: finalCorrect.length + finalMisses.length,
+      difficulty: "open",
+      challenge_date: todayLocal(),
+      completed_at: new Date().toISOString(),
+      chain_length: finalCorrect.length,
+      challenge_type: "name_a_dude",
+      result_json: {
+        game: "name_a_dude",
+        sport: "basketball",
+        league: "nba",
+        correct_players: finalCorrect,
+        misses: finalMisses,
+      },
+    });
+  
+    if (!error) setAttemptSaved(true);
+    else console.error(error);
   }
 
   async function loadLeaderboard(type = leaderboardType) {

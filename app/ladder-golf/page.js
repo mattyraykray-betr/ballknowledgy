@@ -494,7 +494,7 @@ export default function StatLadderPage() {
   
     const { data, error } = await supabase
       .from("nba_trivia_attempts")
-      .select("id, completed, is_correct, score, seconds_elapsed, wrong_guess_count, chain_length")
+      .select("id, completed, is_correct, score, seconds_elapsed, wrong_guess_count, chain_length, result_json")
       .eq("user_id", user.id)
       .eq("challenge_id", challenge.id)
       .eq("difficulty", challenge.difficulty)
@@ -1118,13 +1118,47 @@ export default function StatLadderPage() {
             <section style={styles.card}>
               <div style={styles.label}>Challenge Complete</div>
               <div style={styles.big}>You've completed this challenge already.</div>
-              <div style={styles.sub}>
-                Answer: {challenge.player?.full_name}
-              </div>
-              <div style={styles.sub}>
-                Score {completionStatus.score ?? 0} · Chain {completionStatus.chain_length ?? 0} · Misses {completionStatus.wrong_guess_count ?? 0} · Time {formatTimer(completionStatus.seconds_elapsed ?? 0)}
+        
+              <div style={styles.playerRow}>
+                <img
+                  src={challenge.player?.headshot_url || HEADSHOT_FALLBACK}
+                  alt={challenge.player?.full_name || "Player headshot"}
+                  style={styles.headshot}
+                />
+        
+                <div>
+                  <div style={styles.big}>Answer: {challenge.player?.full_name}</div>
+                  <div style={styles.sub}>
+                    Starting value: {formatValue(completionStatus.result_json?.starting_value ?? startingValue, statKey)} {statLabel}
+                  </div>
+                  <div style={{ ...styles.sub, marginTop: 8 }}>
+                    Score {completionStatus.score ?? 0} · Chain {completionStatus.chain_length ?? 0} · Misses {completionStatus.wrong_guess_count ?? 0} · Time {formatTimer(completionStatus.seconds_elapsed ?? 0)}
+                  </div>
+                </div>
               </div>
             </section>
+        
+            {completionStatus.result_json?.chain?.length > 0 && (
+              <section style={styles.card}>
+                <div style={styles.label}>Your Chain</div>
+        
+                {completionStatus.result_json.chain.map((row, idx) => (
+                  <div key={`${row.player_id}-${idx}`} style={styles.chainRow}>
+                    <img
+                      src={row.headshot_url || HEADSHOT_FALLBACK}
+                      alt=""
+                      style={styles.searchHeadshot}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <strong>{idx + 1}. {row.player_name}</strong>
+                      <div style={styles.sub}>
+                        {formatValue(row.value, completionStatus.result_json?.stat_key || statKey)} {completionStatus.result_json?.stat_label || statLabel}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </section>
+            )}
           </>
         ) : !hasStarted ? (
           <>

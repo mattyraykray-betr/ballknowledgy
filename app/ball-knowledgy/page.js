@@ -271,23 +271,23 @@ export default function HomePage() {
   
     const { error } = await supabase
       .from("nba_trivia_attempts")
-      .upsert(
-        {
-          challenge_id: activeChallenge.id,
-          user_id: user.id,
-          guessed_player_id: correct ? activeChallenge.player_id : null,
-          is_correct: correct,
-          seconds_elapsed: finalSeconds,
-          wrong_guess_count: wrongGuesses.length,
-          hints_used: hintsShown,
-          score: finalScore,
-          gave_up: gaveUpNow || outOfGuesses,
-          completed: true,
-          final_guess_count: wrongGuesses.length + (correct ? 1 : 0),
-          difficulty: activeChallenge.difficulty,
-          challenge_date: activeChallenge.challenge_date,
-          completed_at: new Date().toISOString(),
-        },
+      .insert({
+        challenge_id: activeChallenge.id,
+        user_id: user.id,
+        guessed_player_id: correct ? activeChallenge.player_id : null,
+        is_correct: correct,
+        seconds_elapsed: finalSeconds,
+        wrong_guess_count: wrongGuesses.length,
+        hints_used: hintsShown,
+        score: finalScore,
+        gave_up: gaveUpNow || outOfGuesses,
+        completed: true,
+        final_guess_count: wrongGuesses.length + (correct ? 1 : 0),
+        difficulty: activeChallenge.difficulty,
+        challenge_date: activeChallenge.challenge_date,
+        completed_at: new Date().toISOString(),
+        challenge_type: "season",
+      });
         {
           onConflict: "challenge_id,user_id",
         }
@@ -428,11 +428,18 @@ export default function HomePage() {
   }
 
   function startGame() {
+    const alreadyCompleted = getCompletionForDifficulty(completionStatus, selectedDifficulty);
+  
+    if (alreadyCompleted?.completed) {
+      setMessage("You've completed this challenge already.");
+      return;
+    }
+  
     const challenge =
       challenges.find((c) => c.difficulty === selectedDifficulty) || challenges[0];
-
+  
     if (!challenge) return;
-
+  
     resetGameState(challenge, true);
   }
 

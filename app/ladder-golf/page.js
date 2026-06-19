@@ -110,6 +110,7 @@ export default function StatLadderPage() {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [leaderboardType, setLeaderboardType] = useState("daily");
   const [leaderboard, setLeaderboard] = useState([]);
+  const [completionStatus, setCompletionStatus] = useState(null);
 
   async function loadProfile(userId) {
     if (!userId) {
@@ -444,50 +445,75 @@ export default function StatLadderPage() {
 
   async function saveAttempt({ finalScore, finalSeconds, finalMisses, finalChain }) {
     if (!user || !challenge) return;
-
+  
     const { error } = await supabase
       .from("nba_trivia_attempts")
-      .upsert(
-        {
-          challenge_id: challenge.id,
-          user_id: user.id,
-          guessed_player_id:
-            finalChain.length > 0 ? finalChain[finalChain.length - 1].player_id : null,
-          is_correct: finalChain.length > 0,
-          seconds_elapsed: finalSeconds,
-          wrong_guess_count: finalMisses.length,
-          hints_used: 0,
-          score: finalScore,
-          gave_up: finalMisses.length < 3,
-          completed: true,
-          final_guess_count: finalChain.length + finalMisses.length,
-          difficulty: challenge.difficulty,
-          challenge_date: challenge.challenge_date,
-          completed_at: new Date().toISOString(),
-          chain_length: finalChain.length,
-          challenge_type: "stat_ladder",
-          result_json: {
-            game: "stat_ladder",
-            stat_key: statKey,
-            stat_label: statLabel,
-            starting_player_id: challenge.player_id,
-            starting_player_name: challenge.player?.full_name,
-            starting_value: startingValue,
-            chain: finalChain,
-            misses: finalMisses,
-          },
+      .insert({
+        challenge_id: challenge.id,
+        user_id: user.id,
+        guessed_player_id:
+          finalChain.length > 0 ? finalChain[finalChain.length - 1].player_id : null,
+        is_correct: finalChain.length > 0,
+        seconds_elapsed: finalSeconds,
+        wrong_guess_count: finalMisses.length,
+        hints_used: 0,
+        score: finalScore,
+        gave_up: finalMisses.length < 3,
+        completed: true,
+        final_guess_count: finalChain.length + finalMisses.length,
+        difficulty: challenge.difficulty,
+        challenge_date: challenge.challenge_date,
+        completed_at: new Date().toISOString(),
+        chain_length: finalChain.length,
+        challenge_type: "stat_ladder",
+        result_json: {
+          game: "stat_ladder",
+          stat_key: statKey,
+          stat_label: statLabel,
+          starting_player_id: challenge.player_id,
+          starting_player_name: challenge.player?.full_name,
+          starting_value: startingValue,
+          chain: finalChain,
+          misses: finalMisses,
         },
-        {
-          onConflict: "challenge_id,user_id",
-        }
-      );
-
-    if (!error) setAttemptSaved(true);
-    else console.error(error);
+      });
+  
+    if (!error) {
+      setAttemptSaved(true);
+      loadCompletionStatus();
+    } else {
+      console.error(error);
+    }
   }
 
+  async function loadCompletionStatus() {
+    if (!user || !challenge) {
+      setCompletionStatus(null);
+      return;
+    }
+  
+    const { data, error } = await supabase
+      .from("nba_trivia_attempts")
+      .select("id, completed, is_correct, score, seconds_elapsed, wrong_guess_count, chain_length")
+      .eq("user_id", user.id)
+      .eq("challenge_id", challenge.id)
+      .eq("difficulty", challenge.difficulty)
+      .eq("challenge_type", "stat_ladder")
+      .eq("completed", true)
+      .maybeSingle();
+  
+    if (!error) setCompletionStatus(data || null);
+  }
+  
   function startGame() {
     if (!challenge) return;
+  
+    if (completionStatus?.completed) {
+      setMessageType("info");
+      setMessage("You've completed this challenge already.");
+      return;
+    }
+  
     setHasStarted(true);
     setStartedAt(Date.now());
     setSecondsElapsed(0);
@@ -499,6 +525,10 @@ export default function StatLadderPage() {
     loadChallenge(selectedDate);
   }, [selectedDate]);
 
+  useEffect(() => {
+    loadCompletionStatus();
+  }, [user, challenge]);
+  
   useEffect(() => {
     async function loadUser() {
       const { data } = await supabase.auth.getUser();
@@ -1083,6 +1113,19 @@ export default function StatLadderPage() {
           <section style={styles.card}>Loading challenge...</section>
         ) : !challenge ? (
           <section style={styles.card}>No Stat Ladder Golf challenge found for this date.</section>
+        ) : completionStatus?.completed ? (
+          <>
+            <section style={styles.card}>
+              <div style={styles.label}>Challenge Complete</div>
+              <div style={styles.big}>You've completed this challenge already.</div>
+              <div style={styles.sub}>
+                Answer: {challenge.player?.full_name}
+              </div>
+              <div style={styles.sub}>
+                Score {completionStatus.score ?? 0} · Chain {completionStatus.chain_length ?? 0} · Misses {completionStatus.wrong_guess_count ?? 0} · Time {formatTimer(completionStatus.seconds_elapsed ?? 0)}
+              </div>
+            </section>
+          </>
         ) : !hasStarted ? (
           <>
             <section style={styles.card}>

@@ -917,6 +917,17 @@ export default function StatLadderPage() {
       gap: 12,
       textAlign: "right",
     },
+    completeBanner: {
+      border: "1px solid #EF3B24",
+      color: "#EF3B24",
+      borderRadius: 6,
+      padding: "10px 12px",
+      fontWeight: 950,
+      textTransform: "uppercase",
+      fontSize: 12,
+      marginBottom: 12,
+      textAlign: "center",
+    },    
   };
 
   return (
@@ -1117,7 +1128,7 @@ export default function StatLadderPage() {
           <>
             <section style={styles.card}>
               <div style={styles.label}>Challenge Complete</div>
-              <div style={styles.big}>You've completed this challenge already.</div>
+              <div style={styles.completeBanner}>You've completed this challenge already.</div>
         
               <div style={styles.playerRow}>
                 <img

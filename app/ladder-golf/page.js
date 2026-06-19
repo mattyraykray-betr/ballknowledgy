@@ -465,6 +465,7 @@ export default function StatLadderPage() {
           challenge_date: challenge.challenge_date,
           completed_at: new Date().toISOString(),
           chain_length: finalChain.length,
+          challenge_type: "stat_ladder",
           result_json: {
             game: "stat_ladder",
             stat_key: statKey,

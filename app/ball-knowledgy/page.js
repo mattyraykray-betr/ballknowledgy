@@ -318,6 +318,9 @@ export default function HomePage() {
         hint_3_json,
         team:nba_teams(display_name, abbreviation, logo_url),
         player:nba_players(full_name, headshot_url),
+        display_team_name,
+        display_team_abbrev,
+        display_logo_url,
         season:nba_player_seasons(
           games_played,
           games_started,
@@ -1485,7 +1488,7 @@ export default function HomePage() {
                         </div>
             
                         <div style={styles.sub}>
-                          {activeChallenge.season_label} · {activeChallenge.team?.abbreviation}
+                          {activeChallenge.season_label} · {activeChallenge.display_team_abbrev || activeChallenge.team?.abbreviation}
                         </div>
             
                         <div style={{ ...styles.sub, marginTop: 8 }}>
@@ -1536,7 +1539,7 @@ export default function HomePage() {
                     </div>
             
                     <div style={styles.sub}>
-                      {activeChallenge.season_label} · {activeChallenge.team?.abbreviation}
+                      {activeChallenge.season_label} · {activeChallenge.display_team_abbrev || activeChallenge.team?.abbreviation}
                     </div>
             
                     <div style={styles.topStatusRow}>
@@ -1790,13 +1793,18 @@ export default function HomePage() {
                     <div>
                       <div style={styles.label}>Team</div>
                       <div style={styles.teamRow}>
-                        {activeChallenge.team?.logo_url && (
-                          <img src={activeChallenge.team.logo_url} alt="" style={styles.logo} />
+                        {(activeChallenge.display_logo_url || activeChallenge.team?.logo_url) && (
+                          <img
+                            src={activeChallenge.display_logo_url || activeChallenge.team?.logo_url}
+                            alt=""
+                            style={styles.logo}
+                          />
                         )}
                         <div style={styles.big}>
-                          {(activeChallenge.starting_clue_json?.team_names || [])
-                            .filter(Boolean)
-                            .join(" / ") ||
+                          {activeChallenge.display_team_name ||
+                            (activeChallenge.starting_clue_json?.team_names || [])
+                              .filter(Boolean)
+                              .join(" / ") ||
                             activeChallenge.team?.display_name ||
                             "Unknown Team"}
                         </div>

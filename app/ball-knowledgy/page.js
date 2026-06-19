@@ -1462,9 +1462,47 @@ export default function HomePage() {
               ))}
             </div>
 
-            <button style={styles.startButton} onClick={startGame}>
-              Start
-            </button>
+            {(() => {
+              const completedStatus = getCompletionForDifficulty(completionStatus, selectedDifficulty);
+            
+              if (completedStatus?.completed && activeChallenge) {
+                return (
+                  <section style={styles.card}>
+                    <div style={styles.completeBanner}>
+                      You've completed this challenge already.
+                    </div>
+            
+                    <div style={styles.resultRow}>
+                      <img
+                        src={activeChallenge.player?.headshot_url || HEADSHOT_FALLBACK}
+                        alt={activeChallenge.player?.full_name || "Player headshot"}
+                        style={styles.resultHeadshot}
+                      />
+            
+                      <div>
+                        <div style={styles.big}>
+                          Answer: {activeChallenge.player?.full_name}
+                        </div>
+            
+                        <div style={styles.sub}>
+                          {activeChallenge.season_label} · {activeChallenge.team?.abbreviation}
+                        </div>
+            
+                        <div style={{ ...styles.sub, marginTop: 8 }}>
+                          Saved score: {completedStatus.score ?? 0}
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                );
+              }
+            
+              return (
+                <button style={styles.startButton} onClick={startGame}>
+                  Start
+                </button>
+              );
+            })()}
           </>
         ) : (
           <>

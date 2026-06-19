@@ -288,10 +288,6 @@ export default function HomePage() {
         completed_at: new Date().toISOString(),
         challenge_type: "season",
       });
-        {
-          onConflict: "challenge_id,user_id",
-        }
-      );
   
     if (!error) {
       setAttemptSaved(true);

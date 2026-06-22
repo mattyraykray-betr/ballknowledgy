@@ -316,7 +316,7 @@ export default function NameADudePage() {
         full_name: selectedPlayer.full_name,
         headshot_url: selectedPlayer.headshot_url || match.headshot_url,
         team_key: challenge.team_key,
-        team_name: challenge.team_name,
+        team_name: challenge.display_team_name,
         season_year: challenge.season_year,
         season_label: challenge.season_label,
         jersey: match.jersey,
@@ -344,7 +344,7 @@ export default function NameADudePage() {
       full_name: selectedPlayer.full_name,
       headshot_url: selectedPlayer.headshot_url,
       team_key: challenge.team_key,
-      team_name: challenge.team_name,
+      team_name: challenge.display_team_name,
       season_year: challenge.season_year,
       season_label: challenge.season_label,
     };
@@ -371,16 +371,35 @@ export default function NameADudePage() {
 
   async function saveAttempt({ finalScore, finalSeconds, finalMisses, finalCorrect }) {
     if (!user || !dailyChallengeId) return;
-    const { error } = await supabase.from("nba_trivia_attempts").upsert({
-      challenge_id: dailyChallengeId, user_id: user.id,
+  
+    const { error } = await supabase.from("nba_trivia_attempts").insert({
+      challenge_id: dailyChallengeId,
+      user_id: user.id,
       guessed_player_id: finalCorrect.length > 0 ? finalCorrect[finalCorrect.length - 1].player_id : null,
-      is_correct: finalCorrect.length > 0, seconds_elapsed: finalSeconds, wrong_guess_count: finalMisses.length,
-      hints_used: 0, score: finalScore, gave_up: finalMisses.length < 3, completed: true,
-      final_guess_count: finalCorrect.length + finalMisses.length, difficulty: "open", challenge_date: todayLocal(),
-      completed_at: new Date().toISOString(), chain_length: finalCorrect.length,
-      result_json: { game: "name_a_dude", sport: "basketball", league: "nba", correct_players: finalCorrect, misses: finalMisses }
-    }, { onConflict: "challenge_id,user_id" });
-    if (!error) setAttemptSaved(true); else console.error(error);
+      is_correct: finalCorrect.length > 0,
+      seconds_elapsed: finalSeconds,
+      wrong_guess_count: finalMisses.length,
+      hints_used: 0,
+      score: finalScore,
+      gave_up: finalMisses.length < 3,
+      completed: true,
+      final_guess_count: finalCorrect.length + finalMisses.length,
+      difficulty: "open",
+      challenge_date: todayLocal(),
+      completed_at: new Date().toISOString(),
+      chain_length: finalCorrect.length,
+      challenge_type: "name_a_dude",
+      result_json: {
+        game: "name_a_dude",
+        sport: "basketball",
+        league: "nba",
+        correct_players: finalCorrect,
+        misses: finalMisses,
+      },
+    });
+  
+    if (!error) setAttemptSaved(true);
+    else console.error(error);
   }
 
   async function loadLeaderboard(type = leaderboardType) {
@@ -568,9 +587,9 @@ export default function NameADudePage() {
               <section style={styles.card}>
                 <div style={styles.label}>Name a Dude From</div>
                 <div style={styles.teamRow}>
-                  {challenge.logo_url && <img src={challenge.logo_url} alt="" style={styles.logo} />}
+                  {(challenge.display_logo_url || challenge.logo_url) && (<img src={challenge.display_logo_url} alt="" style={styles.logo} /> )}
                   <div>
-                    <div style={styles.big}>{challenge.team_name}</div>
+                    <div style={styles.big}>{challenge.display_team_name}</div>
                     <div style={styles.sub}>{challenge.season_label || challenge.season_year} · Roster Size: {challenge.roster_count}</div>
                   </div>
                 </div>

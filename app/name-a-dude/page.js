@@ -417,7 +417,6 @@ export default function NameADudePage() {
       await fetchRandomTeamFromDB();
       return;
     }
-    }
 
     const missRow = {
       player_id: selectedPlayer.id,

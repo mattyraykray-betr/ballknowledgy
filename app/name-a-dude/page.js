@@ -73,7 +73,7 @@ function calculateScore({ correctCount, secondsElapsed, misses }) {
 
 const STATIC_STYLES = {
   page: { minHeight: "100vh", width: "100%", overflowX: "hidden", fontFamily: 'Arial, Helvetica, sans-serif', margin: 0 },
-  wrap: {maxWidth: 520, minHeight: "100vh", margin: "0 auto", padding: 12, display: "flex", flexDirection: "column",},
+  wrap: {maxWidth: 520, minHeight: "100vh", margin: "0 auto", padding: "12px 12px 170px", display: "flex", flexDirection: "column",},
   topbar: { display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 10, marginBottom: 10 },
   title: { fontFamily: "'Roboto Slab', Rockwell, serif", fontSize: 24, fontWeight: 800, margin: 0, letterSpacing: "-0.04em", textTransform: "uppercase" },
   sub: { fontSize: 12, marginTop: 2 },

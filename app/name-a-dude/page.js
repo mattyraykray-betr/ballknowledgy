@@ -21,6 +21,37 @@ const supabase = createClient(
 
 const HEADSHOT_FALLBACK = "https://i.ibb.co/1YmfgNKs/TPR-Blank-Headshot-MBB.png";
 
+const GAME_MODES = [
+  { key: "survival", label: "Survival" },
+  { key: "race", label: "Race to 10" },
+  { key: "decades", label: "Decades" },
+];
+
+const DECADE_OPTIONS = ["1980s", "1990s", "2000s", "2010s", "2020s"];
+
+function getDifficultyForMode(gameMode, selectedDecade) {
+  if (gameMode === "race") return "race";
+  if (gameMode === "decades") return `decade-${selectedDecade}`;
+  return "open";
+}
+
+function getModeLabel(gameMode, selectedDecade) {
+  if (gameMode === "race") return "Race to 10";
+  if (gameMode === "decades") return selectedDecade;
+  return "Survival";
+}
+
+function getModeDescription(gameMode, selectedDecade) {
+  if (gameMode === "race") return "Name 10 correct players as fast as you can.";
+  if (gameMode === "decades") return `Only teams from the ${selectedDecade}.`;
+  return "Three misses ends the run.";
+}
+
+function decadeBounds(decade) {
+  const start = Number(String(decade).replace("s", ""));
+  return { start, end: start + 10 };
+}
+
 function todayLocal() {
   return new Date().toISOString().slice(0, 10);
 }
@@ -130,6 +161,12 @@ export default function NameADudePage() {
   const [leaderboardType, setLeaderboardType] = useState("daily");
   const [leaderboard, setLeaderboard] = useState([]);
 
+  const [gameMode, setGameMode] = useState("survival");
+  const [selectedDecade, setSelectedDecade] = useState("2010s");
+  const [poolStats, setPoolStats] = useState({ all: 748 });
+  
+  const lastCorrectAtRef = useRef(null);  
+
   const searchTimeoutRef = useRef(null);
 
   useEffect(() => {
@@ -190,39 +227,58 @@ export default function NameADudePage() {
     if (!error && data) {
       setDailyChallengeId(data.id);
     }
+    const { data: statsData } = await supabase
+      .from("vw_name_a_dude_pool_stats")
+      .select("pool_key, row_count");
+    
+    if (statsData) {
+      setPoolStats(
+        statsData.reduce((acc, row) => {
+          acc[row.pool_key] = Number(row.row_count || 0);
+          return acc;
+        }, { all: 748 })
+      );
+    }      
     setLoading(false);
   }
 
   async function fetchRandomTeamFromDB(usedKeys = usedTeamKeys) {
     setChallengeLoading(true);
   
-    // Since you know exactly how many rows are in the table, we use it!
-    // We subtract 10 so our random starting window (which grabs 10 rows) never overshoots the end of the table.
-    const totalRows = 748; 
+    const poolKey = gameMode === "decades" ? selectedDecade : "all";
+    const totalRows = poolStats[poolKey] || poolStats.all || 748;
     const maxOffset = Math.max(0, totalRows - 10);
     const randomOffset = Math.floor(Math.random() * maxOffset);
   
-    // Fetch a tiny 10-row slice starting from our exact random location
     let queryBuilder = supabase
       .from("name_a_dude_pool_cache")
-      .select("*") 
+      .select("*")
       .eq("sport", "basketball")
-      .eq("league", "nba")
-      .range(randomOffset, randomOffset + 9); 
+      .eq("league", "nba");
   
-    const { data, error } = await queryBuilder;
+    if (gameMode === "decades") {
+      const { start, end } = decadeBounds(selectedDecade);
+      queryBuilder = queryBuilder.gte("season_year", start).lt("season_year", end);
+    }
+  
+    const { data, error } = await queryBuilder.range(randomOffset, randomOffset + 9);
   
     let activeData = data;
-    
-    // Fallback just in case a network hiccup happens or data returns empty
+  
     if (error || !activeData || activeData.length === 0) {
-      const fallback = await supabase
+      let fallbackQuery = supabase
         .from("name_a_dude_pool_cache")
         .select("*")
         .eq("sport", "basketball")
-        .eq("league", "nba")
-        .limit(10);
-      
+        .eq("league", "nba");
+  
+      if (gameMode === "decades") {
+        const { start, end } = decadeBounds(selectedDecade);
+        fallbackQuery = fallbackQuery.gte("season_year", start).lt("season_year", end);
+      }
+  
+      const fallback = await fallbackQuery.limit(10);
+  
       if (fallback.data && fallback.data.length > 0) {
         activeData = fallback.data;
       } else {
@@ -231,13 +287,12 @@ export default function NameADudePage() {
       }
     }
   
-    // Filter out teams already encountered in this active game session
-    const freshTeams = activeData.filter(team => !usedKeys.includes(team.team_key));
+    const freshTeams = activeData.filter((team) => !usedKeys.includes(team.team_key));
   
-    // Grab a random choice out of our small shuffled batch
-    const finalSelection = freshTeams.length > 0 
-      ? freshTeams[Math.floor(Math.random() * freshTeams.length)]
-      : activeData[Math.floor(Math.random() * activeData.length)];
+    const finalSelection =
+      freshTeams.length > 0
+        ? freshTeams[Math.floor(Math.random() * freshTeams.length)]
+        : activeData[Math.floor(Math.random() * activeData.length)];
   
     setChallenge(finalSelection);
     setUsedTeamKeys((prev) => [...prev, finalSelection.team_key]);
@@ -276,6 +331,7 @@ export default function NameADudePage() {
     setHasStarted(false); setStartedAt(null); setSecondsElapsed(0); setEnded(false);
     setQuery(""); setPlayerResults([]); setSelectedPlayer(null); setCorrectPlayers([]);
     setMisses([]); setMessage(""); setMessageType("info"); setScore(null); setUsedTeamKeys([]); setChallenge(null);
+    lastCorrectAtRef.current = null;
   }
 
   async function startGame() {
@@ -312,6 +368,16 @@ export default function NameADudePage() {
     const match = getValidPlayerMatch(selectedPlayer.id);
 
     if (match) {
+      const now = Date.now();
+    
+      if (lastCorrectAtRef.current && now - lastCorrectAtRef.current < 1000) {
+        setMessageType("error");
+        setMessage("Slow down. One answer per second.");
+        return;
+      }
+    
+      lastCorrectAtRef.current = now;
+    
       const correctRow = {
         player_id: selectedPlayer.id,
         full_name: selectedPlayer.full_name,
@@ -328,16 +394,24 @@ export default function NameADudePage() {
         rebounds_per_game: match.rebounds_per_game,
         assists_per_game: match.assists_per_game,
       };
-
-      setCorrectPlayers((prev) => [...prev, correctRow]);
+    
+      const nextCorrectPlayers = [...correctPlayers, correctRow];
+    
+      setCorrectPlayers(nextCorrectPlayers);
       setMessageType("success");
-      setMessage("Correct. New team.");
+      setMessage(gameMode === "race" && nextCorrectPlayers.length >= 10 ? "Race complete." : "Correct. New team.");
       setQuery("");
       setSelectedPlayer(null);
       setPlayerResults([]);
-      
+    
+      if (gameMode === "race" && nextCorrectPlayers.length >= 10) {
+        finishGame(misses, nextCorrectPlayers);
+        return;
+      }
+    
       await fetchRandomTeamFromDB();
       return;
+    }
     }
 
     const missRow = {
@@ -373,6 +447,9 @@ export default function NameADudePage() {
   async function saveAttempt({ finalScore, finalSeconds, finalMisses, finalCorrect }) {
     if (!user || !dailyChallengeId) return;
   
+    const difficulty = getDifficultyForMode(gameMode, selectedDecade);
+    const isTooFastRace = gameMode === "race" && finalCorrect.length >= 10 && finalSeconds < 10;
+  
     const { error } = await supabase.from("nba_trivia_attempts").insert({
       challenge_id: dailyChallengeId,
       user_id: user.id,
@@ -381,17 +458,23 @@ export default function NameADudePage() {
       seconds_elapsed: finalSeconds,
       wrong_guess_count: finalMisses.length,
       hints_used: 0,
-      score: finalScore,
-      gave_up: finalMisses.length < 3,
+      score: isTooFastRace ? 0 : finalScore,
+      gave_up: finalMisses.length < 3 && !(gameMode === "race" && finalCorrect.length >= 10),
       completed: true,
       final_guess_count: finalCorrect.length + finalMisses.length,
-      difficulty: "open",
+      difficulty,
       challenge_date: todayLocal(),
       completed_at: new Date().toISOString(),
       chain_length: finalCorrect.length,
       challenge_type: "name_a_dude",
       result_json: {
         game: "name_a_dude",
+        mode: gameMode,
+        decade: gameMode === "decades" ? selectedDecade : null,
+        anti_bot: {
+          min_one_second_per_correct: true,
+          flagged_too_fast_race: isTooFastRace,
+        },
         sport: "basketball",
         league: "nba",
         correct_players: finalCorrect,
@@ -551,17 +634,48 @@ export default function NameADudePage() {
               <div style={styles.statHero}>
                 <div style={styles.statBox}>
                   <div style={styles.statLabel}>Mode</div>
-                  <div style={styles.statValue}>Survival</div>
+                  <div style={styles.statValue}>{getModeLabel(gameMode, selectedDecade)}</div>
                 </div>
                 <div style={styles.statBox}>
                   <div style={styles.statLabel}>Misses</div>
                   <div style={styles.statValue}>3</div>
                 </div>
                 <div style={styles.statBox}>
-                  <div style={styles.statLabel}>League</div>
-                  <div style={styles.statValue}>NBA</div>
+                  <div style={styles.statLabel}>Goal</div>
+                  <div style={styles.statValue}>{gameMode === "race" ? "10" : "Run"}</div>
                 </div>
               </div>
+              
+              <div style={{ ...styles.tabs, gridTemplateColumns: "repeat(3, minmax(0, 1fr))", marginTop: 10 }}>
+                {GAME_MODES.map((mode) => (
+                  <button
+                    key={mode.key}
+                    style={{
+                      ...styles.tab,
+                      ...(gameMode === mode.key ? styles.activeTab : {}),
+                    }}
+                    onClick={() => setGameMode(mode.key)}
+                  >
+                    {mode.label}
+                  </button>
+                ))}
+              </div>
+              
+              {gameMode === "decades" && (
+                <select
+                  style={styles.input}
+                  value={selectedDecade}
+                  onChange={(e) => setSelectedDecade(e.target.value)}
+                >
+                  {DECADE_OPTIONS.map((decade) => (
+                    <option key={decade} value={decade}>
+                      {decade}
+                    </option>
+                  ))}
+                </select>
+              )}
+              
+              <div style={styles.sub}>{getModeDescription(gameMode, selectedDecade)}</div>
             </section>
             <button style={styles.startButton} onClick={startGame}>Start</button>
           </>
@@ -575,8 +689,10 @@ export default function NameADudePage() {
               </div>
               <div style={styles.hudRightRow}>
                 <div>
-                  <div style={styles.label}>Score</div>
-                  <div style={styles.big}>{correctPlayers.length}</div>
+                  <div style={styles.label}>{gameMode === "race" ? "Race" : "Score"}</div>
+                  <div style={styles.big}>
+                    {gameMode === "race" ? `${correctPlayers.length}/10` : correctPlayers.length}
+                  </div>
                 </div>
                 {!ended && (
                   <button style={styles.dangerButton} onClick={giveUp}>Give Up</button>
@@ -673,7 +789,9 @@ export default function NameADudePage() {
               <div style={styles.statHero}>
                 <div style={styles.statBox}>
                   <div style={styles.statLabel}>Correct</div>
-                  <div style={styles.statValue}>{correctPlayers.length}</div>
+                  <div style={styles.statValue}>
+                    {gameMode === "race" ? `${correctPlayers.length}/10` : correctPlayers.length}
+                  </div>
                 </div>
                 <div style={styles.statBox}>
                   <div style={styles.statLabel}>Misses</div>

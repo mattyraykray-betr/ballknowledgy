@@ -640,7 +640,7 @@ export default function NameADudePage() {
               
                   <div style={{ ...styles.postGameButtonRow, gridTemplateColumns: "1fr 1fr" }}>
                     <button style={styles.primaryButton} onClick={() => { setShowLeaderboard(false); startGame(); }}>Play Again</button>
-                    <button style={styles.primaryButton} onClick={() => { setShowLeaderboard(false); selectGameMode(); }}>Select Game Mode</button>
+                    <button style={styles.primaryButton} onClick={() => { setShowLeaderboard(false); selectGameMode(); }}>Game Modes</button>
                   </div>
                 </div>
               )}
@@ -789,7 +789,7 @@ export default function NameADudePage() {
 
                 <div style={{ ...styles.postGameButtonRow, gridTemplateColumns: "1fr 1fr 1fr" }}>
                   <button style={styles.primaryButton} onClick={startGame}>Play Again</button>
-                  <button style={styles.primaryButton} onClick={selectGameMode}>Select Game Mode</button>
+                  <button style={styles.primaryButton} onClick={selectGameMode}>Game Modes</button>
                   <button
                     style={styles.primaryButton}
                     onClick={() => {

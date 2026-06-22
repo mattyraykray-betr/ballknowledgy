@@ -216,6 +216,8 @@ export default function NameADudePage() {
 
   async function loadStartup() {
     setLoading(true);
+  
+    // Load today's Name a Dude challenge id
     const { data, error } = await supabase
       .from("nba_trivia_challenges")
       .select("id")
@@ -227,10 +229,12 @@ export default function NameADudePage() {
     if (!error && data) {
       setDailyChallengeId(data.id);
     }
+  
+    // Load precomputed pool counts for all/decade random offsets
     const { data: statsData } = await supabase
       .from("vw_name_a_dude_pool_stats")
       .select("pool_key, row_count");
-    
+  
     if (statsData) {
       setPoolStats(
         statsData.reduce((acc, row) => {
@@ -238,7 +242,8 @@ export default function NameADudePage() {
           return acc;
         }, { all: 748 })
       );
-    }      
+    }
+  
     setLoading(false);
   }
 

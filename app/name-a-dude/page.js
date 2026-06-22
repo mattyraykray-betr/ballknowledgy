@@ -868,16 +868,16 @@ export default function NameADudePage() {
           </>
         )}
 
-      <SponsorBanner
-        theme={theme}
-        darkMode={darkMode}
-        href="https://x.com/NBAGuyRocked"
-        desktopLightSrc="/sponsor-desktop-light.png"
-        desktopDarkSrc="/sponsor-desktop-dark.png"
-        mobileLightSrc="/sponsor-mobile-light.png"
-        mobileDarkSrc="/sponsor-mobile-dark.png"
-        alt="Sponsor name"
-      />
+        <SponsorBanner
+          theme={theme}
+          darkMode={darkMode}
+          href="https://x.com/NBAGuyRocked"
+          desktopLightSrc="/sponsor-desktop-light.png"
+          desktopDarkSrc="/sponsor-desktop-dark.png"
+          mobileLightSrc="/sponsor-mobile-light.png"
+          mobileDarkSrc="/sponsor-mobile-dark.png"
+          alt="Sponsor name"
+        />
       </div>
     </main>
   );

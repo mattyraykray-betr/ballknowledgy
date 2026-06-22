@@ -1,9 +1,9 @@
 export default function SponsorBanner({
   href = "https://advertiser-website.com",
-  desktopLightSrc = "/ads/sponsor-desktop-light.png",
-  desktopDarkSrc = "/ads/sponsor-desktop-dark.png",
-  mobileLightSrc = "/ads/sponsor-mobile-light.png",
-  mobileDarkSrc = "/ads/sponsor-mobile-dark.png",
+  desktopLightSrc = "/sponsor-desktop-light.png",
+  desktopDarkSrc = "/sponsor-desktop-dark.png",
+  mobileLightSrc = "/sponsor-mobile-light.png",
+  mobileDarkSrc = "/sponsor-mobile-dark.png",
   alt = "Sponsored advertisement",
   darkMode = false,
   theme,
@@ -16,7 +16,8 @@ export default function SponsorBanner({
       aria-label="Sponsored advertisement"
       style={{
         width: "100%",
-        margin: "18px auto 0",
+        marginTop: "auto",
+        paddingTop: 18,
       }}
     >
       <div
@@ -39,10 +40,10 @@ export default function SponsorBanner({
         style={{
           display: "block",
           width: "100%",
-          border: `1px solid ${theme?.border || "#d8d8d8"}`,
-          borderRadius: 8,
+          border: "none",
+          borderRadius: 0,
           overflow: "hidden",
-          background: theme?.card || "#f6f6f6",
+          background: "transparent",
           textDecoration: "none",
         }}
       >

@@ -27,7 +27,7 @@ const GAME_MODES = [
   { key: "decades", label: "Decades" },
 ];
 
-const DECADE_OPTIONS = ["1980s", "1990s", "2000s", "2010s", "2020s"];
+const DECADE_OPTIONS = ["2000s", "2010s", "2020s"];
 
 function getDifficultyForMode(gameMode, selectedDecade) {
   if (gameMode === "race") return "race";
@@ -491,15 +491,34 @@ export default function NameADudePage() {
   }
 
   async function loadLeaderboard(type = leaderboardType) {
+    const difficulty = getDifficultyForMode(gameMode, selectedDecade);
+  
     if (type === "daily" && dailyChallengeId) {
-      const { data, error } = await supabase.from("vw_nba_trivia_daily_challenge_leaderboard").select("username, avatar_url, best_score, best_time, fewest_misses, correct, hints_used, chain_length").eq("challenge_id", dailyChallengeId).order("best_score", { ascending: false }).limit(10);
-      if (!error) setLeaderboard(data || []); return;
+      const { data, error } = await supabase
+        .from("vw_nba_trivia_daily_challenge_leaderboard")
+        .select("username, avatar_url, best_score, best_time, fewest_misses, correct, hints_used, chain_length")
+        .eq("challenge_id", dailyChallengeId)
+        .eq("difficulty", difficulty)
+        .order("best_score", { ascending: false })
+        .limit(10);
+  
+      if (!error) setLeaderboard(data || []);
+      return;
     }
-    const { data, error } = await supabase.from("vw_nba_trivia_all_time_leaderboard").select("username, avatar_url, total_score, avg_score, correct_challenges").eq("challenge_type", "name_a_dude").order("total_score", { ascending: false }).limit(10);
+  
+    const { data, error } = await supabase
+      .from("vw_nba_trivia_all_time_leaderboard")
+      .select("username, avatar_url, total_score, avg_score, correct_challenges")
+      .eq("challenge_type", "name_a_dude")
+      .eq("difficulty", difficulty)
+      .order("total_score", { ascending: false })
+      .limit(10);
+  
     if (!error) setLeaderboard(data || []);
   }
 
   function giveUp() { finishGame(misses, correctPlayers); }
+  function selectGameMode() {resetRun();}
   function formatShareDate(dateString) { const d = new Date(dateString + "T00:00:00"); return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`; }
   function nameADudeShareText() { return `${correctPlayers.length} correct, ${misses.length} misses, ⏱️ ${formatTimer(secondsElapsed)}\n${"✅".repeat(correctPlayers.length)}${"🟥".repeat(misses.length)}`; }
   function getShareText(gameName, scoreText) { return `${gameName} | ${formatShareDate(todayLocal())}\n${scoreText}\n\nTry to beat my score: ${window.location.origin}/name-a-dude`; }
@@ -569,7 +588,9 @@ export default function NameADudePage() {
               <div style={styles.modalHeader}>
                 <div>
                   <div style={styles.label}>Leaderboard</div>
-                  <div style={styles.big}>{leaderboardType === "daily" ? "Daily Name a Dude" : "All-Time Name a Dude"}</div>
+                  <div style={styles.big}>
+                    {leaderboardType === "daily" ? "Daily" : "All-Time"} Name a Dude · {getModeLabel(gameMode, selectedDecade)}
+                  </div>
                 </div>
                 <button style={styles.closeButton} onClick={() => setShowLeaderboard(false)}>×</button>
               </div>
@@ -617,9 +638,9 @@ export default function NameADudePage() {
                     </button>
                   </div>
               
-                  <div style={styles.postGameButtonRow}>
+                  <div style={{ ...styles.postGameButtonRow, gridTemplateColumns: "1fr 1fr" }}>
                     <button style={styles.primaryButton} onClick={() => { setShowLeaderboard(false); startGame(); }}>Play Again</button>
-                    <button style={styles.primaryButton} onClick={() => { setShowLeaderboard(false); setShowProfile(true); }}>{user ? "Profile" : "Create Profile/Login"}</button>
+                    <button style={styles.primaryButton} onClick={() => { setShowLeaderboard(false); selectGameMode(); }}>Select Game Mode</button>
                   </div>
                 </div>
               )}
@@ -766,9 +787,19 @@ export default function NameADudePage() {
                 <div style={styles.big}>Score: {score ?? 0}</div>
                 <div style={styles.sub}>Correct {correctPlayers.length} · Misses {misses.length} · Time {formatTimer(secondsElapsed)}</div>
 
-                <div style={styles.postGameButtonRow}>
+                <div style={{ ...styles.postGameButtonRow, gridTemplateColumns: "1fr 1fr 1fr" }}>
                   <button style={styles.primaryButton} onClick={startGame}>Play Again</button>
-                  <button style={styles.primaryButton} onClick={() => { setLeaderboardType("daily"); loadLeaderboard("daily"); setShowLeaderboard(true); }}>Leaderboard</button>
+                  <button style={styles.primaryButton} onClick={selectGameMode}>Select Game Mode</button>
+                  <button
+                    style={styles.primaryButton}
+                    onClick={() => {
+                      setLeaderboardType("daily");
+                      loadLeaderboard("daily");
+                      setShowLeaderboard(true);
+                    }}
+                  >
+                    Leaderboard
+                  </button>
                 </div>
                 
                 <div style={{ ...styles.label, marginTop: 14 }}>Share</div>

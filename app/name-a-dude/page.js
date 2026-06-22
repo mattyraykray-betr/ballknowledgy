@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import SiteNav from "../../components/SiteNav";
 import ProfileModal from "../../components/ProfileModal";
+import SponsorBanner from "../../components/SponsorBanner";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -743,6 +744,13 @@ export default function NameADudePage() {
             )}
           </>
         )}
+        <SponsorBanner
+          theme={theme}
+          href="https://advertiser-website.com"
+          desktopSrc="/ads/sponsor-desktop-placeholder.png"
+          mobileSrc="/ads/sponsor-mobile-placeholder.png"
+          alt="Sponsor name"
+        />          
       </div>
     </main>
   );

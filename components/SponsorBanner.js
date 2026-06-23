@@ -15,9 +15,15 @@ export default function SponsorBanner({
     <aside
       aria-label="Sponsored advertisement"
       style={{
+        position: "fixed",
+        left: "50%",
+        bottom: 0,
+        transform: "translateX(-50%)",
         width: "100%",
-        marginTop: "auto",
-        paddingTop: 18,
+        maxWidth: 520,
+        padding: "8px 12px 10px",
+        background: theme?.bg || "transparent",
+        zIndex: 20,
       }}
     >
       <div

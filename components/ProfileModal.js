@@ -170,7 +170,9 @@ export default function ProfileModal({
         setAvatarUrl(uploadedAvatarUrl);
       }
       
-      const { error } = await supabase.from("profiles").upsert(payload);
+      const { error } = await supabase
+        .from("profiles")
+        .upsert(payload, { onConflict: "id" });
   
       if (error) {
         if (error.code === "23505") {

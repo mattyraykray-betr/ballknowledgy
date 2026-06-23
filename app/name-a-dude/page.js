@@ -71,6 +71,22 @@ function calculateScore({ correctCount, secondsElapsed, misses }) {
   return Math.max(0, correctScore + speedBonus - missPenalty);
 }
 
+function formatNumber(value) {
+  return Math.round(Number(value) || 0).toLocaleString();
+}
+
+function formatDecimal(value, digits = 2) {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "0.00";
+  return number.toFixed(digits);
+}
+
+function secondsPerAnswer(seconds, correct) {
+  const correctCount = Number(correct) || 0;
+  if (correctCount <= 0) return null;
+  return (Number(seconds) || 0) / correctCount;
+}
+
 const STATIC_STYLES = {
   page: { minHeight: "100vh", width: "100%", overflowX: "hidden", fontFamily: 'Arial, Helvetica, sans-serif', margin: 0 },
   wrap: {maxWidth: 520, minHeight: "100vh", margin: "0 auto", padding: "12px 12px 170px", display: "flex", flexDirection: "column",},
@@ -508,7 +524,7 @@ export default function NameADudePage() {
   
     const { data, error } = await supabase
       .from("vw_nba_trivia_all_time_leaderboard")
-      .select("username, avatar_url, total_score, avg_score, correct_challenges")
+      .select("username, avatar_url, total_score, avg_score, correct_challenges, total_correct, avg_correct, total_misses, avg_misses, total_seconds, seconds_per_answer")
       .eq("challenge_type", "name_a_dude")
       .eq("difficulty", difficulty)
       .order("total_score", { ascending: false })
@@ -613,9 +629,25 @@ export default function NameADudePage() {
                     <div style={{ flex: 1 }}>
                       <strong>{idx + 1}. {row.username || "Guest"}</strong>
                       <div style={styles.sub}>
-                        {leaderboardType === "daily"
-                          ? `${row.best_score || 0} pts · ${formatTimer(row.best_time || 0)} · ${row.chain_length || 0} correct`
-                          : `${row.total_score || 0} pts · Avg ${Math.round(row.avg_score || 0)} · Correct ${row.correct_challenges || 0}`}
+                        {(() => {
+                          const isRace = gameMode === "race";
+                        
+                          if (leaderboardType === "daily") {
+                            const spa = secondsPerAnswer(row.best_time, row.chain_length);
+                        
+                            if (isRace) {
+                              return `${formatNumber(row.best_score)} PTS · ${formatTimer(row.best_time || 0)} · ${formatDecimal(spa)} Seconds/answer · ${formatNumber(row.fewest_misses)} Misses`;
+                            }
+                        
+                            return `${formatNumber(row.best_score)} PTS · ${formatTimer(row.best_time || 0)} · ${formatNumber(row.chain_length)} Correct · ${formatDecimal(spa)} Seconds/answer`;
+                          }
+                        
+                          if (isRace) {
+                            return `${formatNumber(row.total_score)} Total PTS (Avg ${formatNumber(row.avg_score)}) · ${formatDecimal(row.seconds_per_answer)} Seconds/answer · ${formatNumber(row.total_misses)} Total Misses (Avg ${formatDecimal(row.avg_misses)})`;
+                          }
+                        
+                          return `${formatNumber(row.total_score)} Total PTS (Avg ${formatNumber(row.avg_score)}) · Total Correct ${formatNumber(row.total_correct)} (Avg ${formatDecimal(row.avg_correct, 1)}) · ${formatDecimal(row.seconds_per_answer)} Seconds/answer`;
+                        })()}
                       </div>
                     </div>
                   </div>

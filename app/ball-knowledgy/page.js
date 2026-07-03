@@ -20,6 +20,8 @@ const supabase = createClient(
 
 const HEADSHOT_FALLBACK =
   "https://i.ibb.co/1YmfgNKs/TPR-Blank-Headshot-MBB.png";
+const ACTIVE_SPORT = "basketball";
+const ACTIVE_LEAGUE = "NBA";
 
 function todayLocal() {
   return new Date().toISOString().slice(0, 10);
@@ -287,6 +289,8 @@ export default function HomePage() {
         challenge_date: activeChallenge.challenge_date,
         completed_at: new Date().toISOString(),
         challenge_type: "season",
+        sport: ACTIVE_SPORT,
+        league: ACTIVE_LEAGUE,
       });
   
     if (!error) {
@@ -335,6 +339,8 @@ export default function HomePage() {
         )
       `)
       .eq("challenge_date", dateValue)
+      .eq("sport", ACTIVE_SPORT)
+      .eq("league", ACTIVE_LEAGUE)
       .eq("is_active", true)
       .order("daily_slot", { ascending: true });
 
@@ -369,6 +375,8 @@ export default function HomePage() {
       .from("nba_players")
       .select("id, full_name, headshot_url")
       .ilike("full_name", `%${value.trim()}%`)
+      .eq("sport", ACTIVE_SPORT)
+      .eq("league", ACTIVE_LEAGUE)
       .order("full_name", { ascending: true })
       .limit(8);
 
@@ -399,6 +407,8 @@ export default function HomePage() {
           "username, avatar_url, total_score, avg_score, correct_challenges"
         )
         .eq("challenge_type", "season")
+        .eq("sport", ACTIVE_SPORT)
+        .eq("league", ACTIVE_LEAGUE)
         .order("total_score", { ascending: false })
         .limit(10);
   
@@ -415,6 +425,8 @@ export default function HomePage() {
       .from("vw_nba_trivia_daily_completion_status")
       .select("challenge_id, difficulty, completed, is_correct, score")
       .eq("user_id", user.id)
+      .eq("sport", ACTIVE_SPORT)
+      .eq("league", ACTIVE_LEAGUE)
       .eq("challenge_date", selectedDate);
   
     if (!error) setCompletionStatus(data || []);

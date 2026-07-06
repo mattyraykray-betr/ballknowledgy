@@ -42,7 +42,7 @@ export default function SportSelector({ value, onChange, theme }) {
                 border: `1px solid ${theme.border}`,
                 borderBottom: active ? "3px solid #EF3B24" : `1px solid ${theme.border}`,
                 background: theme.input,
-                color: active ? "#EF3B24" : theme.text,
+                color: "#ffffff",
                 borderRadius: 6,
                 padding: active ? "9px 8px 7px" : "9px 8px",
                 fontSize: 11,

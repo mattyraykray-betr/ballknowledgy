@@ -77,6 +77,55 @@ function formatStatForLabel(label, value) {
   return Number.isInteger(num) ? num.toLocaleString() : num.toFixed(1);
 }
 
+function hasStatValue(value) {
+  return value !== null && value !== undefined && value !== "";
+}
+
+function statEntriesFromObject(stats) {
+  return Object.entries(stats || {}).filter(([, value]) => hasStatValue(value));
+}
+
+function getBaseballSeasonStatEntries(season, clue) {
+  const pitchingGames = Number(season.pitching_games ?? clue.stats?.G ?? 0) || 0;
+  const battingGames = Number(season.batting_games ?? clue.stats?.G ?? 0) || 0;
+  const atBats = Number(season.at_bats ?? clue.stats?.AB ?? 0) || 0;
+  const clueStats = statEntriesFromObject(clue.stats);
+  const clueLooksPitching = clueStats.some(([label]) => {
+    return ["ERA", "WHIP", "K", "IP", "SV", "W"].includes(String(label).toUpperCase());
+  });
+  const usePitching =
+    pitchingGames > 0 &&
+    (clueLooksPitching || pitchingGames >= battingGames || atBats <= 1);
+
+  const entries = usePitching
+    ? [
+        ["G", season.pitching_games],
+        ["GS", season.pitching_games_started],
+        ["IP", season.innings_pitched],
+        ["W", season.wins],
+        ["SV", season.saves],
+        ["ERA", season.era],
+        ["WHIP", season.whip],
+        ["K", season.pitching_strikeouts],
+        ["WAR", season.pitching_war],
+      ]
+    : [
+        ["G", season.batting_games ?? season.games_played],
+        ["AB", season.at_bats],
+        ["R", season.runs],
+        ["H", season.hits],
+        ["HR", season.home_runs],
+        ["RBI", season.rbi],
+        ["SB", season.stolen_bases],
+        ["AVG", season.batting_avg],
+        ["OPS", season.ops],
+        ["WAR", season.batting_war],
+      ];
+
+  const seasonEntries = entries.filter(([, value]) => hasStatValue(value));
+  return seasonEntries.length > 0 ? seasonEntries : clueStats;
+}
+
 function calculateScore({ secondsElapsed, wrongGuessCount, hintsUsed, gaveUp }) {
   if (gaveUp) return 0;
   return Math.max(
@@ -391,7 +440,26 @@ export default function HomePage() {
           steals_per_game,
           blocks_per_game,
           game_score,
-          eff
+          eff,
+          batting_games,
+          at_bats,
+          runs,
+          hits,
+          home_runs,
+          rbi,
+          stolen_bases,
+          batting_avg,
+          ops,
+          batting_war,
+          pitching_games,
+          pitching_games_started,
+          innings_pitched,
+          wins,
+          saves,
+          era,
+          whip,
+          pitching_strikeouts,
+          pitching_war
         )
       `)
       .eq("challenge_date", dateValue)
@@ -1249,8 +1317,8 @@ export default function HomePage() {
   const hint3 = activeChallenge?.hint_3_json || {};
   const ended = isSolved || gaveUp || wrongGuesses.length >= 10;
   const seasonStatEntries =
-    ACTIVE_SPORT === "baseball" && clue.stats
-      ? Object.entries(clue.stats).filter(([, value]) => value !== null && value !== undefined && value !== "")
+    ACTIVE_SPORT === "baseball"
+      ? getBaseballSeasonStatEntries(season, clue)
       : [
           ["GP", season.games_played ?? clue.games_played],
           ["GS", season.games_started ?? clue.games_started],
@@ -1829,14 +1897,18 @@ export default function HomePage() {
                 <section style={styles.card}>
                   <div style={styles.label}>Stat line in selected year</div>
 
-                  <div style={styles.statGrid}>
-                    {seasonStatEntries.map(([label, value]) => (
-                      <div key={label} style={styles.statBox}>
-                        <div style={styles.statLabel}>{label}</div>
-                        <div style={styles.statValue}>{formatStatForLabel(label, value)}</div>
-                      </div>
-                    ))}
-                  </div>
+                  {seasonStatEntries.length > 0 ? (
+                    <div style={styles.statGrid}>
+                      {seasonStatEntries.map(([label, value]) => (
+                        <div key={label} style={styles.statBox}>
+                          <div style={styles.statLabel}>{label}</div>
+                          <div style={styles.statValue}>{formatStatForLabel(label, value)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={styles.sub}>No stat line is available for this player-season.</div>
+                  )}
                 </section>              
                 <section style={styles.card}>
                   <div style={styles.metaRow}>

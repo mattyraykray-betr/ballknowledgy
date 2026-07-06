@@ -20,6 +20,8 @@ const supabase = createClient(
 
 const HEADSHOT_FALLBACK =
   "https://i.ibb.co/1YmfgNKs/TPR-Blank-Headshot-MBB.png";
+const ACTIVE_SPORT = "basketball";
+const ACTIVE_LEAGUE = "NBA";
 
 function todayLocal() {
   return new Date().toISOString().slice(0, 10);
@@ -203,6 +205,8 @@ export default function StatLadderPage() {
       `)
       .eq("challenge_type", "stat_ladder")
       .eq("challenge_date", dateValue)
+      .eq("sport", ACTIVE_SPORT)
+      .eq("league", ACTIVE_LEAGUE)
       .eq("is_active", true)
       .maybeSingle();
 
@@ -229,6 +233,8 @@ export default function StatLadderPage() {
       .from("nba_players")
       .select("id, full_name, headshot_url")
       .ilike("full_name", `%${value.trim()}%`)
+      .eq("sport", ACTIVE_SPORT)
+      .eq("league", ACTIVE_LEAGUE)
       .order("full_name", { ascending: true })
       .limit(8);
 
@@ -255,6 +261,8 @@ export default function StatLadderPage() {
         career_apg
       `)
       .eq("player_id", playerId)
+      .eq("sport", ACTIVE_SPORT)
+      .eq("league", ACTIVE_LEAGUE)
       .maybeSingle();
 
     if (error) {
@@ -347,6 +355,8 @@ export default function StatLadderPage() {
           "username, avatar_url, total_score, avg_score, correct_challenges"
         )
         .eq("challenge_type", "stat_ladder")
+        .eq("sport", ACTIVE_SPORT)
+        .eq("league", ACTIVE_LEAGUE)
         .order("total_score", { ascending: false })
         .limit(10);
   
@@ -470,6 +480,8 @@ export default function StatLadderPage() {
         completed_at: new Date().toISOString(),
         chain_length: finalChain.length,
         challenge_type: "stat_ladder",
+        sport: ACTIVE_SPORT,
+        league: ACTIVE_LEAGUE,
         result_json: {
           game: "stat_ladder",
           stat_key: statKey,
@@ -503,6 +515,8 @@ export default function StatLadderPage() {
       .eq("challenge_id", challenge.id)
       .eq("difficulty", challenge.difficulty)
       .eq("challenge_type", "stat_ladder")
+      .eq("sport", ACTIVE_SPORT)
+      .eq("league", ACTIVE_LEAGUE)
       .eq("completed", true)
       .maybeSingle();
   

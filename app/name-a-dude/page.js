@@ -169,7 +169,10 @@ const STATIC_STYLES = {
 };
 
 export default function NameADudePage() {
-  const [selectedSportKey, setSelectedSportKey] = useState(DEFAULT_SPORT_KEY);
+  const [selectedSportKey, setSelectedSportKey] = useState(() => {
+    if (typeof window === "undefined") return DEFAULT_SPORT_KEY;
+    return getSportOption(window.localStorage?.getItem(SPORT_STORAGE_KEY)).key;
+  });
   const [challenge, setChallenge] = useState(null);
   const [usedTeamKeys, setUsedTeamKeys] = useState([]);
   const [challengeLoading, setChallengeLoading] = useState(false);
@@ -231,8 +234,6 @@ export default function NameADudePage() {
   useEffect(() => {
     const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
     setDarkMode(Boolean(prefersDark));
-    const storedSport = window.localStorage?.getItem(SPORT_STORAGE_KEY);
-    if (storedSport) setSelectedSportKey(getSportOption(storedSport).key);
   }, []);
 
   const theme = useMemo(() => {

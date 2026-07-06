@@ -739,7 +739,7 @@ export default function NameADudePage() {
                 <div style={{ marginTop: 12 }}>
                   <div style={{ ...styles.label, marginTop: 14 }}>Share</div>
                   <div style={styles.shareGrid}>
-                    <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>ð•</button>
+                    <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>X</button>
                     <button style={styles.shareIconButton} onClick={() => openFacebookShare("Name a Dude", nameADudeShareText())}>f</button>
                     <button style={styles.shareIconButton} onClick={() => copyShareText("Name a Dude", nameADudeShareText())}>
                       <span className="material-symbols-outlined">content_copy</span>
@@ -753,7 +753,7 @@ export default function NameADudePage() {
                   </div>
               
                   <div style={{ ...styles.postGameButtonRow, gridTemplateColumns: "1fr 1fr" }}>
-                    <button style={styles.primaryButton} onClick={() => { setShowLeaderboard(false); startGame(); }}>Play Again</button>
+                    <button style={styles.primaryButton} onClick={() => { setShowLeaderboard(false); selectGameMode(); }}>Play Again</button>
                     <button style={styles.primaryButton} onClick={() => { setShowLeaderboard(false); selectGameMode(); }}>Game Modes</button>
                   </div>
                 </div>
@@ -902,7 +902,7 @@ export default function NameADudePage() {
                 <div style={styles.sub}>Correct {correctPlayers.length} · Misses {misses.length} · Time {formatTimer(secondsElapsed)}</div>
 
                 <div style={{ ...styles.postGameButtonRow, gridTemplateColumns: "1fr 1fr 1fr" }}>
-                  <button style={styles.primaryButton} onClick={startGame}>Play Again</button>
+                  <button style={styles.primaryButton} onClick={selectGameMode}>Play Again</button>
                   <button style={styles.primaryButton} onClick={selectGameMode}>Game Modes</button>
                   <button
                     style={styles.primaryButton}
@@ -918,7 +918,7 @@ export default function NameADudePage() {
                 
                 <div style={{ ...styles.label, marginTop: 14 }}>Share</div>
                 <div style={styles.shareGrid}>
-                  <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>ð•</button>
+                  <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>X</button>
                   <button style={styles.shareIconButton} onClick={() => openFacebookShare("Name a Dude", nameADudeShareText())}>f</button>
                   <button style={styles.shareIconButton} onClick={() => copyShareText("Name a Dude", nameADudeShareText())}>
                     <span className="material-symbols-outlined">content_copy</span>

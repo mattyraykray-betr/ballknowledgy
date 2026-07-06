@@ -165,6 +165,7 @@ function renderHint(hint) {
 
   if (hint.height) rows.push({ label: "Height", value: hint.height });
   if (hint.weight) rows.push({ label: "Weight", value: hint.weight });
+  if (hint.position) rows.push({ label: "Position", value: hint.position });
   if (hint.depth_chart_position) {
     rows.push({ label: "Depth Chart Position", value: hint.depth_chart_position });
   }
@@ -175,11 +176,9 @@ function renderHint(hint) {
   }
   if (hint.hometown) rows.push({ label: "Hometown", value: hint.hometown });
 
-  if (hint.label && hint.value) {
+  if (rows.length === 0 && hint.label && hint.value) {
     rows.push({ label: cleanLabel(hint.label), value: hint.value });
-  }
-
-  if (hint.type && hint.value) {
+  } else if (rows.length === 0 && hint.type && hint.value) {
     rows.push({ label: cleanLabel(hint.type), value: hint.value });
   }
 
@@ -189,62 +188,47 @@ function renderHint(hint) {
 }
 
 function renderHint3(hint, styles) {
-  if (hint?.type === "exact_season_team_stats") {
-    const stats = Object.entries(hint.stats || {}).filter(([, value]) => {
-      return value !== null && value !== undefined && value !== "";
-    });
-
-    return (
-      <div>
-        <div>
-          Exact season: {hint?.season_label || hint?.season_year || "-"}
-          {hint?.team ? ` · ${hint.team}` : ""}
-        </div>
-        {stats.length > 0 && (
-          <div style={{ display: "grid", gap: 4, marginTop: 8 }}>
-            {stats.map(([label, value]) => (
-              <div key={label} style={styles.teammateStats}>
-                <strong>{label}:</strong> {formatStatForLabel(label, value)}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
   const teammates = hint?.teammates || [];
 
   return (
     <div>
-      <div>Exact year: {hint?.exact_year || "-"}</div>
+      <div>Exact year: {hint?.exact_year || hint?.season_label || hint?.season_year || "-"}</div>
 
       <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
-        {teammates.map((t) => (
-          <div key={t.full_name} style={styles.teammateRow}>
+        {teammates.length === 0 ? (
+          <div style={styles.teammateStats}>No teammate hints available.</div>
+        ) : (
+          teammates.map((t) => (
+            <div key={t.full_name} style={styles.teammateRow}>
               <img
                 src={t.headshot_url || HEADSHOT_FALLBACK}
                 alt={t.full_name}
                 style={styles.teammateHeadshot}
               />
 
-            <div>
-              <strong>{t.full_name}</strong>
-              <div style={styles.teammateStats}>
-                {formatStat(t.points_per_game)} PPG ·{" "}
-                {formatStat(t.rebounds_per_game)} RPG ·{" "}
-                {formatStat(t.assists_per_game)} APG
+              <div>
+                <strong>{t.full_name}</strong>
+                <div style={styles.teammateStats}>
+                  {t.points_per_game !== undefined
+                    ? `${formatStat(t.points_per_game)} PPG · ${formatStat(t.rebounds_per_game)} RPG · ${formatStat(t.assists_per_game)} APG`
+                    : t.pitching_games
+                      ? `${formatStatForLabel("G", t.pitching_games)} G · ${formatStatForLabel("ERA", t.era)} ERA · ${formatStatForLabel("K", t.pitching_strikeouts)} K`
+                      : `${formatStatForLabel("H", t.hits)} H · ${formatStatForLabel("HR", t.home_runs)} HR · ${formatStatForLabel("RBI", t.rbi)} RBI`}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
 }
 
 export default function HomePage() {
-  const [selectedSportKey, setSelectedSportKey] = useState(DEFAULT_SPORT_KEY);
+  const [selectedSportKey, setSelectedSportKey] = useState(() => {
+    if (typeof window === "undefined") return DEFAULT_SPORT_KEY;
+    return getSportOption(window.localStorage?.getItem(SPORT_STORAGE_KEY)).key;
+  });
   const [selectedDate, setSelectedDate] = useState(todayLocal());
   const [challenges, setChallenges] = useState([]);
   const [activeChallenge, setActiveChallenge] = useState(null);
@@ -308,8 +292,6 @@ export default function HomePage() {
   useEffect(() => {
     const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
     setDarkMode(Boolean(prefersDark));
-    const storedSport = window.localStorage?.getItem(SPORT_STORAGE_KEY);
-    if (storedSport) setSelectedSportKey(getSportOption(storedSport).key);
   }, []);
   
   const theme = useMemo(() => {
@@ -2010,3 +1992,4 @@ export default function HomePage() {
     </main>
   );
 }
+

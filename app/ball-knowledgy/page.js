@@ -1457,7 +1457,7 @@ export default function HomePage() {
                       aria-label="Share on X"
                       title="Share on X"
                     >
-                      𝕏
+                      X
                     </button>
               
                     <button
@@ -1522,7 +1522,7 @@ export default function HomePage() {
                       style={styles.primaryButton}
                       onClick={() => {
                         setShowLeaderboard(false);
-                        startGame();
+                        resetGameState(activeChallenge, false);
                       }}
                     >
                       Play Again
@@ -1753,7 +1753,7 @@ export default function HomePage() {
                     aria-label="Share on X"
                     title="Share on X"
                   >
-                    𝕏
+                    X
                   </button>
                 
                   <button
@@ -1992,4 +1992,5 @@ export default function HomePage() {
     </main>
   );
 }
+
 

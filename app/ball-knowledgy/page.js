@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import SiteNav from "../../components/SiteNav";
 import ProfileModal from "../../components/ProfileModal";
+import SportSelector, { getSportOption } from "../../components/SportSelector";
 import Link from "next/link";
 
 const supabase = createClient(
@@ -20,8 +21,8 @@ const supabase = createClient(
 
 const HEADSHOT_FALLBACK =
   "https://i.ibb.co/1YmfgNKs/TPR-Blank-Headshot-MBB.png";
-const ACTIVE_SPORT = "basketball";
-const ACTIVE_LEAGUE = "NBA";
+const DEFAULT_SPORT_KEY = "basketball-nba";
+const SPORT_STORAGE_KEY = "thatGuyRockedSport";
 
 function todayLocal() {
   return new Date().toISOString().slice(0, 10);
@@ -57,6 +58,23 @@ function formatStat(value) {
   const num = Number(value);
   if (Number.isNaN(num)) return value;
   return num.toFixed(1);
+}
+
+function formatStatForLabel(label, value) {
+  if (value === null || value === undefined || value === "") return "-";
+  const num = Number(value);
+  if (Number.isNaN(num)) return value;
+  const normalizedLabel = String(label).toLowerCase();
+
+  if (["avg", "obp", "slg", "ops"].includes(normalizedLabel)) {
+    return num.toFixed(3).replace(/^0/, "");
+  }
+
+  if (["era", "whip", "k9", "war"].includes(normalizedLabel)) {
+    return num.toFixed(2).replace(/\.00$/, "");
+  }
+
+  return Number.isInteger(num) ? num.toLocaleString() : num.toFixed(1);
 }
 
 function calculateScore({ secondsElapsed, wrongGuessCount, hintsUsed, gaveUp }) {
@@ -122,6 +140,30 @@ function renderHint(hint) {
 }
 
 function renderHint3(hint, styles) {
+  if (hint?.type === "exact_season_team_stats") {
+    const stats = Object.entries(hint.stats || {}).filter(([, value]) => {
+      return value !== null && value !== undefined && value !== "";
+    });
+
+    return (
+      <div>
+        <div>
+          Exact season: {hint?.season_label || hint?.season_year || "-"}
+          {hint?.team ? ` · ${hint.team}` : ""}
+        </div>
+        {stats.length > 0 && (
+          <div style={{ display: "grid", gap: 4, marginTop: 8 }}>
+            {stats.map(([label, value]) => (
+              <div key={label} style={styles.teammateStats}>
+                <strong>{label}:</strong> {formatStatForLabel(label, value)}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   const teammates = hint?.teammates || [];
 
   return (
@@ -153,6 +195,7 @@ function renderHint3(hint, styles) {
 }
 
 export default function HomePage() {
+  const [selectedSportKey, setSelectedSportKey] = useState(DEFAULT_SPORT_KEY);
   const [selectedDate, setSelectedDate] = useState(todayLocal());
   const [challenges, setChallenges] = useState([]);
   const [activeChallenge, setActiveChallenge] = useState(null);
@@ -183,6 +226,17 @@ export default function HomePage() {
   const [completionStatus, setCompletionStatus] = useState([]);
   const [userStreaks, setUserStreaks] = useState(null);
   const [profile, setProfile] = useState(null);
+  const activeSportOption = getSportOption(selectedSportKey);
+  const ACTIVE_SPORT = activeSportOption.sport;
+  const ACTIVE_LEAGUE = activeSportOption.league;
+
+  function handleSportChange(nextSportKey) {
+    setSelectedSportKey(nextSportKey);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(SPORT_STORAGE_KEY, nextSportKey);
+    }
+    setShowLeaderboard(false);
+  }
 
   // SAFELY MOVED INSIDE COMPONENT
   async function loadProfile(userId) {
@@ -205,6 +259,8 @@ export default function HomePage() {
   useEffect(() => {
     const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
     setDarkMode(Boolean(prefersDark));
+    const storedSport = window.localStorage?.getItem(SPORT_STORAGE_KEY);
+    if (storedSport) setSelectedSportKey(getSportOption(storedSport).key);
   }, []);
   
   const theme = useMemo(() => {
@@ -622,7 +678,7 @@ export default function HomePage() {
   
   useEffect(() => {
     loadChallenges(selectedDate);
-  }, [selectedDate]);
+  }, [selectedDate, ACTIVE_SPORT, ACTIVE_LEAGUE]);
 
   useEffect(() => {
     if (!activeChallenge || !hasStarted || isSolved || gaveUp || !startedAt) return;
@@ -636,7 +692,7 @@ export default function HomePage() {
 
   useEffect(() => {
     loadCompletionStatus();
-  }, [user, selectedDate]);
+  }, [user, selectedDate, ACTIVE_SPORT, ACTIVE_LEAGUE]);
   
   useEffect(() => {
     async function loadUser() {
@@ -1192,6 +1248,18 @@ export default function HomePage() {
   const hint2 = activeChallenge?.hint_2_json || {};
   const hint3 = activeChallenge?.hint_3_json || {};
   const ended = isSolved || gaveUp || wrongGuesses.length >= 10;
+  const seasonStatEntries =
+    ACTIVE_SPORT === "baseball" && clue.stats
+      ? Object.entries(clue.stats).filter(([, value]) => value !== null && value !== undefined && value !== "")
+      : [
+          ["GP", season.games_played ?? clue.games_played],
+          ["GS", season.games_started ?? clue.games_started],
+          ["PTS", season.points_per_game ?? clue.points_per_game],
+          ["REB", season.rebounds_per_game ?? clue.rebounds_per_game],
+          ["AST", season.assists_per_game ?? clue.assists_per_game],
+          ["STL", season.steals_per_game ?? clue.steals_per_game],
+          ["BLK", season.blocks_per_game ?? clue.blocks_per_game],
+        ];
 
   return (
     <main style={styles.page}>
@@ -1236,6 +1304,12 @@ export default function HomePage() {
           user={user}
           setUser={setUser}
           darkMode={darkMode}
+          theme={theme}
+        />
+
+        <SportSelector
+          value={selectedSportKey}
+          onChange={handleSportChange}
           theme={theme}
         />
   
@@ -1756,48 +1830,12 @@ export default function HomePage() {
                   <div style={styles.label}>Stat line in selected year</div>
 
                   <div style={styles.statGrid}>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>GP</div>
-                      <div style={styles.statValue}>
-                        {parseInt(season.games_played ?? clue.games_played, 10)}
+                    {seasonStatEntries.map(([label, value]) => (
+                      <div key={label} style={styles.statBox}>
+                        <div style={styles.statLabel}>{label}</div>
+                        <div style={styles.statValue}>{formatStatForLabel(label, value)}</div>
                       </div>
-                    </div> 
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>GS</div>
-                      <div style={styles.statValue}>
-                        {parseInt(season.games_started ?? clue.games_started, 10)}
-                      </div>
-                    </div>                        
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>PTS</div>
-                      <div style={styles.statValue}>
-                        {formatStat(season.points_per_game ?? clue.points_per_game)}
-                      </div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>REB</div>
-                      <div style={styles.statValue}>
-                        {formatStat(season.rebounds_per_game ?? clue.rebounds_per_game)}
-                      </div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>AST</div>
-                      <div style={styles.statValue}>
-                        {formatStat(season.assists_per_game ?? clue.assists_per_game)}
-                      </div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>STL</div>
-                      <div style={styles.statValue}>
-                        {formatStat(season.steals_per_game ?? clue.steals_per_game)}
-                      </div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>BLK</div>
-                      <div style={styles.statValue}>
-                        {formatStat(season.blocks_per_game ?? clue.blocks_per_game)}
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </section>              
                 <section style={styles.card}>

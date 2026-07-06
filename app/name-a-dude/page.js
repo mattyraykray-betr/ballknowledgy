@@ -20,6 +20,8 @@ const supabase = createClient(
 );
 
 const HEADSHOT_FALLBACK = "https://i.ibb.co/1YmfgNKs/TPR-Blank-Headshot-MBB.png";
+const ACTIVE_SPORT = "basketball";
+const ACTIVE_LEAGUE = "NBA";
 
 const GAME_MODES = [
   { key: "survival", label: "Survival" },
@@ -239,6 +241,8 @@ export default function NameADudePage() {
       .select("id")
       .eq("challenge_type", "name_a_dude")
       .eq("challenge_date", todayLocal())
+      .eq("sport", ACTIVE_SPORT)
+      .eq("league", ACTIVE_LEAGUE)
       .eq("is_active", true)
       .maybeSingle();
   
@@ -249,7 +253,9 @@ export default function NameADudePage() {
     // Load precomputed pool counts for all/decade random offsets
     const { data: statsData } = await supabase
       .from("vw_name_a_dude_pool_stats")
-      .select("pool_key, row_count");
+      .select("pool_key, row_count")
+      .eq("sport", ACTIVE_SPORT)
+      .eq("league", ACTIVE_LEAGUE);
   
     if (statsData) {
       setPoolStats(
@@ -274,8 +280,8 @@ export default function NameADudePage() {
     let queryBuilder = supabase
       .from("name_a_dude_pool_cache")
       .select("*")
-      .eq("sport", "basketball")
-      .eq("league", "nba");
+      .eq("sport", ACTIVE_SPORT)
+      .eq("league", ACTIVE_LEAGUE);
   
     if (gameMode === "decades") {
       const { start, end } = decadeBounds(selectedDecade);
@@ -290,8 +296,8 @@ export default function NameADudePage() {
       let fallbackQuery = supabase
         .from("name_a_dude_pool_cache")
         .select("*")
-        .eq("sport", "basketball")
-        .eq("league", "nba");
+        .eq("sport", ACTIVE_SPORT)
+        .eq("league", ACTIVE_LEAGUE);
   
       if (gameMode === "decades") {
         const { start, end } = decadeBounds(selectedDecade);
@@ -339,6 +345,8 @@ export default function NameADudePage() {
         .from("nba_players")
         .select("id, full_name")
         .ilike("full_name", `%${q}%`)
+        .eq("sport", ACTIVE_SPORT)
+        .eq("league", ACTIVE_LEAGUE)
         .limit(8);
 
       if (!error && data) {
@@ -487,6 +495,8 @@ export default function NameADudePage() {
       completed_at: new Date().toISOString(),
       chain_length: finalCorrect.length,
       challenge_type: "name_a_dude",
+      sport: ACTIVE_SPORT,
+      league: ACTIVE_LEAGUE,
       result_json: {
         game: "name_a_dude",
         mode: gameMode,
@@ -495,8 +505,8 @@ export default function NameADudePage() {
           min_one_second_per_correct: true,
           flagged_too_fast_race: isTooFastRace,
         },
-        sport: "basketball",
-        league: "nba",
+        sport: ACTIVE_SPORT,
+        league: ACTIVE_LEAGUE,
         correct_players: finalCorrect,
         misses: finalMisses,
       },
@@ -527,6 +537,8 @@ export default function NameADudePage() {
       .select("username, avatar_url, total_score, avg_score, correct_challenges, total_correct, avg_correct, total_misses, avg_misses, total_seconds, seconds_per_answer")
       .eq("challenge_type", "name_a_dude")
       .eq("difficulty", difficulty)
+      .eq("sport", ACTIVE_SPORT)
+      .eq("league", ACTIVE_LEAGUE)
       .order("total_score", { ascending: false })
       .limit(10);
   

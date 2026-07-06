@@ -94,7 +94,10 @@ function calculateScore({ chainLength, secondsElapsed, misses }) {
 }
 
 export default function StatLadderPage() {
-  const [selectedSportKey, setSelectedSportKey] = useState(DEFAULT_SPORT_KEY);
+  const [selectedSportKey, setSelectedSportKey] = useState(() => {
+    if (typeof window === "undefined") return DEFAULT_SPORT_KEY;
+    return getSportOption(window.localStorage?.getItem(SPORT_STORAGE_KEY)).key;
+  });
   const [selectedDate, setSelectedDate] = useState(todayLocal());
   const [challenge, setChallenge] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -157,8 +160,6 @@ export default function StatLadderPage() {
   useEffect(() => {
     const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
     setDarkMode(Boolean(prefersDark));
-    const storedSport = window.localStorage?.getItem(SPORT_STORAGE_KEY);
-    if (storedSport) setSelectedSportKey(getSportOption(storedSport).key);
   }, []);
 
   const theme = useMemo(() => {

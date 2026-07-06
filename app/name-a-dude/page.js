@@ -6,6 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 import SiteNav from "../../components/SiteNav";
 import ProfileModal from "../../components/ProfileModal";
 import SponsorBanner from "../../components/SponsorBanner";
+import SportSelector, { getSportOption } from "../../components/SportSelector";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -20,8 +21,8 @@ const supabase = createClient(
 );
 
 const HEADSHOT_FALLBACK = "https://i.ibb.co/1YmfgNKs/TPR-Blank-Headshot-MBB.png";
-const ACTIVE_SPORT = "basketball";
-const ACTIVE_LEAGUE = "NBA";
+const DEFAULT_SPORT_KEY = "basketball-nba";
+const SPORT_STORAGE_KEY = "thatGuyRockedSport";
 
 const GAME_MODES = [
   { key: "survival", label: "Survival" },
@@ -89,6 +90,34 @@ function secondsPerAnswer(seconds, correct) {
   return (Number(seconds) || 0) / correctCount;
 }
 
+function formatStatCell(value) {
+  if (value === null || value === undefined || value === "") return "-";
+  const number = Number(value);
+  if (!Number.isFinite(number)) return value;
+  if (number > 0 && number < 1) return number.toFixed(3).replace(/^0/, "");
+  return Number.isInteger(number) ? number.toLocaleString() : number.toFixed(1);
+}
+
+function nameADudeStatColumns(sport) {
+  if (sport === "baseball") {
+    return [
+      ["G", (row) => row.batting_games ?? row.pitching_games ?? row.games_played],
+      ["HR", (row) => row.home_runs],
+      ["RBI", (row) => row.rbi],
+      ["OPS", (row) => row.ops],
+      ["K", (row) => row.pitching_strikeouts],
+    ];
+  }
+
+  return [
+    ["GP", (row) => row.games_played],
+    ["GS", (row) => row.games_started],
+    ["PTS", (row) => row.points_per_game],
+    ["REB", (row) => row.rebounds_per_game],
+    ["AST", (row) => row.assists_per_game],
+  ];
+}
+
 const STATIC_STYLES = {
   page: { minHeight: "100vh", width: "100%", overflowX: "hidden", fontFamily: 'Arial, Helvetica, sans-serif', margin: 0 },
   wrap: {maxWidth: 520, minHeight: "100vh", margin: "0 auto", padding: "12px 12px 170px", display: "flex", flexDirection: "column",},
@@ -140,6 +169,7 @@ const STATIC_STYLES = {
 };
 
 export default function NameADudePage() {
+  const [selectedSportKey, setSelectedSportKey] = useState(DEFAULT_SPORT_KEY);
   const [challenge, setChallenge] = useState(null);
   const [usedTeamKeys, setUsedTeamKeys] = useState([]);
   const [challengeLoading, setChallengeLoading] = useState(false);
@@ -182,14 +212,27 @@ export default function NameADudePage() {
   const [gameMode, setGameMode] = useState("survival");
   const [selectedDecade, setSelectedDecade] = useState("2010s");
   const [poolStats, setPoolStats] = useState({ all: 748 });
+  const activeSportOption = getSportOption(selectedSportKey);
+  const ACTIVE_SPORT = activeSportOption.sport;
+  const ACTIVE_LEAGUE = activeSportOption.league;
   
   const lastCorrectAtRef = useRef(null);  
 
   const searchTimeoutRef = useRef(null);
 
+  function handleSportChange(nextSportKey) {
+    setSelectedSportKey(nextSportKey);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(SPORT_STORAGE_KEY, nextSportKey);
+    }
+    setShowLeaderboard(false);
+  }
+
   useEffect(() => {
     const prefersDark = window.matchMedia?.("(prefers-color-scheme: dark)")?.matches;
     setDarkMode(Boolean(prefersDark));
+    const storedSport = window.localStorage?.getItem(SPORT_STORAGE_KEY);
+    if (storedSport) setSelectedSportKey(getSportOption(storedSport).key);
   }, []);
 
   const theme = useMemo(() => {
@@ -422,6 +465,20 @@ export default function NameADudePage() {
         points_per_game: match.points_per_game,
         rebounds_per_game: match.rebounds_per_game,
         assists_per_game: match.assists_per_game,
+        batting_games: match.batting_games,
+        hits: match.hits,
+        home_runs: match.home_runs,
+        rbi: match.rbi,
+        stolen_bases: match.stolen_bases,
+        batting_avg: match.batting_avg,
+        ops: match.ops,
+        pitching_games: match.pitching_games,
+        pitching_games_started: match.pitching_games_started,
+        wins: match.wins,
+        saves: match.saves,
+        era: match.era,
+        whip: match.whip,
+        pitching_strikeouts: match.pitching_strikeouts,
       };
     
       const nextCorrectPlayers = [...correctPlayers, correctRow];
@@ -548,7 +605,7 @@ export default function NameADudePage() {
   function giveUp() { finishGame(misses, correctPlayers); }
   function selectGameMode() {resetRun();}
   function formatShareDate(dateString) { const d = new Date(dateString + "T00:00:00"); return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`; }
-  function nameADudeShareText() { return `${correctPlayers.length} correct, ${misses.length} misses, ⏱️ ${formatTimer(secondsElapsed)}\n${"✅".repeat(correctPlayers.length)}${"🟥".repeat(misses.length)}`; }
+  function nameADudeShareText() { return `${correctPlayers.length} correct, ${misses.length} misses, â±ï¸ ${formatTimer(secondsElapsed)}\n${"âœ…".repeat(correctPlayers.length)}${"ðŸŸ¥".repeat(misses.length)}`; }
   function getShareText(gameName, scoreText) { return `${gameName} | ${formatShareDate(todayLocal())}\n${scoreText}\n\nTry to beat my score: ${window.location.origin}/name-a-dude`; }
   function openTwitterShare(gameName, scoreText) { const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(getShareText(gameName, scoreText))}`; window.open(url, "_blank", "noopener,noreferrer"); }
   async function openFacebookShare(gameName, scoreText) { await navigator.clipboard.writeText(getShareText(gameName, scoreText)); window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`${window.location.origin}/name-a-dude`)}`, "_blank", "noopener,noreferrer"); alert("Score copied. Paste it into your Facebook post."); }
@@ -556,7 +613,12 @@ export default function NameADudePage() {
   function openEmailShare(gameName, scoreText) { window.location.href = `mailto:?subject=${encodeURIComponent("That Guy Rocked score")}&body=${encodeURIComponent(getShareText(gameName, scoreText))}`; }
   async function shareResult(gameName, scoreText) { if (navigator.share) { await navigator.share({ title: "That Guy Rocked", text: getShareText(gameName, scoreText) }); } else { await navigator.clipboard.writeText(getShareText(gameName, scoreText)); alert("Score copied to clipboard."); } }
 
-  useEffect(() => { loadStartup(); }, []);
+  useEffect(() => {
+    resetRun();
+    setDailyChallengeId(null);
+    setPoolStats({ all: 748 });
+    loadStartup();
+  }, [ACTIVE_SPORT, ACTIVE_LEAGUE]);
 
   useEffect(() => {
     async function loadUser() {
@@ -585,6 +647,7 @@ export default function NameADudePage() {
     color: selectedPlayer ? "#ffffff" : theme.muted,
     cursor: selectedPlayer ? "pointer" : "not-allowed",
   };
+  const answerColumns = nameADudeStatColumns(ACTIVE_SPORT);
 
   return (
     <main style={styles.page}>
@@ -610,6 +673,12 @@ export default function NameADudePage() {
 
         <ProfileModal show={showProfile} onClose={() => setShowProfile(false)} user={user} setUser={setUser} darkMode={darkMode} theme={theme} />
 
+        <SportSelector
+          value={selectedSportKey}
+          onChange={handleSportChange}
+          theme={theme}
+        />
+
         {showLeaderboard && (
           <div style={styles.modalBackdrop}>
             <section style={styles.modalCard}>
@@ -617,10 +686,10 @@ export default function NameADudePage() {
                 <div>
                   <div style={styles.label}>Leaderboard</div>
                   <div style={styles.big}>
-                    {leaderboardType === "daily" ? "Daily" : "All-Time"} Name a Dude · {getModeLabel(gameMode, selectedDecade)}
+                    {leaderboardType === "daily" ? "Daily" : "All-Time"} Name a Dude Â· {getModeLabel(gameMode, selectedDecade)}
                   </div>
                 </div>
-                <button style={styles.closeButton} onClick={() => setShowLeaderboard(false)}>×</button>
+                <button style={styles.closeButton} onClick={() => setShowLeaderboard(false)}>Ã—</button>
               </div>
         
               <div style={styles.tabs}>
@@ -648,17 +717,17 @@ export default function NameADudePage() {
                             const spa = secondsPerAnswer(row.best_time, row.chain_length);
                         
                             if (isRace) {
-                              return `${formatNumber(row.best_score)} PTS · ${formatTimer(row.best_time || 0)} · ${formatDecimal(spa)} Seconds/answer · ${formatNumber(row.fewest_misses)} Misses`;
+                              return `${formatNumber(row.best_score)} PTS Â· ${formatTimer(row.best_time || 0)} Â· ${formatDecimal(spa)} Seconds/answer Â· ${formatNumber(row.fewest_misses)} Misses`;
                             }
                         
-                            return `${formatNumber(row.best_score)} PTS · ${formatTimer(row.best_time || 0)} · ${formatNumber(row.chain_length)} Correct · ${formatDecimal(spa)} Seconds/answer`;
+                            return `${formatNumber(row.best_score)} PTS Â· ${formatTimer(row.best_time || 0)} Â· ${formatNumber(row.chain_length)} Correct Â· ${formatDecimal(spa)} Seconds/answer`;
                           }
                         
                           if (isRace) {
-                            return `${formatNumber(row.total_score)} Total PTS (Avg ${formatNumber(row.avg_score)}) · ${formatDecimal(row.seconds_per_answer)} Seconds/answer · ${formatNumber(row.total_misses)} Total Misses (Avg ${formatDecimal(row.avg_misses)})`;
+                            return `${formatNumber(row.total_score)} Total PTS (Avg ${formatNumber(row.avg_score)}) Â· ${formatDecimal(row.seconds_per_answer)} Seconds/answer Â· ${formatNumber(row.total_misses)} Total Misses (Avg ${formatDecimal(row.avg_misses)})`;
                           }
                         
-                          return `${formatNumber(row.total_score)} Total PTS (Avg ${formatNumber(row.avg_score)}) · Total Correct ${formatNumber(row.total_correct)} (Avg ${formatDecimal(row.avg_correct, 1)}) · ${formatDecimal(row.seconds_per_answer)} Seconds/answer`;
+                          return `${formatNumber(row.total_score)} Total PTS (Avg ${formatNumber(row.avg_score)}) Â· Total Correct ${formatNumber(row.total_correct)} (Avg ${formatDecimal(row.avg_correct, 1)}) Â· ${formatDecimal(row.seconds_per_answer)} Seconds/answer`;
                         })()}
                       </div>
                     </div>
@@ -669,7 +738,7 @@ export default function NameADudePage() {
                 <div style={{ marginTop: 12 }}>
                   <div style={{ ...styles.label, marginTop: 14 }}>Share</div>
                   <div style={styles.shareGrid}>
-                    <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>𝕏</button>
+                    <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>ð•</button>
                     <button style={styles.shareIconButton} onClick={() => openFacebookShare("Name a Dude", nameADudeShareText())}>f</button>
                     <button style={styles.shareIconButton} onClick={() => copyShareText("Name a Dude", nameADudeShareText())}>
                       <span className="material-symbols-outlined">content_copy</span>
@@ -776,7 +845,7 @@ export default function NameADudePage() {
                   {(challenge.display_logo_url || challenge.logo_url) && (<img src={challenge.display_logo_url} alt="" style={styles.logo} /> )}
                   <div>
                     <div style={styles.big}>{challenge.display_team_name}</div>
-                    <div style={styles.sub}>{challenge.season_label || challenge.season_year} · Roster Size: {challenge.roster_count}</div>
+                    <div style={styles.sub}>{challenge.season_label || challenge.season_year} Â· Roster Size: {challenge.roster_count}</div>
                   </div>
                 </div>
               </section>
@@ -829,7 +898,7 @@ export default function NameADudePage() {
               <section style={styles.card}>
                 <div style={styles.label}>Result</div>
                 <div style={styles.big}>Score: {score ?? 0}</div>
-                <div style={styles.sub}>Correct {correctPlayers.length} · Misses {misses.length} · Time {formatTimer(secondsElapsed)}</div>
+                <div style={styles.sub}>Correct {correctPlayers.length} Â· Misses {misses.length} Â· Time {formatTimer(secondsElapsed)}</div>
 
                 <div style={{ ...styles.postGameButtonRow, gridTemplateColumns: "1fr 1fr 1fr" }}>
                   <button style={styles.primaryButton} onClick={startGame}>Play Again</button>
@@ -848,7 +917,7 @@ export default function NameADudePage() {
                 
                 <div style={{ ...styles.label, marginTop: 14 }}>Share</div>
                 <div style={styles.shareGrid}>
-                  <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>𝕏</button>
+                  <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>ð•</button>
                   <button style={styles.shareIconButton} onClick={() => openFacebookShare("Name a Dude", nameADudeShareText())}>f</button>
                   <button style={styles.shareIconButton} onClick={() => copyShareText("Name a Dude", nameADudeShareText())}>
                     <span className="material-symbols-outlined">content_copy</span>
@@ -886,13 +955,12 @@ export default function NameADudePage() {
                 <div key={`${row.player_id}-${idx}`} style={styles.chainRow}>
                   <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
                   <div style={{ flex: 1 }}>
-                    <strong>✓ {row.full_name}</strong>
-                    <div style={styles.sub}>{row.season_label || row.season_year} · {row.team_name}</div>
+                    <strong>âœ“ {row.full_name}</strong>
+                    <div style={styles.sub}>{row.season_label || row.season_year} Â· {row.team_name}</div>
                     <div style={styles.miniStatLine}>
-                      GP {row.games_played ?? "-"} · GS {row.games_started ?? "-"} · PTS{" "}
-                      {row.points_per_game ? Number(row.points_per_game).toFixed(1) : "-"} · REB{" "}
-                      {row.rebounds_per_game ? Number(row.rebounds_per_game).toFixed(1) : "-"} · AST{" "}
-                      {row.assists_per_game ? Number(row.assists_per_game).toFixed(1) : "-"}
+                      {answerColumns
+                        .map(([label, getter]) => `${label} ${formatStatCell(getter(row))}`)
+                        .join(" Â· ")}
                     </div>
                   </div>
                 </div>
@@ -902,8 +970,8 @@ export default function NameADudePage() {
                 <div key={`${row.player_id}-${idx}`} style={styles.chainRow}>
                   <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
                   <div style={{ flex: 1 }}>
-                    <strong style={styles.orange}>✕ {row.full_name}</strong>
-                    <div style={styles.sub}>Missed on {row.season_label || row.season_year} · {row.team_name}</div>
+                    <strong style={styles.orange}>âœ• {row.full_name}</strong>
+                    <div style={styles.sub}>Missed on {row.season_label || row.season_year} Â· {row.team_name}</div>
                   </div>
                 </div>
               ))}
@@ -914,26 +982,28 @@ export default function NameADudePage() {
                 <div style={styles.label}>Possible Answers</div>
                 <div style={styles.answerTable}>
                   <div style={styles.answerHeader}>
-                    <div>Player</div><div>GP</div><div>GS</div><div>PTS</div><div>REB</div><div>AST</div>
+                    <div>Player</div>
+                    {answerColumns.map(([label]) => (<div key={label}>{label}</div>))}
                   </div>
             
                   {challenge.valid_players
                     .slice()
-                    .sort((a, b) => Number(b.points_per_game || 0) - Number(a.points_per_game || 0))
+                    .sort((a, b) => {
+                      const getter = answerColumns[0]?.[1];
+                      return Number(getter?.(b) || 0) - Number(getter?.(a) || 0);
+                    })
                     .map((p) => (
                       <div key={p.player_id} style={styles.answerRow}>
                         <div style={styles.answerPlayer}>
                           <img src={p.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
                           <div>
                             <strong>{p.full_name}</strong>
-                            <div style={styles.sub}>{[p.position, p.jersey ? `#${p.jersey}` : null].filter(Boolean).join(" · ")}</div>
+                            <div style={styles.sub}>{[p.position, p.jersey ? `#${p.jersey}` : null].filter(Boolean).join(" Â· ")}</div>
                           </div>
                         </div>
-                        <div>{p.games_played ?? "-"}</div>
-                        <div>{p.games_started ?? "-"}</div>
-                        <div>{p.points_per_game ? Number(p.points_per_game).toFixed(1) : "-"}</div>
-                        <div>{p.rebounds_per_game ? Number(p.rebounds_per_game).toFixed(1) : "-"}</div>
-                        <div>{p.assists_per_game ? Number(p.assists_per_game).toFixed(1) : "-"}</div>
+                        {answerColumns.map(([label, getter]) => (
+                          <div key={label}>{formatStatCell(getter(p))}</div>
+                        ))}
                       </div>
                     ))}
                 </div>

@@ -686,7 +686,7 @@ export default function NameADudePage() {
                 <div>
                   <div style={styles.label}>Leaderboard</div>
                   <div style={styles.big}>
-                    {leaderboardType === "daily" ? "Daily" : "All-Time"} Name a Dude Â· {getModeLabel(gameMode, selectedDecade)}
+                    {leaderboardType === "daily" ? "Daily" : "All-Time"} Name a Dude · {getModeLabel(gameMode, selectedDecade)}
                   </div>
                 </div>
                 <button style={styles.closeButton} onClick={() => setShowLeaderboard(false)}>Ã—</button>
@@ -717,17 +717,17 @@ export default function NameADudePage() {
                             const spa = secondsPerAnswer(row.best_time, row.chain_length);
                         
                             if (isRace) {
-                              return `${formatNumber(row.best_score)} PTS Â· ${formatTimer(row.best_time || 0)} Â· ${formatDecimal(spa)} Seconds/answer Â· ${formatNumber(row.fewest_misses)} Misses`;
+                              return `${formatNumber(row.best_score)} PTS · ${formatTimer(row.best_time || 0)} · ${formatDecimal(spa)} Seconds/answer · ${formatNumber(row.fewest_misses)} Misses`;
                             }
                         
-                            return `${formatNumber(row.best_score)} PTS Â· ${formatTimer(row.best_time || 0)} Â· ${formatNumber(row.chain_length)} Correct Â· ${formatDecimal(spa)} Seconds/answer`;
+                            return `${formatNumber(row.best_score)} PTS · ${formatTimer(row.best_time || 0)} · ${formatNumber(row.chain_length)} Correct · ${formatDecimal(spa)} Seconds/answer`;
                           }
                         
                           if (isRace) {
-                            return `${formatNumber(row.total_score)} Total PTS (Avg ${formatNumber(row.avg_score)}) Â· ${formatDecimal(row.seconds_per_answer)} Seconds/answer Â· ${formatNumber(row.total_misses)} Total Misses (Avg ${formatDecimal(row.avg_misses)})`;
+                            return `${formatNumber(row.total_score)} Total PTS (Avg ${formatNumber(row.avg_score)}) · ${formatDecimal(row.seconds_per_answer)} Seconds/answer · ${formatNumber(row.total_misses)} Total Misses (Avg ${formatDecimal(row.avg_misses)})`;
                           }
                         
-                          return `${formatNumber(row.total_score)} Total PTS (Avg ${formatNumber(row.avg_score)}) Â· Total Correct ${formatNumber(row.total_correct)} (Avg ${formatDecimal(row.avg_correct, 1)}) Â· ${formatDecimal(row.seconds_per_answer)} Seconds/answer`;
+                          return `${formatNumber(row.total_score)} Total PTS (Avg ${formatNumber(row.avg_score)}) · Total Correct ${formatNumber(row.total_correct)} (Avg ${formatDecimal(row.avg_correct, 1)}) · ${formatDecimal(row.seconds_per_answer)} Seconds/answer`;
                         })()}
                       </div>
                     </div>
@@ -845,7 +845,7 @@ export default function NameADudePage() {
                   {(challenge.display_logo_url || challenge.logo_url) && (<img src={challenge.display_logo_url} alt="" style={styles.logo} /> )}
                   <div>
                     <div style={styles.big}>{challenge.display_team_name}</div>
-                    <div style={styles.sub}>{challenge.season_label || challenge.season_year} Â· Roster Size: {challenge.roster_count}</div>
+                    <div style={styles.sub}>{challenge.season_label || challenge.season_year} · Roster Size: {challenge.roster_count}</div>
                   </div>
                 </div>
               </section>
@@ -898,7 +898,7 @@ export default function NameADudePage() {
               <section style={styles.card}>
                 <div style={styles.label}>Result</div>
                 <div style={styles.big}>Score: {score ?? 0}</div>
-                <div style={styles.sub}>Correct {correctPlayers.length} Â· Misses {misses.length} Â· Time {formatTimer(secondsElapsed)}</div>
+                <div style={styles.sub}>Correct {correctPlayers.length} · Misses {misses.length} · Time {formatTimer(secondsElapsed)}</div>
 
                 <div style={{ ...styles.postGameButtonRow, gridTemplateColumns: "1fr 1fr 1fr" }}>
                   <button style={styles.primaryButton} onClick={startGame}>Play Again</button>
@@ -956,11 +956,11 @@ export default function NameADudePage() {
                   <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
                   <div style={{ flex: 1 }}>
                     <strong>âœ“ {row.full_name}</strong>
-                    <div style={styles.sub}>{row.season_label || row.season_year} Â· {row.team_name}</div>
+                    <div style={styles.sub}>{row.season_label || row.season_year} · {row.team_name}</div>
                     <div style={styles.miniStatLine}>
                       {answerColumns
                         .map(([label, getter]) => `${label} ${formatStatCell(getter(row))}`)
-                        .join(" Â· ")}
+                        .join(" · ")}
                     </div>
                   </div>
                 </div>
@@ -971,7 +971,7 @@ export default function NameADudePage() {
                   <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
                   <div style={{ flex: 1 }}>
                     <strong style={styles.orange}>âœ• {row.full_name}</strong>
-                    <div style={styles.sub}>Missed on {row.season_label || row.season_year} Â· {row.team_name}</div>
+                    <div style={styles.sub}>Missed on {row.season_label || row.season_year} · {row.team_name}</div>
                   </div>
                 </div>
               ))}
@@ -998,7 +998,7 @@ export default function NameADudePage() {
                           <img src={p.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
                           <div>
                             <strong>{p.full_name}</strong>
-                            <div style={styles.sub}>{[p.position, p.jersey ? `#${p.jersey}` : null].filter(Boolean).join(" Â· ")}</div>
+                            <div style={styles.sub}>{[p.position, p.jersey ? `#${p.jersey}` : null].filter(Boolean).join(" · ")}</div>
                           </div>
                         </div>
                         {answerColumns.map(([label, getter]) => (

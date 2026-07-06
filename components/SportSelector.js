@@ -39,11 +39,12 @@ export default function SportSelector({ value, onChange, theme }) {
               type="button"
               onClick={() => onChange(option.key)}
               style={{
-                border: active ? "1px solid #EF3B24" : `1px solid ${theme.border}`,
-                background: active ? "#EF3B24" : theme.input,
-                color: active ? "#ffffff" : theme.text,
+                border: `1px solid ${theme.border}`,
+                borderBottom: active ? "3px solid #EF3B24" : `1px solid ${theme.border}`,
+                background: theme.input,
+                color: active ? "#EF3B24" : theme.text,
                 borderRadius: 6,
-                padding: "9px 8px",
+                padding: active ? "9px 8px 7px" : "9px 8px",
                 fontSize: 11,
                 fontWeight: 900,
                 textTransform: "uppercase",

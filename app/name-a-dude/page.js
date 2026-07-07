@@ -99,16 +99,6 @@ function formatStatCell(value) {
 }
 
 function nameADudeStatColumns(sport) {
-  if (sport === "baseball") {
-    return [
-      ["G", (row) => row.batting_games ?? row.pitching_games ?? row.games_played],
-      ["HR", (row) => row.home_runs],
-      ["RBI", (row) => row.rbi],
-      ["OPS", (row) => row.ops],
-      ["K", (row) => row.pitching_strikeouts],
-    ];
-  }
-
   return [
     ["GP", (row) => row.games_played],
     ["GS", (row) => row.games_started],
@@ -116,6 +106,50 @@ function nameADudeStatColumns(sport) {
     ["REB", (row) => row.rebounds_per_game],
     ["AST", (row) => row.assists_per_game],
   ];
+}
+
+function baseballHitterStatColumns() {
+  return [
+    ["G", (row) => row.batting_games ?? row.games_played],
+    ["H", (row) => row.hits],
+    ["HR", (row) => row.home_runs],
+    ["RBI", (row) => row.rbi],
+    ["OPS", (row) => row.ops],
+  ];
+}
+
+function baseballPitcherStatColumns() {
+  return [
+    ["G", (row) => row.pitching_games ?? row.games_played],
+    ["GS", (row) => row.pitching_games_started],
+    ["W", (row) => row.wins],
+    ["ERA", (row) => row.era],
+    ["K", (row) => row.pitching_strikeouts],
+  ];
+}
+
+function isPitcherAnswer(row) {
+  const pitchingGames = Number(row?.pitching_games || 0);
+  const battingGames = Number(row?.batting_games || 0);
+  const pitchingStats =
+    pitchingGames +
+    Number(row?.pitching_games_started || 0) +
+    Number(row?.wins || 0) +
+    Number(row?.saves || 0) +
+    Number(row?.pitching_strikeouts || 0);
+  const hittingStats =
+    battingGames +
+    Number(row?.hits || 0) +
+    Number(row?.home_runs || 0) +
+    Number(row?.rbi || 0) +
+    Number(row?.stolen_bases || 0);
+
+  return pitchingStats > 0 && (pitchingGames >= battingGames || hittingStats === 0);
+}
+
+function nameADudeRowColumns(row, sport) {
+  if (sport !== "baseball") return nameADudeStatColumns(sport);
+  return isPitcherAnswer(row) ? baseballPitcherStatColumns() : baseballHitterStatColumns();
 }
 
 const STATIC_STYLES = {
@@ -224,9 +258,10 @@ export default function NameADudePage() {
   const searchTimeoutRef = useRef(null);
 
   function handleSportChange(nextSportKey) {
-    setSelectedSportKey(nextSportKey);
+    const normalizedKey = getSportOption(nextSportKey).key;
+    setSelectedSportKey(normalizedKey);
     if (typeof window !== "undefined") {
-      window.localStorage.setItem(SPORT_STORAGE_KEY, nextSportKey);
+      window.localStorage.setItem(SPORT_STORAGE_KEY, normalizedKey);
     }
     setShowLeaderboard(false);
   }
@@ -606,7 +641,7 @@ export default function NameADudePage() {
   function giveUp() { finishGame(misses, correctPlayers); }
   function selectGameMode() {resetRun();}
   function formatShareDate(dateString) { const d = new Date(dateString + "T00:00:00"); return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`; }
-  function nameADudeShareText() { return `${correctPlayers.length} correct, ${misses.length} misses, â±ï¸ ${formatTimer(secondsElapsed)}\n${"âœ…".repeat(correctPlayers.length)}${"ðŸŸ¥".repeat(misses.length)}`; }
+  function nameADudeShareText() { return `${correctPlayers.length} correct, ${misses.length} misses, time ${formatTimer(secondsElapsed)}\n${"W".repeat(correctPlayers.length)}${"X".repeat(misses.length)}`; }
   function getShareText(gameName, scoreText) { return `${gameName} | ${formatShareDate(todayLocal())}\n${scoreText}\n\nTry to beat my score: ${window.location.origin}/name-a-dude`; }
   function openTwitterShare(gameName, scoreText) { const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(getShareText(gameName, scoreText))}`; window.open(url, "_blank", "noopener,noreferrer"); }
   async function openFacebookShare(gameName, scoreText) { await navigator.clipboard.writeText(getShareText(gameName, scoreText)); window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`${window.location.origin}/name-a-dude`)}`, "_blank", "noopener,noreferrer"); alert("Score copied. Paste it into your Facebook post."); }
@@ -649,6 +684,48 @@ export default function NameADudePage() {
     cursor: selectedPlayer ? "pointer" : "not-allowed",
   };
   const answerColumns = nameADudeStatColumns(ACTIVE_SPORT);
+  const possibleAnswerPlayers = challenge?.valid_players || [];
+  const basketballAnswers = possibleAnswerPlayers
+    .slice()
+    .sort((a, b) => Number(b.points_per_game || 0) - Number(a.points_per_game || 0));
+  const baseballHitters = possibleAnswerPlayers
+    .filter((player) => !isPitcherAnswer(player))
+    .sort((a, b) => Number(b.ops || 0) - Number(a.ops || 0));
+  const baseballPitchers = possibleAnswerPlayers
+    .filter((player) => isPitcherAnswer(player))
+    .sort((a, b) => {
+      const strikeoutDiff = Number(b.pitching_strikeouts || 0) - Number(a.pitching_strikeouts || 0);
+      if (strikeoutDiff !== 0) return strikeoutDiff;
+      return Number(b.pitching_games || 0) - Number(a.pitching_games || 0);
+    });
+
+  function renderAnswerTable(players, columns) {
+    if (!players.length) return null;
+
+    return (
+      <div style={styles.answerTable}>
+        <div style={styles.answerHeader}>
+          <div>Player</div>
+          {columns.map(([label]) => (<div key={label}>{label}</div>))}
+        </div>
+
+        {players.map((p) => (
+          <div key={p.player_id} style={styles.answerRow}>
+            <div style={styles.answerPlayer}>
+              <img src={p.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
+              <div>
+                <strong>{p.full_name}</strong>
+                <div style={styles.sub}>{[p.position, p.jersey ? `#${p.jersey}` : null].filter(Boolean).join(" · ")}</div>
+              </div>
+            </div>
+            {columns.map(([label, getter]) => (
+              <div key={label}>{formatStatCell(getter(p))}</div>
+            ))}
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <main style={styles.page}>
@@ -739,7 +816,7 @@ export default function NameADudePage() {
                 <div style={{ marginTop: 12 }}>
                   <div style={{ ...styles.label, marginTop: 14 }}>Share</div>
                   <div style={styles.shareGrid}>
-                    <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>X</button>
+                    <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>𝕏</button>
                     <button style={styles.shareIconButton} onClick={() => openFacebookShare("Name a Dude", nameADudeShareText())}>f</button>
                     <button style={styles.shareIconButton} onClick={() => copyShareText("Name a Dude", nameADudeShareText())}>
                       <span className="material-symbols-outlined">content_copy</span>
@@ -918,7 +995,7 @@ export default function NameADudePage() {
                 
                 <div style={{ ...styles.label, marginTop: 14 }}>Share</div>
                 <div style={styles.shareGrid}>
-                  <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>X</button>
+                  <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>𝕏</button>
                   <button style={styles.shareIconButton} onClick={() => openFacebookShare("Name a Dude", nameADudeShareText())}>f</button>
                   <button style={styles.shareIconButton} onClick={() => copyShareText("Name a Dude", nameADudeShareText())}>
                     <span className="material-symbols-outlined">content_copy</span>
@@ -956,10 +1033,10 @@ export default function NameADudePage() {
                 <div key={`${row.player_id}-${idx}`} style={styles.chainRow}>
                   <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
                   <div style={{ flex: 1 }}>
-                    <strong>âœ“ {row.full_name}</strong>
+                    <strong>Correct: {row.full_name}</strong>
                     <div style={styles.sub}>{row.season_label || row.season_year} · {row.team_name}</div>
                     <div style={styles.miniStatLine}>
-                      {answerColumns
+                      {nameADudeRowColumns(row, ACTIVE_SPORT)
                         .map(([label, getter]) => `${label} ${formatStatCell(getter(row))}`)
                         .join(" · ")}
                     </div>
@@ -971,43 +1048,26 @@ export default function NameADudePage() {
                 <div key={`${row.player_id}-${idx}`} style={styles.chainRow}>
                   <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
                   <div style={{ flex: 1 }}>
-                    <strong style={styles.orange}>âœ• {row.full_name}</strong>
+                    <strong style={styles.orange}>Miss: {row.full_name}</strong>
                     <div style={styles.sub}>Missed on {row.season_label || row.season_year} · {row.team_name}</div>
                   </div>
                 </div>
               ))}
             </section>
 
-            {ended && challenge?.valid_players?.length > 0 && (
+            {ended && possibleAnswerPlayers.length > 0 && (
               <section style={styles.card}>
                 <div style={styles.label}>Possible Answers</div>
-                <div style={styles.answerTable}>
-                  <div style={styles.answerHeader}>
-                    <div>Player</div>
-                    {answerColumns.map(([label]) => (<div key={label}>{label}</div>))}
-                  </div>
-            
-                  {challenge.valid_players
-                    .slice()
-                    .sort((a, b) => {
-                      const getter = answerColumns[0]?.[1];
-                      return Number(getter?.(b) || 0) - Number(getter?.(a) || 0);
-                    })
-                    .map((p) => (
-                      <div key={p.player_id} style={styles.answerRow}>
-                        <div style={styles.answerPlayer}>
-                          <img src={p.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
-                          <div>
-                            <strong>{p.full_name}</strong>
-                            <div style={styles.sub}>{[p.position, p.jersey ? `#${p.jersey}` : null].filter(Boolean).join(" · ")}</div>
-                          </div>
-                        </div>
-                        {answerColumns.map(([label, getter]) => (
-                          <div key={label}>{formatStatCell(getter(p))}</div>
-                        ))}
-                      </div>
-                    ))}
-                </div>
+                {ACTIVE_SPORT === "baseball" ? (
+                  <>
+                    {baseballHitters.length > 0 && <div style={{ ...styles.label, marginTop: 8 }}>Hitters</div>}
+                    {renderAnswerTable(baseballHitters, baseballHitterStatColumns())}
+                    {baseballPitchers.length > 0 && <div style={{ ...styles.label, marginTop: 10 }}>Pitchers</div>}
+                    {renderAnswerTable(baseballPitchers, baseballPitcherStatColumns())}
+                  </>
+                ) : (
+                  renderAnswerTable(basketballAnswers, answerColumns)
+                )}
               </section>
             )}
           </>

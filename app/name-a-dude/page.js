@@ -96,7 +96,7 @@ function formatStatCell(value, label) {
   if (!Number.isFinite(number)) return value;
   const normalizedLabel = String(label || "").toUpperCase();
 
-  if (["GP", "GS", "G", "H", "HR", "RBI", "W", "K"].includes(normalizedLabel)) {
+  if (["GP", "GS", "G", "H", "HR", "RBI", "W", "K", "RUNS"].includes(normalizedLabel)) {
     return Math.round(number).toLocaleString();
   }
 
@@ -128,18 +128,17 @@ function baseballHitterStatColumns() {
     ["HR", (row) => row.home_runs],
     ["RBI", (row) => row.rbi],
     ["AVG", (row) => row.batting_avg],
-    ["OBP", (row) => row.on_base_pct ?? row.obp ?? row.batting_obp],
     ["OPS", (row) => row.ops],
   ];
 }
 
 function baseballPitcherStatColumns() {
   return [
-    ["G", (row) => row.pitching_games ?? row.games_played],
-    ["GS", (row) => row.pitching_games_started],
-    ["W", (row) => row.wins],
-    ["ERA", (row) => row.era],
-    ["K", (row) => row.pitching_strikeouts],
+    ["G", (row) => row.pitching_games ?? row.pitching_gp ?? row.games_played],
+    ["GS", (row) => row.pitching_games_started ?? row.pitching_gs],
+    ["W", (row) => row.wins ?? row.pitching_w],
+    ["ERA", (row) => row.era ?? row.pitching_era],
+    ["K", (row) => row.pitching_strikeouts ?? row.pitching_k],
   ];
 }
 
@@ -147,14 +146,14 @@ function isPitcherAnswer(row) {
   const position = String(row?.position || row?.position_abbreviation || "").trim().toUpperCase();
   if (["P", "SP", "RP", "PITCHER", "STARTING PITCHER", "RELIEF PITCHER"].includes(position)) return true;
 
-  const pitchingGames = Number(row?.pitching_games || 0);
+  const pitchingGames = Number(row?.pitching_games ?? row?.pitching_gp ?? 0);
   const battingGames = Number(row?.batting_games || 0);
   const pitchingStats =
     pitchingGames +
-    Number(row?.pitching_games_started || 0) +
-    Number(row?.wins || 0) +
-    Number(row?.saves || 0) +
-    Number(row?.pitching_strikeouts || 0);
+    Number(row?.pitching_games_started ?? row?.pitching_gs ?? 0) +
+    Number(row?.wins ?? row?.pitching_w ?? 0) +
+    Number(row?.saves ?? row?.pitching_sv ?? 0) +
+    Number(row?.pitching_strikeouts ?? row?.pitching_k ?? 0);
   const hittingStats =
     battingGames +
     Number(row?.hits || 0) +
@@ -522,15 +521,14 @@ export default function NameADudePage() {
         rbi: match.rbi,
         stolen_bases: match.stolen_bases,
         batting_avg: match.batting_avg,
-        on_base_pct: match.on_base_pct ?? match.obp ?? match.batting_obp,
         ops: match.ops,
-        pitching_games: match.pitching_games,
-        pitching_games_started: match.pitching_games_started,
-        wins: match.wins,
-        saves: match.saves,
-        era: match.era,
+        pitching_games: match.pitching_games ?? match.pitching_gp,
+        pitching_games_started: match.pitching_games_started ?? match.pitching_gs,
+        wins: match.wins ?? match.pitching_w,
+        saves: match.saves ?? match.pitching_sv,
+        era: match.era ?? match.pitching_era,
         whip: match.whip,
-        pitching_strikeouts: match.pitching_strikeouts,
+        pitching_strikeouts: match.pitching_strikeouts ?? match.pitching_k,
       };
     
       const nextCorrectPlayers = [...correctPlayers, correctRow];
@@ -710,15 +708,17 @@ export default function NameADudePage() {
   const baseballPitchers = possibleAnswerPlayers
     .filter((player) => isPitcherAnswer(player))
     .sort((a, b) => {
-      const eraA = Number(a.era);
-      const eraB = Number(b.era);
-      const validEraA = a.era !== null && a.era !== undefined && a.era !== "" && Number.isFinite(eraA);
-      const validEraB = b.era !== null && b.era !== undefined && b.era !== "" && Number.isFinite(eraB);
+      const rawEraA = a.era ?? a.pitching_era;
+      const rawEraB = b.era ?? b.pitching_era;
+      const eraA = Number(rawEraA);
+      const eraB = Number(rawEraB);
+      const validEraA = rawEraA !== null && rawEraA !== undefined && rawEraA !== "" && Number.isFinite(eraA);
+      const validEraB = rawEraB !== null && rawEraB !== undefined && rawEraB !== "" && Number.isFinite(eraB);
 
       if (validEraA && validEraB && eraA !== eraB) return eraA - eraB;
       if (validEraA !== validEraB) return validEraA ? -1 : 1;
 
-      return Number(b.pitching_strikeouts || 0) - Number(a.pitching_strikeouts || 0);
+      return Number(b.pitching_strikeouts ?? b.pitching_k ?? 0) - Number(a.pitching_strikeouts ?? a.pitching_k ?? 0);
     });
 
   function renderAnswerTable(players, columns) {
@@ -1081,7 +1081,7 @@ export default function NameADudePage() {
             {ended && possibleAnswerPlayers.length > 0 && (
               <section style={styles.card}>
                 <div style={styles.label}>Possible Answers</div>
-                {activeSportOption.key === "baseball-mlb" ? (
+                {ACTIVE_SPORT === "baseball" ? (
                   <>
                     {baseballHitters.length > 0 && <div style={{ ...styles.label, marginTop: 8 }}>Hitters</div>}
                     {renderAnswerTable(baseballHitters, baseballHitterStatColumns())}

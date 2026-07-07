@@ -12,6 +12,8 @@ export function getSportOption(key) {
 }
 
 export default function SportSelector({ value, onChange, theme }) {
+  const selectedKey = getSportOption(value).key;
+
   return (
     <div style={{ marginBottom: 10 }}>
       <div
@@ -34,12 +36,12 @@ export default function SportSelector({ value, onChange, theme }) {
         }}
       >
         {SPORT_OPTIONS.map((option) => {
-          const active = option.key === value;
+          const active = option.key === selectedKey;
           return (
             <button
               key={option.key}
               type="button"
-              onClick={() => onChange(option.key)}
+              onClick={() => onChange(getSportOption(option.key).key)}
               style={{
                 border: `1px solid ${theme.border}`,
                 borderBottom: active ? "3px solid #EF3B24" : `1px solid ${theme.border}`,

@@ -144,24 +144,38 @@ function baseballPitcherStatColumns() {
 
 function isPitcherAnswer(row) {
   const position = String(row?.position || row?.position_abbreviation || "").trim().toUpperCase();
-  if (["P", "SP", "RP", "PITCHER", "STARTING PITCHER", "RELIEF PITCHER"].includes(position)) return true;
+  const hasStat = (keys) => keys.some((key) => {
+    const value = row?.[key];
+    return value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value));
+  });
+  const hasPitchingStats = hasStat([
+    "pitching_games",
+    "pitching_gp",
+    "pitching_games_started",
+    "pitching_gs",
+    "wins",
+    "pitching_w",
+    "saves",
+    "pitching_sv",
+    "era",
+    "pitching_era",
+    "whip",
+    "pitching_strikeouts",
+    "pitching_k",
+  ]);
+  const hasHittingStats = hasStat([
+    "batting_games",
+    "hits",
+    "home_runs",
+    "rbi",
+    "stolen_bases",
+    "batting_avg",
+    "ops",
+  ]);
 
-  const pitchingGames = Number(row?.pitching_games ?? row?.pitching_gp ?? 0);
-  const battingGames = Number(row?.batting_games || 0);
-  const pitchingStats =
-    pitchingGames +
-    Number(row?.pitching_games_started ?? row?.pitching_gs ?? 0) +
-    Number(row?.wins ?? row?.pitching_w ?? 0) +
-    Number(row?.saves ?? row?.pitching_sv ?? 0) +
-    Number(row?.pitching_strikeouts ?? row?.pitching_k ?? 0);
-  const hittingStats =
-    battingGames +
-    Number(row?.hits || 0) +
-    Number(row?.home_runs || 0) +
-    Number(row?.rbi || 0) +
-    Number(row?.stolen_bases || 0);
-
-  return pitchingStats > 0 && (pitchingGames >= battingGames || hittingStats === 0);
+  if (hasPitchingStats) return true;
+  if (hasHittingStats) return false;
+  return ["P", "SP", "RP", "PITCHER", "STARTING PITCHER", "RELIEF PITCHER"].includes(position);
 }
 
 function nameADudeRowColumns(row, sport) {

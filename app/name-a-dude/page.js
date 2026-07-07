@@ -90,11 +90,24 @@ function secondsPerAnswer(seconds, correct) {
   return (Number(seconds) || 0) / correctCount;
 }
 
-function formatStatCell(value) {
+function formatStatCell(value, label) {
   if (value === null || value === undefined || value === "") return "-";
   const number = Number(value);
   if (!Number.isFinite(number)) return value;
-  if (number > 0 && number < 1) return number.toFixed(3).replace(/^0/, "");
+  const normalizedLabel = String(label || "").toUpperCase();
+
+  if (["GP", "GS", "G", "H", "HR", "RBI", "W", "K"].includes(normalizedLabel)) {
+    return Math.round(number).toLocaleString();
+  }
+
+  if (["PTS", "REB", "AST"].includes(normalizedLabel)) {
+    return number.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  }
+
+  if (["OPS", "AVG", "OBP", "ERA"].includes(normalizedLabel)) {
+    return number.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+  }
+
   return Number.isInteger(number) ? number.toLocaleString() : number.toFixed(1);
 }
 
@@ -114,6 +127,8 @@ function baseballHitterStatColumns() {
     ["H", (row) => row.hits],
     ["HR", (row) => row.home_runs],
     ["RBI", (row) => row.rbi],
+    ["AVG", (row) => row.batting_avg],
+    ["OBP", (row) => row.on_base_pct ?? row.obp ?? row.batting_obp],
     ["OPS", (row) => row.ops],
   ];
 }
@@ -129,6 +144,9 @@ function baseballPitcherStatColumns() {
 }
 
 function isPitcherAnswer(row) {
+  const position = String(row?.position || row?.position_abbreviation || "").trim().toUpperCase();
+  if (["P", "SP", "RP", "PITCHER", "STARTING PITCHER", "RELIEF PITCHER"].includes(position)) return true;
+
   const pitchingGames = Number(row?.pitching_games || 0);
   const battingGames = Number(row?.batting_games || 0);
   const pitchingStats =
@@ -504,6 +522,7 @@ export default function NameADudePage() {
         rbi: match.rbi,
         stolen_bases: match.stolen_bases,
         batting_avg: match.batting_avg,
+        on_base_pct: match.on_base_pct ?? match.obp ?? match.batting_obp,
         ops: match.ops,
         pitching_games: match.pitching_games,
         pitching_games_started: match.pitching_games_started,
@@ -693,8 +712,8 @@ export default function NameADudePage() {
     .sort((a, b) => {
       const eraA = Number(a.era);
       const eraB = Number(b.era);
-      const validEraA = Number.isFinite(eraA) && eraA > 0;
-      const validEraB = Number.isFinite(eraB) && eraB > 0;
+      const validEraA = a.era !== null && a.era !== undefined && a.era !== "" && Number.isFinite(eraA);
+      const validEraB = b.era !== null && b.era !== undefined && b.era !== "" && Number.isFinite(eraB);
 
       if (validEraA && validEraB && eraA !== eraB) return eraA - eraB;
       if (validEraA !== validEraB) return validEraA ? -1 : 1;
@@ -704,16 +723,17 @@ export default function NameADudePage() {
 
   function renderAnswerTable(players, columns) {
     if (!players.length) return null;
+    const gridTemplateColumns = `2fr repeat(${columns.length}, minmax(38px, 0.65fr))`;
 
     return (
       <div style={styles.answerTable}>
-        <div style={styles.answerHeader}>
+        <div style={{ ...styles.answerHeader, gridTemplateColumns }}>
           <div>Player</div>
           {columns.map(([label]) => (<div key={label}>{label}</div>))}
         </div>
 
         {players.map((p) => (
-          <div key={p.player_id} style={styles.answerRow}>
+          <div key={p.player_id} style={{ ...styles.answerRow, gridTemplateColumns }}>
             <div style={styles.answerPlayer}>
               <img src={p.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
               <div>
@@ -722,7 +742,7 @@ export default function NameADudePage() {
               </div>
             </div>
             {columns.map(([label, getter]) => (
-              <div key={label}>{formatStatCell(getter(p))}</div>
+              <div key={label}>{formatStatCell(getter(p), label)}</div>
             ))}
           </div>
         ))}
@@ -1040,7 +1060,7 @@ export default function NameADudePage() {
                     <div style={styles.sub}>{row.season_label || row.season_year} · {row.team_name}</div>
                     <div style={styles.miniStatLine}>
                       {nameADudeRowColumns(row, ACTIVE_SPORT)
-                        .map(([label, getter]) => `${label} ${formatStatCell(getter(row))}`)
+                        .map(([label, getter]) => `${label} ${formatStatCell(getter(row), label)}`)
                         .join(" · ")}
                     </div>
                   </div>
@@ -1061,7 +1081,7 @@ export default function NameADudePage() {
             {ended && possibleAnswerPlayers.length > 0 && (
               <section style={styles.card}>
                 <div style={styles.label}>Possible Answers</div>
-                {ACTIVE_SPORT === "baseball" ? (
+                {activeSportOption.key === "baseball-mlb" ? (
                   <>
                     {baseballHitters.length > 0 && <div style={{ ...styles.label, marginTop: 8 }}>Hitters</div>}
                     {renderAnswerTable(baseballHitters, baseballHitterStatColumns())}

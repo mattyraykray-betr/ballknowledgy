@@ -144,38 +144,10 @@ function baseballPitcherStatColumns() {
 
 function isPitcherAnswer(row) {
   const position = String(row?.position || row?.position_abbreviation || "").trim().toUpperCase();
-  const hasStat = (keys) => keys.some((key) => {
-    const value = row?.[key];
-    return value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value));
-  });
-  const hasPitchingStats = hasStat([
-    "pitching_games",
-    "pitching_gp",
-    "pitching_games_started",
-    "pitching_gs",
-    "wins",
-    "pitching_w",
-    "saves",
-    "pitching_sv",
-    "era",
-    "pitching_era",
-    "whip",
-    "pitching_strikeouts",
-    "pitching_k",
-  ]);
-  const hasHittingStats = hasStat([
-    "batting_games",
-    "hits",
-    "home_runs",
-    "rbi",
-    "stolen_bases",
-    "batting_avg",
-    "ops",
-  ]);
-
-  if (hasPitchingStats) return true;
-  if (hasHittingStats) return false;
-  return ["P", "SP", "RP", "PITCHER", "STARTING PITCHER", "RELIEF PITCHER"].includes(position);
+  return (
+    ["P", "SP", "RP", "CP", "CL", "LHP", "RHP", "PITCHER", "STARTING PITCHER", "RELIEF PITCHER"].includes(position) ||
+    position.includes("PITCH")
+  );
 }
 
 function nameADudeRowColumns(row, sport) {

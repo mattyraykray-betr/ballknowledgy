@@ -6,8 +6,9 @@ export const SPORT_OPTIONS = [
 ];
 
 export function getSportOption(key) {
-  if (["basketball", "nba", "NBA", "Pro Basketball"].includes(key)) return SPORT_OPTIONS[0];
-  if (["baseball", "mlb", "MLB", "Pro Baseball"].includes(key)) return SPORT_OPTIONS[1];
+  const normalizedKey = String(key || "").trim().toLowerCase();
+  if (["basketball", "nba", "pro basketball", "basketball-nba"].includes(normalizedKey)) return SPORT_OPTIONS[0];
+  if (["baseball", "mlb", "pro baseball", "baseball-mlb"].includes(normalizedKey)) return SPORT_OPTIONS[1];
   return SPORT_OPTIONS.find((option) => option.key === key) || SPORT_OPTIONS[0];
 }
 
@@ -45,6 +46,7 @@ export default function SportSelector({ value, onChange, theme }) {
               style={{
                 border: `1px solid ${theme.border}`,
                 borderBottom: active ? "3px solid #EF3B24" : `1px solid ${theme.border}`,
+                boxShadow: active ? "inset 0 -2px 0 #EF3B24" : "none",
                 background: "#111111",
                 color: "#ffffff",
                 borderRadius: 6,

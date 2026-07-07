@@ -203,10 +203,7 @@ const STATIC_STYLES = {
 };
 
 export default function NameADudePage() {
-  const [selectedSportKey, setSelectedSportKey] = useState(() => {
-    if (typeof window === "undefined") return DEFAULT_SPORT_KEY;
-    return getSportOption(window.localStorage?.getItem(SPORT_STORAGE_KEY)).key;
-  });
+  const [selectedSportKey, setSelectedSportKey] = useState(DEFAULT_SPORT_KEY);
   const [challenge, setChallenge] = useState(null);
   const [usedTeamKeys, setUsedTeamKeys] = useState([]);
   const [challengeLoading, setChallengeLoading] = useState(false);
@@ -694,9 +691,15 @@ export default function NameADudePage() {
   const baseballPitchers = possibleAnswerPlayers
     .filter((player) => isPitcherAnswer(player))
     .sort((a, b) => {
-      const strikeoutDiff = Number(b.pitching_strikeouts || 0) - Number(a.pitching_strikeouts || 0);
-      if (strikeoutDiff !== 0) return strikeoutDiff;
-      return Number(b.pitching_games || 0) - Number(a.pitching_games || 0);
+      const eraA = Number(a.era);
+      const eraB = Number(b.era);
+      const validEraA = Number.isFinite(eraA) && eraA > 0;
+      const validEraB = Number.isFinite(eraB) && eraB > 0;
+
+      if (validEraA && validEraB && eraA !== eraB) return eraA - eraB;
+      if (validEraA !== validEraB) return validEraA ? -1 : 1;
+
+      return Number(b.pitching_strikeouts || 0) - Number(a.pitching_strikeouts || 0);
     });
 
   function renderAnswerTable(players, columns) {
@@ -816,7 +819,7 @@ export default function NameADudePage() {
                 <div style={{ marginTop: 12 }}>
                   <div style={{ ...styles.label, marginTop: 14 }}>Share</div>
                   <div style={styles.shareGrid}>
-                    <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>𝕏</button>
+                    <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>X</button>
                     <button style={styles.shareIconButton} onClick={() => openFacebookShare("Name a Dude", nameADudeShareText())}>f</button>
                     <button style={styles.shareIconButton} onClick={() => copyShareText("Name a Dude", nameADudeShareText())}>
                       <span className="material-symbols-outlined">content_copy</span>
@@ -995,7 +998,7 @@ export default function NameADudePage() {
                 
                 <div style={{ ...styles.label, marginTop: 14 }}>Share</div>
                 <div style={styles.shareGrid}>
-                  <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>𝕏</button>
+                  <button style={styles.shareIconButton} onClick={() => openTwitterShare("Name a Dude", nameADudeShareText())}>X</button>
                   <button style={styles.shareIconButton} onClick={() => openFacebookShare("Name a Dude", nameADudeShareText())}>f</button>
                   <button style={styles.shareIconButton} onClick={() => copyShareText("Name a Dude", nameADudeShareText())}>
                     <span className="material-symbols-outlined">content_copy</span>

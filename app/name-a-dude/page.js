@@ -143,11 +143,21 @@ function baseballPitcherStatColumns() {
 }
 
 function isPitcherAnswer(row) {
+  if (row?.player_role === "pitcher") return true;
+  if (row?.player_role === "hitter") return false;
+
   const position = String(row?.position || row?.position_abbreviation || "").trim().toUpperCase();
   return (
     ["P", "SP", "RP", "CP", "CL", "LHP", "RHP", "PITCHER", "STARTING PITCHER", "RELIEF PITCHER"].includes(position) ||
     position.includes("PITCH")
   );
+}
+
+function normalizePlayerName(name) {
+  return String(name || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
 }
 
 function nameADudeRowColumns(row, sport) {
@@ -457,7 +467,16 @@ export default function NameADudePage() {
 
   function getValidPlayerMatch(playerId) {
     const validPlayers = challenge?.valid_players || [];
-    return validPlayers.find((p) => Number(p.player_id) === Number(playerId));
+    const selectedName = normalizePlayerName(selectedPlayer?.full_name);
+    return validPlayers.find((p) => {
+      const cachePlayerId = Number(p.player_id);
+      const guessedPlayerId = Number(playerId);
+      if (Number.isFinite(cachePlayerId) && Number.isFinite(guessedPlayerId) && cachePlayerId === guessedPlayerId) {
+        return true;
+      }
+
+      return selectedName && normalizePlayerName(p.full_name) === selectedName;
+    });
   }
 
   function alreadyNamed(playerId) {

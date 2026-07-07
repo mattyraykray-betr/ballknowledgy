@@ -153,10 +153,64 @@ function isPitcherAnswer(row) {
   );
 }
 
+function hasStatValue(row, keys) {
+  return keys.some((key) => {
+    const value = row?.[key];
+    return value !== null && value !== undefined && value !== "" && Number.isFinite(Number(value));
+  });
+}
+
+function normalizeValidPlayer(row) {
+  const hasPitchingStats = hasStatValue(row, [
+    "pitching_games",
+    "pitching_gp",
+    "pitching_games_started",
+    "pitching_gs",
+    "wins",
+    "pitching_w",
+    "saves",
+    "pitching_sv",
+    "era",
+    "pitching_era",
+    "whip",
+    "pitching_strikeouts",
+    "pitching_k",
+  ]);
+  const hasHittingStats = hasStatValue(row, [
+    "batting_games",
+    "hits",
+    "home_runs",
+    "rbi",
+    "stolen_bases",
+    "batting_avg",
+    "ops",
+  ]);
+  const position = String(row?.position || row?.position_abbreviation || "").trim().toUpperCase();
+  const positionIsPitcher =
+    ["P", "SP", "RP", "CP", "CL", "LHP", "RHP", "PITCHER", "STARTING PITCHER", "RELIEF PITCHER"].includes(position) ||
+    position.includes("PITCH");
+
+  return {
+    ...row,
+    player_role: row?.player_role || (positionIsPitcher || (hasPitchingStats && !hasHittingStats) ? "pitcher" : "hitter"),
+  };
+}
+
+function normalizeChallenge(row) {
+  const validPlayers = Array.isArray(row?.valid_players) ? row.valid_players : [];
+  return {
+    ...row,
+    valid_players: validPlayers.map(normalizeValidPlayer),
+  };
+}
+
 function normalizePlayerName(name) {
   return String(name || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, "")
     .replace(/\s+/g, " ");
 }
 
@@ -379,7 +433,7 @@ export default function NameADudePage() {
   
     const { data, error } = await queryBuilder.range(randomOffset, randomOffset + 9);
   
-    let activeData = data;
+    let activeData = Array.isArray(data) ? data.map(normalizeChallenge) : data;
   
     if (error || !activeData || activeData.length === 0) {
       let fallbackQuery = supabase
@@ -396,7 +450,7 @@ export default function NameADudePage() {
       const fallback = await fallbackQuery.limit(10);
   
       if (fallback.data && fallback.data.length > 0) {
-        activeData = fallback.data;
+        activeData = fallback.data.map(normalizeChallenge);
       } else {
         setChallengeLoading(false);
         return null;

@@ -66,7 +66,7 @@ function formatStatForLabel(label, value) {
   if (Number.isNaN(num)) return value;
   const normalizedLabel = String(label).toUpperCase();
 
-  if (["GP", "GS", "G", "H", "HR", "RBI", "W", "SV", "K"].includes(normalizedLabel)) {
+  if (["GP", "GS", "G", "H", "RUNS", "RBI", "HR", "W", "SV", "K"].includes(normalizedLabel)) {
     return Math.round(num).toLocaleString();
   }
 
@@ -119,14 +119,11 @@ function getBaseballSeasonStatEntries(season, clue) {
       ]
     : [
         ["G", season.batting_games ?? season.games_played],
-        ["AB", season.at_bats],
-        ["R", season.runs],
         ["H", season.hits],
-        ["HR", season.home_runs],
+        ["Runs", season.runs],
         ["RBI", season.rbi],
-        ["SB", season.stolen_bases],
+        ["HR", season.home_runs],
         ["AVG", season.batting_avg],
-        ["OBP", season.on_base_pct],
         ["OPS", season.ops],
         ["WAR", season.batting_war],
       ];

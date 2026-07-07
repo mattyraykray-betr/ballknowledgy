@@ -64,13 +64,21 @@ function formatStatForLabel(label, value) {
   if (value === null || value === undefined || value === "") return "-";
   const num = Number(value);
   if (Number.isNaN(num)) return value;
-  const normalizedLabel = String(label).toLowerCase();
+  const normalizedLabel = String(label).toUpperCase();
 
-  if (["avg", "obp", "slg", "ops"].includes(normalizedLabel)) {
-    return num.toFixed(3).replace(/^0/, "");
+  if (["GP", "GS", "G", "H", "HR", "RBI", "W", "SV", "K"].includes(normalizedLabel)) {
+    return Math.round(num).toLocaleString();
   }
 
-  if (["era", "whip", "k9", "war"].includes(normalizedLabel)) {
+  if (["PTS", "REB", "AST"].includes(normalizedLabel)) {
+    return num.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  }
+
+  if (["AVG", "OBP", "OPS", "ERA"].includes(normalizedLabel)) {
+    return num.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+  }
+
+  if (["WHIP", "K9", "WAR"].includes(normalizedLabel)) {
     return num.toFixed(2).replace(/\.00$/, "");
   }
 
@@ -118,6 +126,7 @@ function getBaseballSeasonStatEntries(season, clue) {
         ["RBI", season.rbi],
         ["SB", season.stolen_bases],
         ["AVG", season.batting_avg],
+        ["OBP", season.on_base_pct],
         ["OPS", season.ops],
         ["WAR", season.batting_war],
       ];

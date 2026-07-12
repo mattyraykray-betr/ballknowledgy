@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import SiteNav from "../../components/SiteNav";
 import ProfileModal from "../../components/ProfileModal";
+import SportSelector, { getSportOption } from "../../components/SportSelector";
 import Link from "next/link";
 
 const supabase = createClient(
@@ -20,8 +21,9 @@ const supabase = createClient(
 
 const HEADSHOT_FALLBACK =
   "https://i.ibb.co/1YmfgNKs/TPR-Blank-Headshot-MBB.png";
-const ACTIVE_SPORT = "basketball";
-const ACTIVE_LEAGUE = "NBA";
+const BASEBALL_HEADSHOT_FALLBACK = "https://i.ibb.co/KxgWj4dJ/TPR-Blank-Headshot-MLB.png";
+const DEFAULT_SPORT_KEY = "basketball-nba";
+const SPORT_STORAGE_KEY = "thatGuyRockedSport";
 
 function todayLocal() {
   return new Date().toISOString().slice(0, 10);
@@ -57,6 +59,78 @@ function formatStat(value) {
   const num = Number(value);
   if (Number.isNaN(num)) return value;
   return num.toFixed(1);
+}
+
+function formatStatForLabel(label, value) {
+  if (value === null || value === undefined || value === "") return "-";
+  const num = Number(value);
+  if (Number.isNaN(num)) return value;
+  const normalizedLabel = String(label).toUpperCase();
+
+  if (["GP", "GS", "G", "H", "RUNS", "RBI", "HR", "W", "SV", "K"].includes(normalizedLabel)) {
+    return Math.round(num).toLocaleString();
+  }
+
+  if (["PTS", "REB", "AST"].includes(normalizedLabel)) {
+    return num.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  }
+
+  if (["AVG", "OBP", "OPS", "ERA"].includes(normalizedLabel)) {
+    return num.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+  }
+
+  if (["WHIP", "K9", "WAR"].includes(normalizedLabel)) {
+    return num.toFixed(2).replace(/\.00$/, "");
+  }
+
+  return Number.isInteger(num) ? num.toLocaleString() : num.toFixed(1);
+}
+
+function hasStatValue(value) {
+  return value !== null && value !== undefined && value !== "";
+}
+
+function statEntriesFromObject(stats) {
+  return Object.entries(stats || {}).filter(([, value]) => hasStatValue(value));
+}
+
+function getBaseballSeasonStatEntries(season, clue) {
+  const pitchingGames = Number(season.pitching_games ?? clue.stats?.G ?? 0) || 0;
+  const battingGames = Number(season.batting_games ?? clue.stats?.G ?? 0) || 0;
+  const atBats = Number(season.at_bats ?? clue.stats?.AB ?? 0) || 0;
+  const clueStats = statEntriesFromObject(clue.stats);
+  const clueLooksPitching = clueStats.some(([label]) => {
+    return ["ERA", "WHIP", "K", "IP", "SV", "W"].includes(String(label).toUpperCase());
+  });
+  const usePitching =
+    pitchingGames > 0 &&
+    (clueLooksPitching || pitchingGames >= battingGames || atBats <= 1);
+
+  const entries = usePitching
+    ? [
+        ["G", season.pitching_games],
+        ["GS", season.pitching_games_started],
+        ["IP", season.innings_pitched],
+        ["W", season.wins],
+        ["SV", season.saves],
+        ["ERA", season.era],
+        ["WHIP", season.whip],
+        ["K", season.pitching_strikeouts],
+        ["WAR", season.pitching_war],
+      ]
+    : [
+        ["G", season.batting_games ?? season.games_played],
+        ["H", season.hits],
+        ["Runs", season.runs],
+        ["RBI", season.rbi],
+        ["HR", season.home_runs],
+        ["AVG", season.batting_avg],
+        ["OPS", season.ops],
+        ["WAR", season.batting_war],
+      ];
+
+  const seasonEntries = entries.filter(([, value]) => hasStatValue(value));
+  return seasonEntries.length > 0 ? seasonEntries : clueStats;
 }
 
 function calculateScore({ secondsElapsed, wrongGuessCount, hintsUsed, gaveUp }) {
@@ -98,6 +172,7 @@ function renderHint(hint) {
 
   if (hint.height) rows.push({ label: "Height", value: hint.height });
   if (hint.weight) rows.push({ label: "Weight", value: hint.weight });
+  if (hint.position) rows.push({ label: "Position", value: hint.position });
   if (hint.depth_chart_position) {
     rows.push({ label: "Depth Chart Position", value: hint.depth_chart_position });
   }
@@ -108,11 +183,9 @@ function renderHint(hint) {
   }
   if (hint.hometown) rows.push({ label: "Hometown", value: hint.hometown });
 
-  if (hint.label && hint.value) {
+  if (rows.length === 0 && hint.label && hint.value) {
     rows.push({ label: cleanLabel(hint.label), value: hint.value });
-  }
-
-  if (hint.type && hint.value) {
+  } else if (rows.length === 0 && hint.type && hint.value) {
     rows.push({ label: cleanLabel(hint.type), value: hint.value });
   }
 
@@ -126,33 +199,43 @@ function renderHint3(hint, styles) {
 
   return (
     <div>
-      <div>Exact year: {hint?.exact_year || "-"}</div>
+      <div>Exact year: {hint?.exact_year || hint?.season_label || hint?.season_year || "-"}</div>
 
       <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
-        {teammates.map((t) => (
-          <div key={t.full_name} style={styles.teammateRow}>
+        {teammates.length === 0 ? (
+          <div style={styles.teammateStats}>No teammate hints available.</div>
+        ) : (
+          teammates.map((t) => (
+            <div key={t.full_name} style={styles.teammateRow}>
               <img
-                src={t.headshot_url || HEADSHOT_FALLBACK}
+                src={t.headshot_url || activeHeadshotFallback}
                 alt={t.full_name}
                 style={styles.teammateHeadshot}
               />
 
-            <div>
-              <strong>{t.full_name}</strong>
-              <div style={styles.teammateStats}>
-                {formatStat(t.points_per_game)} PPG ·{" "}
-                {formatStat(t.rebounds_per_game)} RPG ·{" "}
-                {formatStat(t.assists_per_game)} APG
+              <div>
+                <strong>{t.full_name}</strong>
+                <div style={styles.teammateStats}>
+                  {t.points_per_game !== undefined
+                    ? `${formatStat(t.points_per_game)} PPG · ${formatStat(t.rebounds_per_game)} RPG · ${formatStat(t.assists_per_game)} APG`
+                    : t.pitching_games
+                      ? `${formatStatForLabel("G", t.pitching_games)} G · ${formatStatForLabel("ERA", t.era)} ERA · ${formatStatForLabel("K", t.pitching_strikeouts)} K`
+                      : `${formatStatForLabel("H", t.hits)} H · ${formatStatForLabel("HR", t.home_runs)} HR · ${formatStatForLabel("RBI", t.rbi)} RBI`}
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );
 }
 
 export default function HomePage() {
+  const [selectedSportKey, setSelectedSportKey] = useState(() => {
+    if (typeof window === "undefined") return DEFAULT_SPORT_KEY;
+    return getSportOption(window.localStorage?.getItem(SPORT_STORAGE_KEY)).key;
+  });
   const [selectedDate, setSelectedDate] = useState(todayLocal());
   const [challenges, setChallenges] = useState([]);
   const [activeChallenge, setActiveChallenge] = useState(null);
@@ -183,6 +266,18 @@ export default function HomePage() {
   const [completionStatus, setCompletionStatus] = useState([]);
   const [userStreaks, setUserStreaks] = useState(null);
   const [profile, setProfile] = useState(null);
+  const activeSportOption = getSportOption(selectedSportKey);
+  const ACTIVE_SPORT = activeSportOption.sport;
+  const ACTIVE_LEAGUE = activeSportOption.league;
+  const activeHeadshotFallback = ACTIVE_SPORT === "baseball" ? BASEBALL_HEADSHOT_FALLBACK : HEADSHOT_FALLBACK;
+
+  function handleSportChange(nextSportKey) {
+    setSelectedSportKey(nextSportKey);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(SPORT_STORAGE_KEY, nextSportKey);
+    }
+    setShowLeaderboard(false);
+  }
 
   // SAFELY MOVED INSIDE COMPONENT
   async function loadProfile(userId) {
@@ -335,7 +430,26 @@ export default function HomePage() {
           steals_per_game,
           blocks_per_game,
           game_score,
-          eff
+          eff,
+          batting_games,
+          at_bats,
+          runs,
+          hits,
+          home_runs,
+          rbi,
+          stolen_bases,
+          batting_avg,
+          ops,
+          batting_war,
+          pitching_games,
+          pitching_games_started,
+          innings_pitched,
+          wins,
+          saves,
+          era,
+          whip,
+          pitching_strikeouts,
+          pitching_war
         )
       `)
       .eq("challenge_date", dateValue)
@@ -622,7 +736,7 @@ export default function HomePage() {
   
   useEffect(() => {
     loadChallenges(selectedDate);
-  }, [selectedDate]);
+  }, [selectedDate, ACTIVE_SPORT, ACTIVE_LEAGUE]);
 
   useEffect(() => {
     if (!activeChallenge || !hasStarted || isSolved || gaveUp || !startedAt) return;
@@ -636,7 +750,7 @@ export default function HomePage() {
 
   useEffect(() => {
     loadCompletionStatus();
-  }, [user, selectedDate]);
+  }, [user, selectedDate, ACTIVE_SPORT, ACTIVE_LEAGUE]);
   
   useEffect(() => {
     async function loadUser() {
@@ -1192,6 +1306,18 @@ export default function HomePage() {
   const hint2 = activeChallenge?.hint_2_json || {};
   const hint3 = activeChallenge?.hint_3_json || {};
   const ended = isSolved || gaveUp || wrongGuesses.length >= 10;
+  const seasonStatEntries =
+    ACTIVE_SPORT === "baseball"
+      ? getBaseballSeasonStatEntries(season, clue)
+      : [
+          ["GP", season.games_played ?? clue.games_played],
+          ["GS", season.games_started ?? clue.games_started],
+          ["PTS", season.points_per_game ?? clue.points_per_game],
+          ["REB", season.rebounds_per_game ?? clue.rebounds_per_game],
+          ["AST", season.assists_per_game ?? clue.assists_per_game],
+          ["STL", season.steals_per_game ?? clue.steals_per_game],
+          ["BLK", season.blocks_per_game ?? clue.blocks_per_game],
+        ];
 
   return (
     <main style={styles.page}>
@@ -1236,6 +1362,12 @@ export default function HomePage() {
           user={user}
           setUser={setUser}
           darkMode={darkMode}
+          theme={theme}
+        />
+
+        <SportSelector
+          value={selectedSportKey}
+          onChange={handleSportChange}
           theme={theme}
         />
   
@@ -1333,7 +1465,7 @@ export default function HomePage() {
                       aria-label="Share on X"
                       title="Share on X"
                     >
-                      𝕏
+                      X
                     </button>
               
                     <button
@@ -1398,7 +1530,7 @@ export default function HomePage() {
                       style={styles.primaryButton}
                       onClick={() => {
                         setShowLeaderboard(false);
-                        startGame();
+                        resetGameState(activeChallenge, false);
                       }}
                     >
                       Play Again
@@ -1489,7 +1621,7 @@ export default function HomePage() {
             
                     <div style={styles.resultRow}>
                       <img
-                        src={activeChallenge.player?.headshot_url || HEADSHOT_FALLBACK}
+                        src={activeChallenge.player?.headshot_url || activeHeadshotFallback}
                         alt={activeChallenge.player?.full_name || "Player headshot"}
                         style={styles.resultHeadshot}
                       />
@@ -1530,7 +1662,7 @@ export default function HomePage() {
             
                 <div style={styles.resultRow}>
                     <img
-                      src={activeChallenge.player.headshot_url || HEADSHOT_FALLBACK}
+                      src={activeChallenge.player.headshot_url || activeHeadshotFallback}
                       alt={activeChallenge.player.full_name || "Player headshot"}
                       style={styles.resultHeadshot}
                     />
@@ -1629,7 +1761,7 @@ export default function HomePage() {
                     aria-label="Share on X"
                     title="Share on X"
                   >
-                    𝕏
+                    X
                   </button>
                 
                   <button
@@ -1725,7 +1857,7 @@ export default function HomePage() {
                         }}
                       >
                         <div style={styles.searchResultRow}>
-                            <img src={p.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
+                            <img src={p.headshot_url || activeHeadshotFallback} alt="" style={styles.searchHeadshot} />
                           <span>{p.full_name}</span>
                         </div>
                       </div>
@@ -1755,50 +1887,18 @@ export default function HomePage() {
                 <section style={styles.card}>
                   <div style={styles.label}>Stat line in selected year</div>
 
-                  <div style={styles.statGrid}>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>GP</div>
-                      <div style={styles.statValue}>
-                        {parseInt(season.games_played ?? clue.games_played, 10)}
-                      </div>
-                    </div> 
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>GS</div>
-                      <div style={styles.statValue}>
-                        {parseInt(season.games_started ?? clue.games_started, 10)}
-                      </div>
-                    </div>                        
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>PTS</div>
-                      <div style={styles.statValue}>
-                        {formatStat(season.points_per_game ?? clue.points_per_game)}
-                      </div>
+                  {seasonStatEntries.length > 0 ? (
+                    <div style={styles.statGrid}>
+                      {seasonStatEntries.map(([label, value]) => (
+                        <div key={label} style={styles.statBox}>
+                          <div style={styles.statLabel}>{label}</div>
+                          <div style={styles.statValue}>{formatStatForLabel(label, value)}</div>
+                        </div>
+                      ))}
                     </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>REB</div>
-                      <div style={styles.statValue}>
-                        {formatStat(season.rebounds_per_game ?? clue.rebounds_per_game)}
-                      </div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>AST</div>
-                      <div style={styles.statValue}>
-                        {formatStat(season.assists_per_game ?? clue.assists_per_game)}
-                      </div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>STL</div>
-                      <div style={styles.statValue}>
-                        {formatStat(season.steals_per_game ?? clue.steals_per_game)}
-                      </div>
-                    </div>
-                    <div style={styles.statBox}>
-                      <div style={styles.statLabel}>BLK</div>
-                      <div style={styles.statValue}>
-                        {formatStat(season.blocks_per_game ?? clue.blocks_per_game)}
-                      </div>
-                    </div>
-                  </div>
+                  ) : (
+                    <div style={styles.sub}>No stat line is available for this player-season.</div>
+                  )}
                 </section>              
                 <section style={styles.card}>
                   <div style={styles.metaRow}>

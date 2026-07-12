@@ -21,6 +21,7 @@ const supabase = createClient(
 
 const HEADSHOT_FALLBACK =
   "https://i.ibb.co/1YmfgNKs/TPR-Blank-Headshot-MBB.png";
+const BASEBALL_HEADSHOT_FALLBACK = "https://i.ibb.co/KxgWj4dJ/TPR-Blank-Headshot-MLB.png";
 const DEFAULT_SPORT_KEY = "basketball-nba";
 const SPORT_STORAGE_KEY = "thatGuyRockedSport";
 
@@ -207,7 +208,7 @@ function renderHint3(hint, styles) {
           teammates.map((t) => (
             <div key={t.full_name} style={styles.teammateRow}>
               <img
-                src={t.headshot_url || HEADSHOT_FALLBACK}
+                src={t.headshot_url || activeHeadshotFallback}
                 alt={t.full_name}
                 style={styles.teammateHeadshot}
               />
@@ -268,6 +269,7 @@ export default function HomePage() {
   const activeSportOption = getSportOption(selectedSportKey);
   const ACTIVE_SPORT = activeSportOption.sport;
   const ACTIVE_LEAGUE = activeSportOption.league;
+  const activeHeadshotFallback = ACTIVE_SPORT === "baseball" ? BASEBALL_HEADSHOT_FALLBACK : HEADSHOT_FALLBACK;
 
   function handleSportChange(nextSportKey) {
     setSelectedSportKey(nextSportKey);
@@ -1619,7 +1621,7 @@ export default function HomePage() {
             
                     <div style={styles.resultRow}>
                       <img
-                        src={activeChallenge.player?.headshot_url || HEADSHOT_FALLBACK}
+                        src={activeChallenge.player?.headshot_url || activeHeadshotFallback}
                         alt={activeChallenge.player?.full_name || "Player headshot"}
                         style={styles.resultHeadshot}
                       />
@@ -1660,7 +1662,7 @@ export default function HomePage() {
             
                 <div style={styles.resultRow}>
                     <img
-                      src={activeChallenge.player.headshot_url || HEADSHOT_FALLBACK}
+                      src={activeChallenge.player.headshot_url || activeHeadshotFallback}
                       alt={activeChallenge.player.full_name || "Player headshot"}
                       style={styles.resultHeadshot}
                     />
@@ -1855,7 +1857,7 @@ export default function HomePage() {
                         }}
                       >
                         <div style={styles.searchResultRow}>
-                            <img src={p.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
+                            <img src={p.headshot_url || activeHeadshotFallback} alt="" style={styles.searchHeadshot} />
                           <span>{p.full_name}</span>
                         </div>
                       </div>

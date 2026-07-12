@@ -21,6 +21,7 @@ const supabase = createClient(
 );
 
 const HEADSHOT_FALLBACK = "https://i.ibb.co/1YmfgNKs/TPR-Blank-Headshot-MBB.png";
+const BASEBALL_HEADSHOT_FALLBACK = "https://i.ibb.co/KxgWj4dJ/TPR-Blank-Headshot-MLB.png";
 const DEFAULT_SPORT_KEY = "basketball-nba";
 const SPORT_STORAGE_KEY = "thatGuyRockedSport";
 
@@ -316,6 +317,7 @@ export default function NameADudePage() {
   const activeSportOption = getSportOption(selectedSportKey);
   const ACTIVE_SPORT = activeSportOption.sport;
   const ACTIVE_LEAGUE = activeSportOption.league;
+  const activeHeadshotFallback = ACTIVE_SPORT === "baseball" ? BASEBALL_HEADSHOT_FALLBACK : HEADSHOT_FALLBACK;
   
   const lastCorrectAtRef = useRef(null);  
 
@@ -794,7 +796,7 @@ export default function NameADudePage() {
         {players.map((p) => (
           <div key={p.player_id} style={{ ...styles.answerRow, gridTemplateColumns }}>
             <div style={styles.answerPlayer}>
-              <img src={p.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
+              <img src={p.headshot_url || activeHeadshotFallback} alt="" style={styles.searchHeadshot} />
               <div>
                 <strong>{p.full_name}</strong>
                 <div style={styles.sub}>{[p.position, p.jersey ? `#${p.jersey}` : null].filter(Boolean).join(" · ")}</div>
@@ -1113,7 +1115,7 @@ export default function NameADudePage() {
 
               {correctPlayers.map((row, idx) => (
                 <div key={`${row.player_id}-${idx}`} style={styles.chainRow}>
-                  <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
+                  <img src={row.headshot_url || activeHeadshotFallback} alt="" style={styles.searchHeadshot} />
                   <div style={{ flex: 1 }}>
                     <strong>Correct: {row.full_name}</strong>
                     <div style={styles.sub}>{row.season_label || row.season_year} · {row.team_name}</div>
@@ -1128,7 +1130,7 @@ export default function NameADudePage() {
 
               {misses.map((row, idx) => (
                 <div key={`${row.player_id}-${idx}`} style={styles.chainRow}>
-                  <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
+                  <img src={row.headshot_url || activeHeadshotFallback} alt="" style={styles.searchHeadshot} />
                   <div style={{ flex: 1 }}>
                     <strong style={styles.orange}>Miss: {row.full_name}</strong>
                     <div style={styles.sub}>Missed on {row.season_label || row.season_year} · {row.team_name}</div>

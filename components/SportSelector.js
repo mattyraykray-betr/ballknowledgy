@@ -62,6 +62,52 @@ export default function SportSelector({ value, onChange, theme }) {
           );
         })}
       </div>
+      {selectedKey === "baseball-mlb" && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-start",
+            gap: 8,
+            marginTop: 8,
+            padding: "8px 9px",
+            border: "1px solid #003594",
+            borderRadius: 6,
+            background: "rgba(0, 53, 148, 0.10)",
+            color: theme.text,
+            fontSize: 12,
+            lineHeight: 1.35,
+          }}
+        >
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              padding: "2px 6px",
+              borderRadius: 4,
+              background: "#003594",
+              color: "#ffffff",
+              fontSize: 10,
+              fontWeight: 950,
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+            }}
+          >
+            Beta
+          </span>
+          <span>
+            Pro Baseball game mode is in beta testing. If you notice any missing players or issues,{" "}
+            <a
+              href="mailto:thatguyrocked@gmail.com?subject=Pro%20Baseball%20Beta%20Feedback"
+              style={{ color: "#2F80ED", fontWeight: 900 }}
+            >
+              let us know
+            </a>
+            !
+          </span>
+        </div>
+      )}
     </div>
   );
 }

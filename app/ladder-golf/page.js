@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import SiteNav from "../../components/SiteNav";
 import ProfileModal from "../../components/ProfileModal";
+import SportSelector, { getSportOption } from "../../components/SportSelector";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -20,8 +21,9 @@ const supabase = createClient(
 
 const HEADSHOT_FALLBACK =
   "https://i.ibb.co/1YmfgNKs/TPR-Blank-Headshot-MBB.png";
-const ACTIVE_SPORT = "basketball";
-const ACTIVE_LEAGUE = "NBA";
+const BASEBALL_HEADSHOT_FALLBACK = "https://i.ibb.co/KxgWj4dJ/TPR-Blank-Headshot-MLB.png";
+const DEFAULT_SPORT_KEY = "basketball-nba";
+const SPORT_STORAGE_KEY = "thatGuyRockedSport";
 
 function todayLocal() {
   return new Date().toISOString().slice(0, 10);
@@ -52,7 +54,19 @@ function formatValue(value, statKey) {
   if (value === null || value === undefined || Number.isNaN(Number(value))) return "-";
 
   if (
-    ["career_points", "career_assists", "career_rebounds", "career_3pm"].includes(statKey)
+    [
+      "career_points",
+      "career_assists",
+      "career_rebounds",
+      "career_3pm",
+      "career_home_runs",
+      "career_hits",
+      "career_rbi",
+      "career_stolen_bases",
+      "career_pitching_strikeouts",
+      "career_wins",
+      "career_saves",
+    ].includes(statKey)
   ) {
     return Math.round(Number(value)).toLocaleString();
   }
@@ -81,6 +95,10 @@ function calculateScore({ chainLength, secondsElapsed, misses }) {
 }
 
 export default function StatLadderPage() {
+  const [selectedSportKey, setSelectedSportKey] = useState(() => {
+    if (typeof window === "undefined") return DEFAULT_SPORT_KEY;
+    return getSportOption(window.localStorage?.getItem(SPORT_STORAGE_KEY)).key;
+  });
   const [selectedDate, setSelectedDate] = useState(todayLocal());
   const [challenge, setChallenge] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -113,6 +131,18 @@ export default function StatLadderPage() {
   const [leaderboardType, setLeaderboardType] = useState("daily");
   const [leaderboard, setLeaderboard] = useState([]);
   const [completionStatus, setCompletionStatus] = useState(null);
+  const activeSportOption = getSportOption(selectedSportKey);
+  const ACTIVE_SPORT = activeSportOption.sport;
+  const ACTIVE_LEAGUE = activeSportOption.league;
+  const activeHeadshotFallback = ACTIVE_SPORT === "baseball" ? BASEBALL_HEADSHOT_FALLBACK : HEADSHOT_FALLBACK;
+
+  function handleSportChange(nextSportKey) {
+    setSelectedSportKey(nextSportKey);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(SPORT_STORAGE_KEY, nextSportKey);
+    }
+    setShowLeaderboard(false);
+  }
 
   async function loadProfile(userId) {
     if (!userId) {
@@ -258,7 +288,17 @@ export default function StatLadderPage() {
         career_3pm,
         career_ppg,
         career_rpg,
-        career_apg
+        career_apg,
+        career_hits,
+        career_home_runs,
+        career_rbi,
+        career_stolen_bases,
+        career_batting_war,
+        career_pitching_games,
+        career_wins,
+        career_saves,
+        career_pitching_strikeouts,
+        career_pitching_war
       `)
       .eq("player_id", playerId)
       .eq("sport", ACTIVE_SPORT)
@@ -541,11 +581,11 @@ export default function StatLadderPage() {
 
   useEffect(() => {
     loadChallenge(selectedDate);
-  }, [selectedDate]);
+  }, [selectedDate, ACTIVE_SPORT, ACTIVE_LEAGUE]);
 
   useEffect(() => {
     loadCompletionStatus();
-  }, [user, challenge]);
+  }, [user, challenge, ACTIVE_SPORT, ACTIVE_LEAGUE]);
   
   useEffect(() => {
     async function loadUser() {
@@ -993,6 +1033,12 @@ export default function StatLadderPage() {
           theme={theme}
         />
 
+        <SportSelector
+          value={selectedSportKey}
+          onChange={handleSportChange}
+          theme={theme}
+        />
+
         {showLeaderboard && (
           <div style={styles.modalBackdrop}>
             <section style={styles.modalCard}>
@@ -1150,7 +1196,7 @@ export default function StatLadderPage() {
         
               <div style={styles.playerRow}>
                 <img
-                  src={challenge.player?.headshot_url || HEADSHOT_FALLBACK}
+                  src={challenge.player?.headshot_url || activeHeadshotFallback}
                   alt={challenge.player?.full_name || "Player headshot"}
                   style={styles.headshot}
                 />
@@ -1174,7 +1220,7 @@ export default function StatLadderPage() {
                 {completionStatus.result_json.chain.map((row, idx) => (
                   <div key={`${row.player_id}-${idx}`} style={styles.chainRow}>
                     <img
-                      src={row.headshot_url || HEADSHOT_FALLBACK}
+                      src={row.headshot_url || activeHeadshotFallback}
                       alt=""
                       style={styles.searchHeadshot}
                     />
@@ -1221,7 +1267,7 @@ export default function StatLadderPage() {
               <div style={styles.label}>Starting Player</div>
             
               <div style={styles.playerRow}>
-                <img src={challenge.player.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.headshot} />
+                <img src={challenge.player.headshot_url || activeHeadshotFallback} alt="" style={styles.headshot} />
             
                 <div>
                   <div style={styles.big}>{challenge.player?.full_name}</div>
@@ -1307,7 +1353,7 @@ export default function StatLadderPage() {
                         }}
                       >
                         <div style={styles.searchResultRow}>
-                          <img src={p.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
+                          <img src={p.headshot_url || activeHeadshotFallback} alt="" style={styles.searchHeadshot} />
                           <span>{p.full_name}</span>
                         </div>
                       </div>
@@ -1345,7 +1391,7 @@ export default function StatLadderPage() {
 
               {chain.map((row, idx) => (
                 <div key={`${row.player_id}-${idx}`} style={styles.chainRow}>
-                  <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
+                  <img src={row.headshot_url || activeHeadshotFallback} alt="" style={styles.searchHeadshot} />
                   <div style={{ flex: 1 }}>
                     <strong>✓ {row.player_name}</strong>
                     <div style={styles.sub}>
@@ -1357,7 +1403,7 @@ export default function StatLadderPage() {
 
               {misses.map((row, idx) => (
                 <div key={`${row.player_id}-${idx}`} style={styles.chainRow}>
-                  <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
+                  <img src={row.headshot_url || activeHeadshotFallback} alt="" style={styles.searchHeadshot} />
                   <div style={{ flex: 1 }}>
                     <strong style={styles.orange}>✕ {row.player_name}</strong>
                     <div style={styles.sub}>

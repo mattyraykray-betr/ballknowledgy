@@ -21,6 +21,7 @@ const supabase = createClient(
 
 const HEADSHOT_FALLBACK =
   "https://i.ibb.co/1YmfgNKs/TPR-Blank-Headshot-MBB.png";
+const BASEBALL_HEADSHOT_FALLBACK = "https://i.ibb.co/KxgWj4dJ/TPR-Blank-Headshot-MLB.png";
 const DEFAULT_SPORT_KEY = "basketball-nba";
 const SPORT_STORAGE_KEY = "thatGuyRockedSport";
 
@@ -133,6 +134,7 @@ export default function StatLadderPage() {
   const activeSportOption = getSportOption(selectedSportKey);
   const ACTIVE_SPORT = activeSportOption.sport;
   const ACTIVE_LEAGUE = activeSportOption.league;
+  const activeHeadshotFallback = ACTIVE_SPORT === "baseball" ? BASEBALL_HEADSHOT_FALLBACK : HEADSHOT_FALLBACK;
 
   function handleSportChange(nextSportKey) {
     setSelectedSportKey(nextSportKey);
@@ -1194,7 +1196,7 @@ export default function StatLadderPage() {
         
               <div style={styles.playerRow}>
                 <img
-                  src={challenge.player?.headshot_url || HEADSHOT_FALLBACK}
+                  src={challenge.player?.headshot_url || activeHeadshotFallback}
                   alt={challenge.player?.full_name || "Player headshot"}
                   style={styles.headshot}
                 />
@@ -1218,7 +1220,7 @@ export default function StatLadderPage() {
                 {completionStatus.result_json.chain.map((row, idx) => (
                   <div key={`${row.player_id}-${idx}`} style={styles.chainRow}>
                     <img
-                      src={row.headshot_url || HEADSHOT_FALLBACK}
+                      src={row.headshot_url || activeHeadshotFallback}
                       alt=""
                       style={styles.searchHeadshot}
                     />
@@ -1265,7 +1267,7 @@ export default function StatLadderPage() {
               <div style={styles.label}>Starting Player</div>
             
               <div style={styles.playerRow}>
-                <img src={challenge.player.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.headshot} />
+                <img src={challenge.player.headshot_url || activeHeadshotFallback} alt="" style={styles.headshot} />
             
                 <div>
                   <div style={styles.big}>{challenge.player?.full_name}</div>
@@ -1351,7 +1353,7 @@ export default function StatLadderPage() {
                         }}
                       >
                         <div style={styles.searchResultRow}>
-                          <img src={p.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
+                          <img src={p.headshot_url || activeHeadshotFallback} alt="" style={styles.searchHeadshot} />
                           <span>{p.full_name}</span>
                         </div>
                       </div>
@@ -1389,7 +1391,7 @@ export default function StatLadderPage() {
 
               {chain.map((row, idx) => (
                 <div key={`${row.player_id}-${idx}`} style={styles.chainRow}>
-                  <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
+                  <img src={row.headshot_url || activeHeadshotFallback} alt="" style={styles.searchHeadshot} />
                   <div style={{ flex: 1 }}>
                     <strong>✓ {row.player_name}</strong>
                     <div style={styles.sub}>
@@ -1401,7 +1403,7 @@ export default function StatLadderPage() {
 
               {misses.map((row, idx) => (
                 <div key={`${row.player_id}-${idx}`} style={styles.chainRow}>
-                  <img src={row.headshot_url || HEADSHOT_FALLBACK} alt="" style={styles.searchHeadshot} />
+                  <img src={row.headshot_url || activeHeadshotFallback} alt="" style={styles.searchHeadshot} />
                   <div style={{ flex: 1 }}>
                     <strong style={styles.orange}>✕ {row.player_name}</strong>
                     <div style={styles.sub}>

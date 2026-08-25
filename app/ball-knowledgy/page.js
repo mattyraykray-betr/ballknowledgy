@@ -644,23 +644,23 @@ export default function HomePage() {
 
   function keycapNumber(value) {
     const map = {
-      0: "0️⃣",
-      1: "1️⃣",
-      2: "2️⃣",
-      3: "3️⃣",
-      4: "4️⃣",
-      5: "5️⃣",
-      6: "6️⃣",
-      7: "7️⃣",
-      8: "8️⃣",
-      9: "9️⃣",
+      0: "0\uFE0F\u20E3",
+      1: "1\uFE0F\u20E3",
+      2: "2\uFE0F\u20E3",
+      3: "3\uFE0F\u20E3",
+      4: "4\uFE0F\u20E3",
+      5: "5\uFE0F\u20E3",
+      6: "6\uFE0F\u20E3",
+      7: "7\uFE0F\u20E3",
+      8: "8\uFE0F\u20E3",
+      9: "9\uFE0F\u20E3",
     };
   
     return map[value] || String(value);
   }
 
   function ballKnowledgyShareText() {
-    return `${isSolved ? "✅ Correct" : "Missed"}, ${keycapNumber(
+    return `${isSolved ? "\u2705 Correct" : "Missed"}, ${keycapNumber(
       hintsShown
     )} hints, ${keycapNumber(
       wrongGuesses.length
@@ -2000,3 +2000,5 @@ export default function HomePage() {
     </main>
   );
 }
+
+

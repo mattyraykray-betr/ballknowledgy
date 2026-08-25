@@ -716,7 +716,7 @@ export default function NameADudePage() {
   function giveUp() { finishGame(misses, correctPlayers); }
   function selectGameMode() {resetRun();}
   function formatShareDate(dateString) { const d = new Date(dateString + "T00:00:00"); return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`; }
-  function nameADudeShareText() { return `${correctPlayers.length} correct, ${misses.length} misses, time ${formatTimer(secondsElapsed)}\n${"W".repeat(correctPlayers.length)}${"X".repeat(misses.length)}`; }
+  function nameADudeShareText() { return `${correctPlayers.length} correct, ${misses.length} misses, time ${formatTimer(secondsElapsed)}\n${"\uD83D\uDFE9".repeat(correctPlayers.length)}${"\u274C".repeat(misses.length)}`; }
   function getShareText(gameName, scoreText) { return `${gameName} | ${formatShareDate(todayLocal())}\n${scoreText}\n\nTry to beat my score: ${window.location.origin}/name-a-dude`; }
   function openTwitterShare(gameName, scoreText) { const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(getShareText(gameName, scoreText))}`; window.open(url, "_blank", "noopener,noreferrer"); }
   async function openFacebookShare(gameName, scoreText) { await navigator.clipboard.writeText(getShareText(gameName, scoreText)); window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(`${window.location.origin}/name-a-dude`)}`, "_blank", "noopener,noreferrer"); alert("Score copied. Paste it into your Facebook post."); }
@@ -851,7 +851,7 @@ export default function NameADudePage() {
                     {leaderboardType === "daily" ? "Daily" : "All-Time"} Name a Dude · {getModeLabel(gameMode, selectedDecade)}
                   </div>
                 </div>
-                <button style={styles.closeButton} onClick={() => setShowLeaderboard(false)}>Ã—</button>
+                <button style={styles.closeButton} onClick={() => setShowLeaderboard(false)}>X</button>
               </div>
         
               <div style={styles.tabs}>

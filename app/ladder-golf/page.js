@@ -429,8 +429,8 @@ export default function StatLadderPage() {
 
   function ladderGolfShareText() {
     return (
-      `${chain.length} chain, ${misses.length} misses, ⏱️ ${formatTimer(secondsElapsed)}\n` +
-      `${"✅".repeat(chain.length)}${"🟥".repeat(misses.length)}`
+      `${chain.length} chain, ${misses.length} misses, time ${formatTimer(secondsElapsed)}\n` +
+      `${"\uD83D\uDFE9".repeat(chain.length)}${"\u274C".repeat(misses.length)}`
     );
   }
   

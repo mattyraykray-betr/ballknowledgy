@@ -212,6 +212,25 @@ export default function StatLadderPage() {
     setAttemptSaved(false);
   }
 
+  async function hydrateChallengeStartingValue(row) {
+    const clue = row?.starting_clue_json || {};
+    if (!row?.player_id || !clue.stat_key) return row;
+
+    const career = await getCareerStats(row.player_id);
+    const liveValue = getStatValue(career, clue.stat_key);
+    if (liveValue === null || liveValue === undefined || Number.isNaN(Number(liveValue))) {
+      return row;
+    }
+
+    return {
+      ...row,
+      starting_clue_json: {
+        ...clue,
+        starting_value: Number(liveValue),
+      },
+    };
+  }
+
   async function loadChallenge(dateValue) {
     setLoading(true);
 
@@ -244,7 +263,7 @@ export default function StatLadderPage() {
       console.error(error);
       resetGame(null);
     } else {
-      resetGame(data || null);
+      resetGame(data ? await hydrateChallengeStartingValue(data) : null);
     }
 
     setLoading(false);

@@ -1489,12 +1489,12 @@ export default function StatLadderPage() {
         <SponsorBanner
           theme={theme}
           darkMode={darkMode}
-          href="https://x.com/NBAGuyRocked"
+          href="https://shop.thatguyrocked.com/"
           desktopLightSrc="/sponsor-desktop-light.png"
           desktopDarkSrc="/sponsor-desktop-dark.png"
           mobileLightSrc="/sponsor-mobile-light.png"
           mobileDarkSrc="/sponsor-mobile-dark.png"
-          alt="Sponsor name"
+          alt="Shop.ThatGuyRocked.com"
         />
       </div>
     </main>

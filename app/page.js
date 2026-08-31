@@ -217,6 +217,34 @@ export default function HomePage() {
             margin: "20px 0",
           }}
         />
+
+        <a
+          href="https://shop.thatguyrocked.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: "inherit",
+            textDecoration: "none",
+            border: `1px solid ${theme.border}`,
+            background: theme.card,
+            borderRadius: 10,
+            padding: 16,
+            display: "block",
+            marginBottom: 18,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span className="material-symbols-outlined" style={{ color: "#EF3B24", fontSize: 28 }}>
+              apparel
+            </span>
+  
+            <div style={{ fontSize: 22, fontWeight: 900 }}>Shop Merch</div>
+          </div>
+  
+          <div style={{ color: theme.muted, marginTop: 4 }}>
+            Apparel and gear from That Guy Rocked.
+          </div>
+        </a>
                   
         <section
           style={{

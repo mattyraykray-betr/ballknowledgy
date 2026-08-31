@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 import SiteNav from "../../components/SiteNav";
 import ProfileModal from "../../components/ProfileModal";
 import SportSelector, { getSportOption } from "../../components/SportSelector";
+import SponsorBanner from "../../components/SponsorBanner";
 import Link from "next/link";
 
 const supabase = createClient(
@@ -796,7 +797,7 @@ export default function HomePage() {
     wrap: {
       maxWidth: 520,
       margin: "0 auto",
-      padding: "12px",
+      padding: "12px 12px 170px",
     },
     topbar: {
       display: "flex",
@@ -1996,6 +1997,17 @@ export default function HomePage() {
             )}
           </>
         )}
+
+        <SponsorBanner
+          theme={theme}
+          darkMode={darkMode}
+          href="https://x.com/NBAGuyRocked"
+          desktopLightSrc="/sponsor-desktop-light.png"
+          desktopDarkSrc="/sponsor-desktop-dark.png"
+          mobileLightSrc="/sponsor-mobile-light.png"
+          mobileDarkSrc="/sponsor-mobile-dark.png"
+          alt="Sponsor name"
+        />
       </div>
     </main>
   );

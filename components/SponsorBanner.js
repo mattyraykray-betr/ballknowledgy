@@ -1,5 +1,5 @@
 export default function SponsorBanner({
-  href = "https://advertiser-website.com",
+  href = "https://shop.thatguyrocked.com/",
   desktopLightSrc = "/sponsor-desktop-light.png",
   desktopDarkSrc = "/sponsor-desktop-dark.png",
   mobileLightSrc = "/sponsor-mobile-light.png",
